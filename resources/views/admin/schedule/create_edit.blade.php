@@ -91,11 +91,11 @@
                             </div>
                         </div>
 
-                        <div class="card-footer d-flex flex-column flex-sm-row gap-2">
+                        <div class="card-footer">
                             <button type="submit" class="btn btn-primary">
                                 {{ isset($row) ? __('frontend.form.edit') : __('frontend.form.add') }}
                             </button>
-                            <a class="btn btn-outline-secondary" href="{{ route('admin.schedule.index') }}">
+                            <a class="btn btn-outline-secondary float-sm-end" href="{{ route('admin.schedule.index') }}">
                                 <i class="fas fa-arrow-left me-1"></i>
                                 {{ __('frontend.form.back') }}
                             </a>

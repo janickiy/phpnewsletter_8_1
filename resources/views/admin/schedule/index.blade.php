@@ -34,18 +34,6 @@
         margin-bottom: 2rem;
     }
 
-    .schedule-actions .btn {
-        --bs-btn-color: #fff;
-        --bs-btn-bg: #17a2b8;
-        --bs-btn-border-color: #17a2b8;
-        --bs-btn-hover-color: #fff;
-        --bs-btn-hover-bg: #138496;
-        --bs-btn-hover-border-color: #117a8b;
-        --bs-btn-active-color: #fff;
-        --bs-btn-active-bg: #117a8b;
-        --bs-btn-active-border-color: #10707f;
-    }
-
     #calendar {
         --fc-border-color: var(--bs-border-color);
         --fc-today-bg-color: #0f0;
@@ -298,8 +286,8 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <div class="schedule-actions">
-                            <a href="{{ route('admin.schedule.create') }}" class="btn btn-info">
+                        <div class="schedule-actions d-flex justify-content-end">
+                            <a href="{{ route('admin.schedule.create') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus me-1"></i>
                                 {{ __('frontend.str.add_schedule') }}
                             </a>
