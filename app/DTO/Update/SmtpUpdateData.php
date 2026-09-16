@@ -1,0 +1,38 @@
+<?php
+
+namespace App\DTO\Update;
+
+final class SmtpUpdateData
+{
+    /**
+     * Capture the SMTP connection settings that should replace the stored values.
+     */
+    public function __construct(
+        public readonly string $host,
+        public readonly string $username,
+        public readonly string $email,
+        public readonly ?string $password,
+        public readonly int $port,
+        public readonly string $authentication,
+        public readonly string $secure,
+        public readonly int $timeout,
+    ) {
+    }
+
+    /**
+     * Convert the SMTP update data into persistence attributes.
+     */
+    public function toArray(): array
+    {
+        return [
+            'host' => $this->host,
+            'username' => $this->username,
+            'email' => $this->email,
+            'password' => $this->password,
+            'port' => $this->port,
+            'authentication' => $this->authentication,
+            'secure' => $this->secure,
+            'timeout' => $this->timeout,
+        ];
+    }
+}

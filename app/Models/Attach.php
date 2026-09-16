@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Models;
+
+
+use App\Http\Traits\StaticTableName;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
+
+class Attach extends Model
+{
+    use StaticTableName;
+
+    public const DIRECTORY = 'public/attach';
+
+    protected $table = 'attach';
+
+    protected $fillable = [
+        'name',
+        'file_name',
+        'template_id'
+    ];
+
+    protected $attributes = [
+        'name' => 'user',
+    ];
+
+
+    /**
+     * Return the template that owns this attachment.
+     *
+     * @return BelongsTo
+     */
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(Templates::class);
+    }
+
+    /**
+     * Delete the attachment file from storage and remove its database record.
+     *
+     * @return void
+     */
+    public function scopeRemove(): void
+    {
+        if (Storage::exists(Attach::DIRECTORY . '/' . $this->file_name)) {
+            Storage::delete(Attach::DIRECTORY . '/' . $this->file_name);
+        }
+
+        $this->delete();
+    }
+}

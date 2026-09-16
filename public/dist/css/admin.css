@@ -1,0 +1,91 @@
+div.opis {
+    display: none;
+}
+
+a.opislink {
+    margin-top: 12px;
+    display: block;
+}
+
+.showprocess {
+    background: url("../img/select2-spinner.gif") no-repeat scroll 50% 50% rgba(0, 0, 0, 0);
+    height: 16px;
+    width: 16px;
+    padding: 16px;
+}
+
+.navbar-user-link {
+    font-weight: 600;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.main-sidebar .brand-link,
+.sidebar-dark-primary .brand-link {
+    align-items: center;
+    border-bottom: 0;
+    box-sizing: border-box;
+    box-shadow: none;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    min-height: 64px;
+    padding: .8125rem;
+}
+
+.brand-link .brand-icon {
+    flex: 0 0 auto;
+    height: auto;
+    max-height: 56px;
+    max-width: 68px;
+    object-fit: contain;
+    width: auto;
+}
+
+.brand-link .brand-wordmark {
+    display: flex;
+    flex: 0 1 auto;
+    flex-direction: column;
+    line-height: 1;
+    min-width: 0;
+}
+
+.brand-link .brand-wordmark-main {
+    color: #2f8fff;
+    font-size: 1.34rem;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.brand-link .brand-wordmark-main span {
+    color: #f4f7fb;
+    font-weight: 700;
+}
+
+.brand-link .brand-wordmark-sub {
+    color: #69aaff;
+    font-size: 0.78rem;
+    font-style: italic;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
+.sidebar-collapse .brand-link {
+    justify-content: center;
+    padding: .8125rem;
+}
+
+.sidebar-collapse .brand-link .brand-icon {
+    max-height: 34px;
+    max-width: 34px;
+}
+
+.sidebar-collapse .brand-link .brand-wordmark {
+    display: none;
+}
