@@ -40,6 +40,33 @@ class AuthenticationCompatibilityTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_authenticated_users_are_redirected_from_login_to_the_dashboard(): void
+    {
+        $this->actingAs($this->createAdministrator())
+            ->get(route('login'))
+            ->assertRedirect(route('admin.dashboard.index'));
+    }
+
+    public function test_password_whitespace_is_preserved_by_request_normalization(): void
+    {
+        $admin = $this->createAdministrator();
+        $admin->update(['password' => ' secret123 ']);
+
+        $this->post(route('login.submit'), [
+            'login' => $admin->login,
+            'password' => ' secret123 ',
+        ])->assertRedirect(route('admin.dashboard.index'));
+
+        $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_unauthenticated_api_requests_return_json_instead_of_redirecting(): void
+    {
+        $this->getJson('/api/user')
+            ->assertUnauthorized()
+            ->assertJsonPath('message', 'Unauthenticated.');
+    }
+
     public function test_sanctum_personal_access_token_authenticates_the_api(): void
     {
         $admin = $this->createAdministrator();

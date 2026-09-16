@@ -335,15 +335,20 @@ The system stores:
 
 ## Scheduler and Cron
 
-The project uses two console commands:
+The project uses three console commands:
 
 - `php artisan emails:send` - processes scheduled delivery
 - `php artisan emails:unsent` - retries unsent messages
+- `php artisan emails:remove-unconfirmed-subscriber` - removes expired unconfirmed subscriptions when enabled
 
 The Laravel scheduler is currently configured to run:
 
 - `emails:send` every minute
 - `emails:unsent` every ten minutes
+- `emails:remove-unconfirmed-subscriber` every ten minutes
+
+The schedules are defined in `routes/console.php`. Command classes in
+`app/Console/Commands` are discovered automatically by Laravel.
 
 Example direct cron commands shown by the project:
 
@@ -408,11 +413,20 @@ Recommendations:
 ## Project Structure
 
 - `app/` - controllers, models, services, DTOs, middleware, helpers, and console commands
-- `routes/` - web, API, and console routes
+- `bootstrap/app.php` - application setup, routes, middleware, redirects, and exception handling
+- `bootstrap/providers.php` - application service providers; package providers use Composer discovery
+- `app/Http/Middleware/` - application-specific installation, locale, permission, and subscriber middleware
+- `routes/` - web and API routes, console commands, and scheduled tasks
+- `lang/` - interface translations
 - `resources/views/` - admin templates, public subscription pages, and installer screens
 - `database/migrations/` - database schema definitions
 - `storage/` - logs, cache, temporary files, and stored attachments
 - `public/` - public assets and entry point
+
+The application uses the Laravel 13 bootstrap structure. Framework middleware,
+HTTP and console kernels, and the default exception handler are provided by Laravel;
+their standard classes are not duplicated under `app/`. Custom rate limiting and
+helper aliases are registered in `AppServiceProvider`.
 
 ## Summary
 
