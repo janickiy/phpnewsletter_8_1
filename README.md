@@ -41,8 +41,8 @@ It allows you to:
 - UTF-8 email subjects, content and attachment names
 
 All outgoing messages use UTF-8, including manual mailings, test messages,
-scheduled mailings and retries. The former outgoing charset setting is removed
-by a database migration. CSV and TXT subscriber imports accept UTF-8 only,
+scheduled mailings and retries. The former outgoing charset setting is no longer
+used or seeded. CSV and TXT subscriber imports accept UTF-8 only,
 with or without a BOM; no charset selection or conversion is performed.
 
 Manual, scheduled and retry mailings process recipients in subscriber ID order.
@@ -161,6 +161,14 @@ unless you intend to erase this environment's data. Ports can be overridden usin
 update `APP_URL` when changing the application port.
 
 ### Upgrading an existing Docker installation
+
+`database/migrations` contains one creation migration per table, including its
+current columns, indexes and foreign keys. These consolidated migrations create
+the complete schema for new installations. They do not reapply changes to tables
+whose creation migrations have already run: older installations must first have
+nullable `ready_sent.schedule_id` and `log_id` with `ON DELETE SET NULL`, and the
+`subscribers` indexes on `name` and `created_at`. Retired charset/randomization
+settings and the `charsets` table are not part of this baseline.
 
 The application runs on Laravel 13 and PHP 8.4. Keep a backup of the database,
 `.env`, and uploaded files before upgrading. Keep the existing `.env` and database

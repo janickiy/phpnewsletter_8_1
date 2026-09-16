@@ -88,6 +88,30 @@ class ManualMailingLogReportTest extends TestCase
             ->assertDownload();
     }
 
+    public function test_deleting_a_log_preserves_delivery_history(): void
+    {
+        $template = Templates::query()->create([
+            'name' => 'Preserved delivery template',
+            'body' => '<p>Delivery history</p>',
+            'prior' => 0,
+        ]);
+        $subscriber = $this->createSubscriber('preserved@example.test');
+        $log = Logs::query()->create(['time' => now()]);
+        $delivery = $this->createDelivery($log, $template, $subscriber, 1, 1);
+
+        $log->delete();
+
+        $this->assertDatabaseMissing('logs', ['id' => $log->id]);
+        $this->assertDatabaseHas('ready_sent', [
+            'id' => $delivery->id,
+            'email' => $subscriber->email,
+            'success' => 1,
+            'readMail' => 1,
+            'schedule_id' => null,
+            'log_id' => null,
+        ]);
+    }
+
     private function createSubscriber(string $email): Subscribers
     {
         return Subscribers::query()->create([

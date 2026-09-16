@@ -21,6 +21,8 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['active', 'id'], 'idx_subscribers_active_id');
             $table->index('token', 'idx_subscribers_token');
+            $table->index('name', 'idx_subscribers_name');
+            $table->index('created_at', 'idx_subscribers_created_at');
         });
     }
 

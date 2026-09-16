@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -22,15 +23,15 @@ return new class extends Migration {
             $table->text('errorMsg')->nullable();
             $table->tinyInteger('readMail')->nullable();
 
-            $table->unsignedInteger('schedule_id');
-            $table->unsignedInteger('log_id');
+            $table->unsignedInteger('schedule_id')->nullable();
+            $table->unsignedInteger('log_id')->nullable();
 
             $table->timestamps();
 
             $table->foreign('subscriber_id')->references('id')->on('subscribers')->onDelete('cascade');
             $table->foreign('template_id')->references('id')->on('templates')->onDelete('cascade');
-            $table->foreign('schedule_id')->references('id')->on('schedule')->onDelete('cascade');
-            $table->foreign('log_id')->references('id')->on('logs')->onDelete('cascade');
+            $table->foreign('schedule_id')->references('id')->on('schedule')->nullOnDelete();
+            $table->foreign('log_id')->references('id')->on('logs')->nullOnDelete();
         });
     }
 

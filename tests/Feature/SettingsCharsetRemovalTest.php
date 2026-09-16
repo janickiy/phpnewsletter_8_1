@@ -59,23 +59,6 @@ class SettingsCharsetRemovalTest extends TestCase
         $this->assertDatabaseHas('settings', ['name' => 'PRECEDENCE', 'value' => 'bulk']);
     }
 
-    public function test_upgrade_removes_only_the_retired_setting_and_rollback_restores_utf8_default(): void
-    {
-        Settings::query()->create(['name' => 'CHARSET', 'value' => 'windows-1251']);
-        Settings::query()->create(['name' => 'FROM', 'value' => 'Saved sender']);
-
-        $migration = require database_path('migrations/2026_09_16_190000_remove_outgoing_charset_setting.php');
-        $migration->up();
-
-        $this->assertDatabaseMissing('settings', ['name' => 'CHARSET']);
-        $this->assertDatabaseHas('settings', ['name' => 'FROM', 'value' => 'Saved sender']);
-
-        $migration->down();
-
-        $this->assertDatabaseHas('settings', ['name' => 'CHARSET', 'value' => 'utf-8']);
-        $this->assertDatabaseHas('settings', ['name' => 'FROM', 'value' => 'Saved sender']);
-    }
-
     private function administrator(): User
     {
         return User::query()->create([

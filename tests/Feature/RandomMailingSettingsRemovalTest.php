@@ -75,35 +75,6 @@ class RandomMailingSettingsRemovalTest extends TestCase
         $this->assertDatabaseHas('settings', ['name' => 'PRECEDENCE', 'value' => 'bulk']);
     }
 
-    public function test_upgrade_only_removes_retired_settings_and_rollback_preserves_existing_values(): void
-    {
-        foreach (self::RETIRED_SETTINGS as $name) {
-            Settings::query()->create(['name' => $name, 'value' => '1']);
-        }
-        Settings::query()->create(['name' => 'FROM', 'value' => 'Saved sender']);
-
-        $migration = require database_path('migrations/2026_09_16_200000_remove_random_mailing_settings.php');
-        $migration->up();
-
-        foreach (self::RETIRED_SETTINGS as $name) {
-            $this->assertDatabaseMissing('settings', ['name' => $name]);
-        }
-        $this->assertDatabaseHas('settings', ['name' => 'FROM', 'value' => 'Saved sender']);
-
-        $migration->down();
-
-        foreach (self::RETIRED_SETTINGS as $name) {
-            $this->assertDatabaseHas('settings', ['name' => $name, 'value' => '0']);
-        }
-
-        Settings::query()->where('name', 'RANDOM_SEND')->update(['value' => '1']);
-        $migration->down();
-
-        $this->assertDatabaseHas('settings', ['name' => 'RANDOM_SEND', 'value' => '1']);
-        $this->assertDatabaseHas('settings', ['name' => 'FROM', 'value' => 'Saved sender']);
-        $this->assertSame(3, Settings::query()->whereIn('name', self::RETIRED_SETTINGS)->count());
-    }
-
     private function administrator(): User
     {
         return User::query()->create([
