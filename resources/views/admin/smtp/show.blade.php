@@ -80,12 +80,12 @@
                         </table>
                     </div>
 
-                    <div class="card-footer d-flex flex-wrap justify-content-between gap-2">
+                    <div class="card-footer">
                         <a class="btn btn-primary" href="{{ route('admin.smtp.edit', ['id' => $row->id]) }}">
                             <i class="fa-solid fa-pen-to-square me-1"></i>
                             {{ __('frontend.str.edit') }}
                         </a>
-                        <a class="btn btn-secondary" href="{{ route('admin.smtp.index') }}">
+                        <a class="btn btn-outline-secondary float-sm-end" href="{{ route('admin.smtp.index') }}">
                             <i class="fa-solid fa-arrow-left me-1"></i>
                             {{ __('frontend.form.back') }}
                         </a>

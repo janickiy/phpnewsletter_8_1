@@ -160,7 +160,7 @@
                         </div>
                     </div>
 
-                    <div class="card card-outline card-info">
+                    <div class="card card-outline card-info mt-4">
                         <div class="card-header">
                             <h3 class="card-title">{{ __('frontend.str.send_test_letter') }}<span id="process"></span></h3>
                         </div>

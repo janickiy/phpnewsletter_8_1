@@ -84,11 +84,11 @@
                     </div>
                     <!-- /.card-body -->
 
-                    <div class="card-footer d-flex flex-wrap justify-content-between gap-2">
+                    <div class="card-footer">
                         <button type="submit" class="btn btn-primary">
                             {{ __('frontend.form.send') }}
                         </button>
-                        <a class="btn btn-secondary" href="{{ route('admin.subscribers.index') }}">
+                        <a class="btn btn-outline-secondary float-sm-end" href="{{ route('admin.subscribers.index') }}">
                             <i class="fa-solid fa-arrow-left me-1"></i>
                             {{ __('frontend.form.back') }}
                         </a>

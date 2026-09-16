@@ -8,22 +8,70 @@
 
 <style>
 
-    #calendar {
-        --fc-border-color: var(--bs-border-color);
-        --fc-today-bg-color: rgba(var(--bs-primary-rgb), 0.08);
-        --fc-button-bg-color: var(--bs-primary);
-        --fc-button-border-color: var(--bs-primary);
-        --fc-button-hover-bg-color: #0b5ed7;
-        --fc-button-hover-border-color: #0a58ca;
-        --fc-button-active-bg-color: #0a58ca;
-        --fc-button-active-border-color: #0a53be;
+    .app-content-header h1 {
+        font-size: 1.8rem;
+        font-weight: 400;
     }
 
-    #calendar a,
-    #calendar a:hover,
-    #calendar a:focus,
-    #calendar a:active {
-        color: var(--bs-body-color) !important;
+    .app-content-header .callout-info {
+        background-color: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        border-left: 5px solid #117a8b;
+        border-radius: .25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+        color: var(--bs-body-color);
+    }
+
+    .schedule-page {
+        container-type: inline-size;
+    }
+
+    .schedule-page .card-body {
+        padding: 1.25rem;
+    }
+
+    .schedule-actions {
+        margin-bottom: 2rem;
+    }
+
+    .schedule-actions .btn {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: #17a2b8;
+        --bs-btn-border-color: #17a2b8;
+        --bs-btn-hover-color: #fff;
+        --bs-btn-hover-bg: #138496;
+        --bs-btn-hover-border-color: #117a8b;
+        --bs-btn-active-color: #fff;
+        --bs-btn-active-bg: #117a8b;
+        --bs-btn-active-border-color: #10707f;
+    }
+
+    #calendar {
+        --fc-border-color: var(--bs-border-color);
+        --fc-today-bg-color: #0f0;
+        --fc-button-bg-color: #2c3e50;
+        --fc-button-border-color: #2c3e50;
+        --fc-button-hover-bg-color: #1e2b37;
+        --fc-button-hover-border-color: #1a252f;
+        --fc-button-active-bg-color: #1a252f;
+        --fc-button-active-border-color: #151e27;
+    }
+
+    #calendar .fc-header-toolbar {
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+        padding: 0 1rem;
+    }
+
+    #calendar a {
+        text-decoration: none;
+    }
+
+    #calendar .fc-col-header-cell-cushion,
+    #calendar .fc-daygrid-day-number,
+    #calendar .fc-list-day-text,
+    #calendar .fc-list-day-side-text {
+        color: #00008b;
     }
 
     #calendar .fc-event-main,
@@ -110,13 +158,6 @@
     #calendar .calendar-list-event-actions .btn-outline-primary:hover,
     #calendar .calendar-list-event-actions .btn-outline-danger:hover {
         color: #fff !important;
-    }
-
-    .fc-day-today a,
-    .fc-day-today a:hover,
-    .fc-day-today a:focus,
-    .fc-day-today a:active {
-        color: var(--bs-body-color) !important;
     }
 
     #calendar .fc-daygrid-event,
@@ -207,11 +248,30 @@
         }
     }
 
-    @media (max-width: 767.98px) {
+    @container (max-width: 52rem) {
+        #calendar .fc-toolbar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            padding: 0;
+        }
+
+        #calendar .fc-toolbar-chunk:nth-child(2) {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            text-align: center;
+        }
+    }
+
+    @container (max-width: 36rem) {
         #calendar .fc-toolbar {
             align-items: flex-start;
+            display: flex;
             flex-direction: column;
             gap: .75rem;
+        }
+
+        #calendar .fc-toolbar-chunk:nth-child(2) {
+            order: -1;
         }
 
         #calendar .fc-toolbar-title {
@@ -219,7 +279,12 @@
         }
 
         #calendar .fc-button {
+            font-size: .875rem;
             padding: .3rem .45rem;
+        }
+
+        #calendar .fc-view-harness {
+            min-height: 20rem;
         }
     }
 </style>
@@ -231,22 +296,14 @@
     <div class="container-fluid schedule-page">
         <div class="row">
             <div class="col-12">
-                <div class="card card-outline card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-calendar-alt me-1"></i>
-                            {{ __('frontend.menu.schedule') }}
-                        </h3>
-
-                        <div class="card-tools">
-                            <a href="{{ route('admin.schedule.create') }}" class="btn btn-primary btn-sm">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="schedule-actions">
+                            <a href="{{ route('admin.schedule.create') }}" class="btn btn-info">
                                 <i class="fas fa-plus me-1"></i>
                                 {{ __('frontend.str.add_schedule') }}
                             </a>
                         </div>
-                    </div>
-
-                    <div class="card-body">
                         <div id='calendar'></div>
                     </div>
                 </div>
