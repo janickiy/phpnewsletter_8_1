@@ -16,59 +16,59 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <!-- general form elements -->
+                <div class="card card-outline card-primary">
 
-                    <!-- general form elements -->
-                    <header class="card card-primary">
+                    <!-- form start -->
+                    <form method="POST" action="{{ isset($row) ? route('admin.category.update') : route('admin.category.store') }}" accept-charset="UTF-8">
+                        @csrf
+                        @if(isset($row))
+                            @method('PUT')
+                        @endif
 
-                        <!-- form start -->
-                        {!! Form::open(['url' => isset($row) ? route('admin.category.update') : route('admin.category.store'), 'method' => isset($row) ? 'put' : 'post']) !!}
+                    @if(isset($row))
+                        <input type="hidden" name="id" value="{{ $row->id }}">
+                    @endif
 
-                        {!! isset($row) ? Form::hidden('id', $row->id) : '' !!}
+                    <div class="card-body">
 
-                        <div class="card-body">
+                        <p>*-{{ __('frontend.form.required_fields') }}</p>
 
-                            <p>*-{{ __('frontend.form.required_fields') }}</p>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">{{ __('frontend.form.name') }}*</label>
 
-                            <div class="form-group">
-                                {!! Form::label('name', __('frontend.form.name') . '*') !!}
+                            <input type="text" name="name" id="name" value="{{ old('name', $row->name ?? null) }}" class="form-control" placeholder="{{ __('frontend.form.name') }}">
 
-                                {!! Form::text('name', old('name', $row->name ?? null), ['class' => 'form-control', 'placeholder' => __('frontend.form.name')]) !!}
-
-                                @if ($errors->has('name'))
-                                    <p class="text-danger">{{ $errors->first('name') }}</p>
-                                @endif
-                            </div>
-
-                        </div>
-                        <!-- /.card-body -->
-
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">
-                                {{ isset($row) ? __('frontend.form.edit') : __('frontend.form.add') }}
-                            </button>
-                            <a class="btn btn-default float-sm-right" href="{{ route('admin.category.index') }}">
-                                <i class="fas fa-arrow-left mr-1"></i>
-                                {{ __('frontend.form.back') }}
-                            </a>
+                            @if ($errors->has('name'))
+                                <p class="text-danger">{{ $errors->first('name') }}</p>
+                            @endif
                         </div>
 
-                    {!! Form::close() !!}
+                    </div>
+                    <!-- /.card-body -->
 
-                    </header>
+                    <div class="card-footer d-flex flex-wrap justify-content-between gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            {{ isset($row) ? __('frontend.form.edit') : __('frontend.form.add') }}
+                        </button>
+                        <a class="btn btn-secondary" href="{{ route('admin.category.index') }}">
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            {{ __('frontend.form.back') }}
+                        </a>
+                    </div>
+
+                </form>
 
                 </div>
-                <!-- /.card -->
-            </div>
-        </div>
 
-    </section>
-    <!-- /.content -->
+            </div>
+            <!-- /.card -->
+        </div>
+    </div>
 
 @endsection
 

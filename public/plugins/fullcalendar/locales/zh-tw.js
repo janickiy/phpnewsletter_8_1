@@ -1,23 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var zhTw = {
-    code: "zh-tw",
-    buttonText: {
-      prev: "\u4E0A\u6708",
-      next: "\u4E0B\u6708",
-      today: "\u4ECA\u5929",
-      month: "\u6708",
-      week: "\u9031",
-      day: "\u5929",
-      list: "\u6D3B\u52D5\u5217\u8868"
-    },
-    weekText: "\u5468",
-    allDayText: "\u6574\u5929",
-    moreLinkText: "\u986F\u793A\u66F4\u591A",
-    noEventsText: "\u6CA1\u6709\u4EFB\u4F55\u6D3B\u52D5"
-  };
-
-  return zhTw;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"zh-tw",buttonText:{prev:"上個",next:"下個",today:"今天",year:"年",month:"月",week:"週",day:"天",list:"活動列表"},weekText:"週",allDayText:"整天",moreLinkText:"顯示更多",noEventsText:"沒有任何活動"})}();

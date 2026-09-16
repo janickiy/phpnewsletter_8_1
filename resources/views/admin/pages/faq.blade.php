@@ -9,32 +9,26 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <div class="card">
+                    <!-- /.card-header -->
+                    <div class="card-body">
 
-                    <div class="card">
-                        <!-- /.card-header -->
-                        <div class="card-body">
+                        {!! __('faq.str') !!}
 
-                            {!! __('faq.str') !!}
-
-                        </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
+                    <!-- /.card-body -->
                 </div>
-                <!-- /.col -->
+                <!-- /.card -->
             </div>
-            <!-- /.row -->
+            <!-- /.col -->
         </div>
-        <!-- /.container-fluid -->
-
-    </section>
-    <!-- /.content -->
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 

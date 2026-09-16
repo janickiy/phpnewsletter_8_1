@@ -9,9 +9,22 @@
     <li class="breadcrumb-item active">{{ $title }}</li>
 @endsection
 
+@section('css')
+    <style>
+        .template-preview-body {
+            overflow-x: auto;
+        }
+
+        .template-preview-body img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+@endsection
+
 @section('content')
 
-    <section class="content">
+    <section class="template-preview-page">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
@@ -19,38 +32,38 @@
 
 
                         <div class="card-body p-0">
-                            <div class="mailbox-read-info">
+                            <div class="border-bottom p-3">
                                 <h5>{{ $template->name }}</h5>
                                 <h6 class="mt-2 mb-0">
                                     {{ __('frontend.str.importance') }}: {{ $template->getPrior() }}
-                                    <span class="mailbox-read-time float-right">
+                                    <span class="text-body-secondary float-sm-end">
                                         {{ optional($template->created_at)->format('Y-m-d H:i:s') }}
                                     </span>
                                 </h6>
                             </div>
 
-                            <div class="mailbox-read-message clearfix">
+                            <div class="p-3 template-preview-body">
                                 {!! $template->body !!}
                             </div>
                         </div>
 
                         @if($template->attach->isNotEmpty())
-                            <div class="card-footer bg-white">
+                            <div class="card-footer">
                                 <p class="mb-2">
-                                    <i class="fas fa-paperclip mr-1"></i>
+                                    <i class="fas fa-paperclip me-1"></i>
                                     {{ __('frontend.str.attachments') }}
                                 </p>
 
-                                <ul class="mailbox-attachments clearfix">
+                                <ul class="list-unstyled row g-2 mb-0">
                                     @foreach($template->attach as $attach)
-                                        <li>
-                                            <span class="mailbox-attachment-icon">
+                                        <li class="col-12 col-md-6 col-xl-4">
+                                            <span class="d-inline-flex align-items-center justify-content-center bg-body-tertiary border rounded p-3">
                                                 <i class="far fa-file"></i>
                                             </span>
-                                            <div class="mailbox-attachment-info">
-                                                <span class="mailbox-attachment-name text-truncate"
+                                            <div class="d-inline-block align-middle mw-100">
+                                                <span class="d-block text-truncate"
                                                       title="{{ $attach->file_name }}">
-                                                    <i class="fas fa-paperclip mr-1"></i>{{ $attach->file_name }}
+                                                    <i class="fas fa-paperclip me-1"></i>{{ $attach->file_name }}
                                                 </span>
                                             </div>
                                         </li>
@@ -61,11 +74,11 @@
 
                         <div class="card-footer">
                             <a class="btn btn-primary" href="{{ route('admin.templates.edit', ['id' => $template->id]) }}">
-                                <i class="fas fa-edit mr-1"></i>
+                                <i class="fas fa-edit me-1"></i>
                                 {{ __('frontend.str.edit') }}
                             </a>
-                            <a class="btn btn-default bg-white float-right" href="{{ route('admin.templates.index') }}">
-                                <i class="fas fa-arrow-left mr-1"></i>
+                            <a class="btn btn-outline-secondary float-sm-end" href="{{ route('admin.templates.index') }}">
+                                <i class="fas fa-arrow-left me-1"></i>
                                 {{ __('frontend.form.back') }}
                             </a>
                         </div>

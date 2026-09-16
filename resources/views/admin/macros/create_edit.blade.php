@@ -16,82 +16,87 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <!-- general form elements -->
+                <div class="card card-outline card-primary">
 
-                    <!-- general form elements -->
-                    <header class="card card-primary">
+                    <!-- form start -->
+                    <form method="POST" action="{{ isset($row) ? route('admin.macros.update') : route('admin.macros.store') }}" accept-charset="UTF-8">
+                        @csrf
+                        @if(isset($row))
+                            @method('PUT')
+                        @endif
 
-                        <!-- form start -->
-                        {!! Form::open(['url' => isset($row) ? route('admin.macros.update') : route('admin.macros.store'), 'method' => isset($row) ? 'put' : 'post']) !!}
+                    @if(isset($row))
+                        <input type="hidden" name="id" value="{{ $row->id }}">
+                    @endif
 
-                        {!! isset($row) ? Form::hidden('id', $row->id) : '' !!}
+                    <div class="card-body">
 
-                        <div class="card-body">
+                        <p>*-{{ __('frontend.form.required_fields') }}</p>
 
-                            <p>*-{{ __('frontend.form.required_fields') }}</p>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">{{ __('frontend.form.macros_name') }}*</label>
 
-                            <div class="form-group">
-                                {!! Form::label('name', __('frontend.form.macros_name') . '*') !!}
+                            <input type="text" name="name" id="name" value="{{ old('name', $row->name ?? null) }}" class="form-control" placeholder="{{ __('frontend.form.name') }}">
 
-                                {!! Form::text('name', old('name', $row->name ?? null), ['class' => 'form-control', 'placeholder' => __('frontend.form.name')]) !!}
-
-                                @if ($errors->has('name'))
-                                    <p class="text-danger">{{ $errors->first('name') }}</p>
-                                @endif
-                            </div>
-
-                            <div class="form-group">
-
-                                {!! Form::label('value', __('frontend.form.value') . '*') !!}
-
-                                {!! Form::textarea('value', old('value', $row->value ?? null), [ 'placeholder' => __('frontend.form.value'), 'rows' => 3, 'class' => 'form-control']) !!}
-
-                                @if ($errors->has('value'))
-                                    <p class="text-danger">{{ $errors->first('value') }}</p>
-                                @endif
-
-                            </div>
-
-                            <div class="form-group">
-
-                                {!! Form::label('type', __('frontend.form.macros_type') . '*') !!}
-
-                                {!! Form::select('type', $options, $row->type ?? null, ['placeholder' => __('frontend.form.macros_type'), 'class' => 'custom-select']) !!}
-
-                                @if ($errors->has('type'))
-                                    <p class="text-danger">{{ $errors->first('type') }}</p>
-                                @endif
-                            </div>
-
-                        </div>
-                        <!-- /.card-body -->
-
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">
-                                {{ isset($row) ? __('frontend.form.edit') : __('frontend.form.add') }}
-                            </button>
-                            <a class="btn btn-default float-sm-right" href="{{ route('admin.macros.index') }}">
-                                <i class="fas fa-arrow-left mr-1"></i>
-                                {{ __('frontend.form.back') }}
-                            </a>
+                            @if ($errors->has('name'))
+                                <p class="text-danger">{{ $errors->first('name') }}</p>
+                            @endif
                         </div>
 
-                        {!! Form::close() !!}
+                        <div class="mb-3">
 
-                    </header>
+                            <label for="value" class="form-label">{{ __('frontend.form.value') }}*</label>
+
+                            <textarea name="value" id="value" placeholder="{{ __('frontend.form.value') }}" rows="3" cols="50" class="form-control">{{ old('value', $row->value ?? null) }}</textarea>
+
+                            @if ($errors->has('value'))
+                                <p class="text-danger">{{ $errors->first('value') }}</p>
+                            @endif
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label for="type" class="form-label">{{ __('frontend.form.macros_type') }}*</label>
+
+                            <select name="type" id="type" class="form-select">
+                                <option value="" @selected((string) old('type', $row->type ?? '') === '')>{{ __('frontend.form.macros_type') }}</option>
+                                @foreach($options as $value => $label)
+                                    <option value="{{ $value }}" @selected((string) old('type', $row->type ?? '') === (string) $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+
+                            @if ($errors->has('type'))
+                                <p class="text-danger">{{ $errors->first('type') }}</p>
+                            @endif
+                        </div>
+
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer d-flex flex-wrap justify-content-between gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            {{ isset($row) ? __('frontend.form.edit') : __('frontend.form.add') }}
+                        </button>
+                        <a class="btn btn-secondary" href="{{ route('admin.macros.index') }}">
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            {{ __('frontend.form.back') }}
+                        </a>
+                    </div>
+
+                    </form>
 
                 </div>
-                <!-- /.card -->
-            </div>
-        </div>
 
-    </section>
-    <!-- /.content -->
+            </div>
+            <!-- /.card -->
+        </div>
+    </div>
 
 @endsection
 

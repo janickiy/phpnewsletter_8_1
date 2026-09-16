@@ -10,20 +10,20 @@
 
     <!-- Bootstrap Core CSS -->
 
-    {!! Html::style('/css/bootstrap.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('/css/bootstrap.min.css') }}">
 
-    {!! Html::style('/css/style.css') !!}
+    <link rel="stylesheet" href="{{ asset('/css/style.css') }}">
 
-    {!! Html::style('/css/vendor.css') !!}
+    <link rel="stylesheet" href="{{ asset('/css/vendor.css') }}">
 
-    {!! HTML::style('/css/install.css') !!}
+    <link rel="stylesheet" href="{{ asset('/css/install.css') }}">
 
-    {!! Html::style('/plugins/bootstrap-select/css/bootstrap-select.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('/plugins/bootstrap-select/css/bootstrap-select.min.css') }}">
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
 
-    {!! Html::style('/plugins/fontawesome-free/css/all.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('/plugins/fontawesome-free/css/all.min.css') }}">
 
     @yield('css')
 
@@ -59,12 +59,12 @@
 </div>
 
 <!-- jQuery -->
-{!! Html::script('/plugins/jquery/jquery.min.js') !!}
+<script src="{{ asset('/plugins/jquery/jquery.min.js') }}"></script>
 
 <!-- Bootstrap 4 -->
-{!! Html::script('/plugins/bootstrap/js/bootstrap.bundle.min.js') !!}
+<script src="{{ asset('/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
-{!! Html::script('/plugins/bootstrap-select/js/bootstrap-select.min.js') !!}
+<script src="{{ asset('/plugins/bootstrap-select/js/bootstrap-select.min.js') }}"></script>
 
 @yield('js')
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Subscribers;
 
+use App\Rules\Utf8TextFile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 
@@ -27,6 +28,7 @@ class ImportRequest extends FormRequest
     {
         return [
             'import' => [
+                'bail',
                 'required',
                 'file',
                 'max:' . self::MAX_IMPORT_FILE_SIZE_KB,
@@ -44,6 +46,7 @@ class ImportRequest extends FormRequest
                         ]));
                     }
                 },
+                new Utf8TextFile,
             ],
         ];
     }

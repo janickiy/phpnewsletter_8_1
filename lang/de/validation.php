@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'utf8_file' => 'Die Datei :attribute muss UTF-8-kodiert sein.',
 
     /*
     |--------------------------------------------------------------------------

@@ -1,29 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var sq = {
-    code: "sq",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "mbrapa",
-      next: "P\xEBrpara",
-      today: "sot",
-      month: "Muaj",
-      week: "Jav\xEB",
-      day: "Dit\xEB",
-      list: "List\xEB"
-    },
-    weekText: "Ja",
-    allDayText: "Gjith\xEB dit\xEBn",
-    moreLinkText: function(n) {
-      return "+m\xEB tep\xEBr " + n;
-    },
-    noEventsText: "Nuk ka evente p\xEBr t\xEB shfaqur"
-  };
-
-  return sq;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";var t={code:"sq",week:{dow:1,doy:4},buttonText:{prev:"mbrapa",next:"Përpara",today:"Sot",year:"Viti",month:"Muaj",week:"Javë",day:"Ditë",list:"Listë"},weekText:"Ja",allDayText:"Gjithë ditën",moreLinkText:e=>"+më tepër "+e,noEventsText:"Nuk ka evente për të shfaqur"};FullCalendar.globalLocales.push(t)}();

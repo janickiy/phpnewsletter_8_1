@@ -9,8 +9,6 @@ class SettingsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
     public function run(): void
     {
@@ -62,11 +60,7 @@ class SettingsSeeder extends Seeder
             ['name' => 'LIMIT_SEND', 'value' => '0'],
             ['name' => 'DAYS_FOR_REMOVE_SUBSCRIBER', 'value' => '7'],
             ['name' => 'REMOVE_SUBSCRIBER', 'value' => '0'],
-            ['name' => 'RANDOM_SEND', 'value' => '0'],
-            ['name' => 'RENDOM_REPLACEMENT_SUBJECT', 'value' => '0'],
-            ['name' => 'RANDOM_REPLACEMENT_BODY', 'value' => '0'],
             ['name' => 'PRECEDENCE', 'value' => 'bulk'],
-            ['name' => 'CHARSET', 'value' => 'utf-8'],
             ['name' => 'CONTENT_TYPE', 'value' => 'html'],
             ['name' => 'HOW_TO_SEND', 'value' => 'php'],
             ['name' => 'SENDMAIL_PATH', 'value' => '/usr/sbin/sendmail'],
@@ -134,8 +128,6 @@ class SettingsSeeder extends Seeder
 
     /**
      * Resolve the locale used for installer seed data.
-     *
-     * @return string
      */
     private function locale(): string
     {

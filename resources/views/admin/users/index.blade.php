@@ -5,74 +5,67 @@
 @section('css')
 
     <!-- DataTables -->
-    {!! Html::style('/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-bs5/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-responsive-bs5/css/responsive.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-buttons-bs5/css/buttons.bootstrap5.min.css') }}">
 
 @endsection
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-
-                    <div class="card">
-                        <!-- /.card-header -->
-                        <div class="card-body">
-                            <div class="pb-3">
-                                <a href="{{ route('admin.users.create') }}" class="btn btn-info btn-sm pull-left">
-                                    <span class="fa fa-plus"> &nbsp;</span> {{ __('frontend.str.add_user') }}
-                                </a>
-                            </div>
-                            <table id="itemList" class="table table-bordered table-striped">
-                                <thead>
-                                <tr>
-                                    <th>{{ __('frontend.str.login') }}</th>
-                                    <th>{{ __('frontend.str.name') }}</th>
-                                    <th>{{ __('frontend.str.description') }}</th>
-                                    <th>{{ __('frontend.str.role') }}</th>
-                                    <th>{{ __('frontend.str.added') }}</th>
-                                    <th style="width: 10%">{{ __('frontend.str.action') }}</th>
-                                </tr>
-                                </thead>
-                                <tfoot>
-
-                                </tfoot>
-                            </table>
+                <div class="card card-outline card-primary">
+                    <div class="card-header d-flex flex-wrap align-items-center gap-2">
+                        <h3 class="card-title">{{ $title }}</h3>
+                        <div class="card-tools ms-auto">
+                            <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+                                <span class="fas fa-plus me-1"></span> {{ __('frontend.str.add_user') }}
+                            </a>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
+                    <div class="card-body">
+                        <table id="itemList" class="table table-striped table-hover align-middle w-100">
+                            <thead>
+                            <tr>
+                                <th>{{ __('frontend.str.login') }}</th>
+                                <th>{{ __('frontend.str.name') }}</th>
+                                <th>{{ __('frontend.str.description') }}</th>
+                                <th>{{ __('frontend.str.role') }}</th>
+                                <th>{{ __('frontend.str.added') }}</th>
+                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
                 </div>
-                <!-- /.col -->
+                <!-- /.card -->
             </div>
-            <!-- /.row -->
+            <!-- /.col -->
         </div>
-        <!-- /.container-fluid -->
-
-    </section>
-    <!-- /.content -->
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 
 @section('js')
 
     <!-- DataTables  & Plugins -->
-    {!! Html::script('/plugins/datatables/jquery.dataTables.min.js') !!}
-    {!! Html::script('/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/dataTables.responsive.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/dataTables.buttons.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/pdfmake.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/vfs_fonts.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.html5.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.print.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.colVis.min.js') !!}
+    <script src="{{ asset('vendor/datatables/js/dataTables.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive-bs5/js/responsive.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons-bs5/js/buttons.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/pdfmake.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/vfs_fonts.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.print.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
 
     <script>
         $(function (){
@@ -97,11 +90,12 @@
                 },
                 "processing": true,
                 "responsive": true,
-                "autoWidth": true,
+                "autoWidth": false,
                 'serverSide': true,
                 'ajax': {
                     url: '{{ route('admin.datatable.users') }}'
                 },
+                columnDefs: [{targets: -1, className: 'text-end'}],
                 'columns': [
                     {data: 'login', name: 'login'},
                     {data: 'name', name: 'name'},
@@ -112,7 +106,7 @@
                 ]
             });
 
-            $('#itemList').on('click', 'a.deleteRow', function () {
+            $('#itemList').on('click', '.deleteRow', function () {
                 let rowid = $(this).attr('id');
                 Swal.fire({
                     title: "{{ __('frontend.msg.are_you_sure') }}",
@@ -136,7 +130,7 @@
                             data: {_method: 'DELETE'},
                             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                             success: function () {
-                                $("#rowid_" + rowid).remove();
+                                $('#itemList').DataTable().ajax.reload(null, false);
                                 Swal.fire("{{ __('frontend.msg.done') }}", "{{ __('frontend.msg.data_successfully_deleted') }}", 'success');
                             },
                             error: function (xhr, ajaxOptions, thrownError) {

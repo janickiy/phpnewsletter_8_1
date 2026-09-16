@@ -1,27 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var is = {
-    code: "is",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "Fyrri",
-      next: "N\xE6sti",
-      today: "\xCD dag",
-      month: "M\xE1nu\xF0ur",
-      week: "Vika",
-      day: "Dagur",
-      list: "Dagskr\xE1"
-    },
-    weekText: "Vika",
-    allDayText: "Allan daginn",
-    moreLinkText: "meira",
-    noEventsText: "Engir vi\xF0bur\xF0ir til a\xF0 s\xFDna"
-  };
-
-  return is;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"is",week:{dow:1,doy:4},buttonText:{prev:"Fyrri",next:"Næsti",today:"Í dag",year:"Ár",month:"Mánuður",week:"Vika",day:"Dagur",list:"Dagskrá"},weekText:"Vika",allDayText:"Allan daginn",moreLinkText:"meira",noEventsText:"Engir viðburðir til að sýna"})}();

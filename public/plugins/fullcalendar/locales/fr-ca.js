@@ -1,24 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var frCa = {
-    code: "fr",
-    buttonText: {
-      prev: "Pr\xE9c\xE9dent",
-      next: "Suivant",
-      today: "Aujourd'hui",
-      year: "Ann\xE9e",
-      month: "Mois",
-      week: "Semaine",
-      day: "Jour",
-      list: "Mon planning"
-    },
-    weekText: "Sem.",
-    allDayText: "Toute la journ\xE9e",
-    moreLinkText: "en plus",
-    noEventsText: "Aucun \xE9v\xE9nement \xE0 afficher"
-  };
-
-  return frCa;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"fr",buttonText:{prev:"Précédent",next:"Suivant",today:"Aujourd'hui",year:"Année",month:"Mois",week:"Semaine",day:"Jour",list:"Mon planning"},weekText:"Sem.",allDayText:"Toute la journée",moreLinkText:"en plus",noEventsText:"Aucun évènement à afficher"})}();

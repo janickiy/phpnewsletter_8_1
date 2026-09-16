@@ -16,108 +16,77 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <!-- general form elements -->
+                <div class="card card-outline card-primary">
 
-                    <!-- general form elements -->
-                    <header class="card card-primary">
+                    <!-- form start -->
+                    <form action="{{ route('admin.subscribers.import_subscribers') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
 
-                        <!-- form start -->
-                        {!! Form::open(['url' => route('admin.subscribers.import_subscribers'), 'files' => true, 'method' => 'post']) !!}
+                    <div class="card-body">
 
-                        <div class="card-body">
+                        <p>*-{{ __('frontend.form.required_fields') }}</p>
 
-                            <p>*-{{ __('frontend.form.required_fields') }}</p>
+                        <div class="mb-3">
 
-                            <div class="form-group">
+                            <label for="import" class="form-label">{{ __('frontend.form.attach_files') }}*</label>
 
-                                {!! Form::label('import', __('frontend.form.attach_files') . '*') !!}
+                            <input type="file" name="import" id="import" class="form-control" accept=".csv,.xlsx,.xls,.ods,.txt">
 
-                                <div class="input-group">
-                                    <div class="custom-file">
+                            @if ($errors->has('import'))
+                                <p class="text-danger">{{ $errors->first('import') }}</p>
+                            @endif
 
-                                        {!! Form::file('import',  ['id' => 'import', 'class' => "custom-file-input", 'accept' => '.csv,.xlsx,.xls,.ods,.txt']) !!}
-
-                                        {!! Form::label('import', __('frontend.form.browse'),  ['class' => "custom-file-label"]) !!}
-
-                                    </div>
-                                </div>
-
-                                @if ($errors->has('import'))
-                                    <p class="text-danger">{{ $errors->first('import') }}</p>
-                                @endif
-
-                                <blockquote class="quote-secondary">
-                                    <small>{{ __('frontend.form.maximum_size') }}: <cite
-                                            title="Source Title">{{ $maxUploadFileSize }}</cite></small>
-                                </blockquote>
-
-                            </div>
-
-                            <div class="form-group">
-
-                                {!! Form::label('categoryId[]', __('frontend.form.charset')) !!}
-
-                                {!! Form::select('charset', $charsets, null, ['placeholder' => '--' . __('frontend.form.select') . '--', 'class' => 'form-control']) !!}
-
-                                @if ($errors->has('charset'))
-                                    <p class="text-danger">{{ $errors->first('charset') }}</p>
-                                @endif
-
-                            </div>
-
-                            <div class="form-group">
-
-                                {!! Form::label('categoryId[]', __('frontend.form.subscribers_category')) !!}
-
-                                {!! Form::select('categoryId[]', $category_options, null, ['multiple' => 'multiple', 'placeholder' => __('frontend.form.select_category'), 'class' => 'form-control']) !!}
-
-                                @if ($errors->has('categoryId'))
-                                    <p class="text-danger">{{ $errors->first('categoryId') }}</p>
-                                @endif
-
+                            <div class="form-text">
+                                <small>{{ __('frontend.form.maximum_size') }}: <cite
+                                        title="Source Title">{{ $maxUploadFileSize }}</cite></small>
                             </div>
 
                         </div>
-                        <!-- /.card-body -->
 
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">
-                                {{ __('frontend.form.send') }}
-                            </button>
-                            <a class="btn btn-default float-sm-right" href="{{ route('admin.subscribers.index') }}">
-                                <i class="fas fa-arrow-left mr-1"></i>
-                                {{ __('frontend.form.back') }}
-                            </a>
+                        <div class="mb-3">
+
+                            <label for="categoryId" class="form-label">{{ __('frontend.form.subscribers_category') }}</label>
+
+                            @php
+                                $selectedCategoryIds = array_map('strval', (array) old('categoryId', []));
+                            @endphp
+                            <select name="categoryId[]" id="categoryId" multiple class="form-select">
+                                <option value="">{{ __('frontend.form.select_category') }}</option>
+                                @foreach($category_options as $categoryValue => $categoryLabel)
+                                    <option value="{{ $categoryValue }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>{{ $categoryLabel }}</option>
+                                @endforeach
+                            </select>
+
+                            @if ($errors->has('categoryId'))
+                                <p class="text-danger">{{ $errors->first('categoryId') }}</p>
+                            @endif
+
                         </div>
 
-                        {!! Form::close() !!}
+                    </div>
+                    <!-- /.card-body -->
 
-                    </header>
+                    <div class="card-footer d-flex flex-wrap justify-content-between gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            {{ __('frontend.form.send') }}
+                        </button>
+                        <a class="btn btn-secondary" href="{{ route('admin.subscribers.index') }}">
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            {{ __('frontend.form.back') }}
+                        </a>
+                    </div>
+
+                    </form>
+
                 </div>
-                <!-- /.card -->
             </div>
+            <!-- /.card -->
         </div>
-
-    </section>
-    <!-- /.content -->
-
-@endsection
-
-@section('js')
-
-    {!! Html::script('/plugins/bs-custom-file-input/bs-custom-file-input.min.js') !!}
-
-    <script>
-
-        $(function () {
-            bsCustomFileInput.init();
-        });
-
-    </script>
+    </div>
 
 @endsection

@@ -136,7 +136,7 @@ class SendMailService
         $mailCount = 0;
         $attemptCount = 0;
 
-        $order = (int)SettingsHelper::getInstance()->getValueForKey('RANDOM_SEND') === 1 ? 'RAND()' : 'subscribers.id';
+        $order = 'subscribers.id';
         $limit = (int)SettingsHelper::getInstance()->getValueForKey('LIMIT_SEND') === 1 ? (int)SettingsHelper::getInstance()->getValueForKey('LIMIT_NUMBER') : null;
 
         switch (SettingsHelper::getInstance()->getValueForKey('INTERVAL_TYPE')) {

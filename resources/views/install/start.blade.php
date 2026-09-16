@@ -10,7 +10,7 @@
         <fieldset>
             <div class="form-group">
 
-                {!! Form::textarea('readonly', __('license.agreement'), ['class' => "form-control", 'rows' => "13"]) !!}
+                <textarea name="readonly" class="form-control" rows="13" cols="50">{{ __('license.agreement') }}</textarea>
 
             </div>
 
@@ -26,9 +26,9 @@
 
                 <div class="chiller_cb">
 
-                    {!! Form::checkbox('accept_license', 1, false, ['id' => "accept_license"] ) !!}
+                    <input type="checkbox" name="accept_license" value="1" id="accept_license" @checked(old('accept_license'))>
 
-                    {!! Form::label('accept_license', __('frontend.str.accept_license'), ['class' => 'form-check-label']) !!}
+                    <label for="accept_license" class="form-check-label">{{ __('frontend.str.accept_license') }}</label>
 
                     <span></span>
                 </div>

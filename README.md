@@ -38,7 +38,16 @@ It allows you to:
 - WYSIWYG editor
 - HTML and plain text messages
 - macros for subscriber personalization
-- multi-encoding support
+- UTF-8 email subjects, content and attachment names
+
+All outgoing messages use UTF-8, including manual mailings, test messages,
+scheduled mailings and retries. The former outgoing charset setting is removed
+by a database migration. CSV and TXT subscriber imports accept UTF-8 only,
+with or without a BOM; no charset selection or conversion is performed.
+
+Manual, scheduled and retry mailings process recipients in subscriber ID order.
+Subjects and message bodies retain their Cyrillic characters; the former
+random-order and character-substitution settings are no longer supported.
 
 ### Subscriber Management
 
@@ -54,6 +63,15 @@ It allows you to:
 - link click tracking
 - downloadable spreadsheet reports
 
+### Admin interface
+
+The admin panel uses AdminLTE 4.1 and Bootstrap 5.3, following the implementation
+in [janickiy/phpnewsletter_8](https://github.com/janickiy/phpnewsletter_8).
+Navigation, forms, settings tabs, DataTables, mailing dialogs, Summernote and the
+FullCalendar schedule use the updated components. Assets are bundled locally;
+Docker does not require an npm build. See [admin UI assets](docs/admin-ui.md)
+for versions and maintenance details.
+
 ## Quick Start
 
 1. Install the application and complete the setup wizard.
@@ -68,7 +86,7 @@ It allows you to:
 
 ## System Requirements
 
-- PHP 8.4 or newer
+- PHP 8.4.1 or newer
 - Laravel 13
 - MySQL 5.6 or newer
 - Apache 2+ with `mod_rewrite`, or Nginx pointing to `public/index.php`
@@ -163,7 +181,7 @@ including when an existing `vendor` directory is present.
 
 ### Running tests
 
-The test profile runs PHPUnit 12 with PHP 8.4 and a separate MySQL 8.4 database.
+The test profile runs PHPUnit 13 with PHP 8.4 and a separate MySQL 8.4 database.
 The test database and test storage are temporary; the application's MySQL volume
 and uploaded files are not used. MySQL is required because delivery reports use
 MySQL-specific date functions.
@@ -257,7 +275,7 @@ Before import, it is recommended to:
 - remove duplicates;
 - validate email addresses;
 - prepare destination categories in advance;
-- check file encoding.
+- save CSV/TXT files in UTF-8 (with or without a BOM).
 
 ### Export
 

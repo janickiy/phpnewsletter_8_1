@@ -5,132 +5,106 @@
 @section('css')
 
     <!-- DataTables -->
-    {!! Html::style('/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-bs5/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-responsive-bs5/css/responsive.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-buttons-bs5/css/buttons.bootstrap5.min.css') }}">
 
 @endsection
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar me-1"></i>
+                            {{ __('frontend.str.mailing_report') }}
+                        </h3>
 
-                    <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-bar mr-1"></i>
-                                {{ __('frontend.str.mailing_report') }}
-                            </h3>
-
-                            @if(PermissionsHelper::has_permission('admin'))
-                                <div class="card-tools">
-                                    <button id="clearLogButton"
-                                            type="button"
-                                            class="btn btn-danger btn-sm"
-                                            onclick="confirmation(event)"
-                                            title="{{ __('frontend.str.log_clear') }}">
-                                        <i class="fas fa-trash-alt mr-1"></i>
-                                        {{ __('frontend.str.log_clear') }}
-                                    </button>
-                                    <span id="clearLogSpinner" class="ml-2 d-none">
-                                        <span class="spinner-border spinner-border-sm text-danger" role="status" aria-hidden="true"></span>
-                                    </span>
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="card-body">
-                            <table id="itemList" class="table table-bordered table-striped table-hover">
-                                <thead>
-                                <tr>
-                                    <th>{{ __('frontend.str.time') }}</th>
-                                    <th>{{ __('frontend.str.total') }}</th>
-                                    <th>{{ __('frontend.str.sent') }}</th>
-                                    <th>{{ __('frontend.str.unsent') }}</th>
-                                    <th>{{ __('frontend.str.read') }}</th>
-                                    <th>{{ __('frontend.str.excel_report') }}</th>
-                                </tr>
-                                </thead>
-                                <tfoot>
-                                <tr>
-                                    <th>{{ __('frontend.str.time') }}</th>
-                                    <th>{{ __('frontend.str.total') }}</th>
-                                    <th>{{ __('frontend.str.sent') }}</th>
-                                    <th>{{ __('frontend.str.unsent') }}</th>
-                                    <th>{{ __('frontend.str.read') }}</th>
-                                    <th>{{ __('frontend.str.excel_report') }}</th>
-                                </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+                        @if(PermissionsHelper::has_permission('admin'))
+                            <div class="card-tools">
+                                <button id="clearLogButton"
+                                        type="button"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="confirmation(event)"
+                                        title="{{ __('frontend.str.log_clear') }}">
+                                    <i class="fas fa-trash-alt me-1"></i>
+                                    {{ __('frontend.str.log_clear') }}
+                                </button>
+                                <span id="clearLogSpinner" class="ms-2 d-none">
+                                    <span class="spinner-border spinner-border-sm text-danger" role="status" aria-hidden="true"></span>
+                                </span>
+                            </div>
+                        @endif
                     </div>
 
-                    <div class="card card-secondary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-list mr-1"></i>
-                                {{ __('frontend.str.log') }}
-                            </h3>
-                        </div>
-
-                        <div class="card-body">
-                            <table id="logList" class="table table-bordered table-striped table-hover">
-                                <thead>
-                                <tr>
-                                    <th>{{ __('frontend.str.newsletter') }}</th>
-                                    <th>E-mail</th>
-                                    <th>{{ __('frontend.str.time') }}</th>
-                                    <th>{{ __('frontend.str.status') }}</th>
-                                    <th>{{ __('frontend.str.read') }}</th>
-                                    <th>{{ __('frontend.str.error') }}</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                                <tfoot>
-                                <tr>
-                                    <th>{{ __('frontend.str.newsletter') }}</th>
-                                    <th>E-mail</th>
-                                    <th>{{ __('frontend.str.time') }}</th>
-                                    <th>{{ __('frontend.str.status') }}</th>
-                                    <th>{{ __('frontend.str.read') }}</th>
-                                    <th>{{ __('frontend.str.error') }}</th>
-                                </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+                    <div class="card-body">
+                        <table id="itemList" class="table table-striped table-hover align-middle w-100">
+                            <thead>
+                            <tr>
+                                <th>{{ __('frontend.str.time') }}</th>
+                                <th>{{ __('frontend.str.total') }}</th>
+                                <th>{{ __('frontend.str.sent') }}</th>
+                                <th>{{ __('frontend.str.unsent') }}</th>
+                                <th>{{ __('frontend.str.read') }}</th>
+                                <th>{{ __('frontend.str.excel_report') }}</th>
+                            </tr>
+                            </thead>
+                        </table>
                     </div>
                 </div>
-                <!-- /.col -->
-            </div>
-            <!-- /.row -->
-        </div>
-        <!-- /.container-fluid -->
 
-    </section>
-    <!-- /.content -->
+                <div class="card card-outline card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-list me-1"></i>
+                            {{ __('frontend.str.log') }}
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                        <table id="logList" class="table table-striped table-hover align-middle w-100">
+                            <thead>
+                            <tr>
+                                <th>{{ __('frontend.str.newsletter') }}</th>
+                                <th>E-mail</th>
+                                <th>{{ __('frontend.str.time') }}</th>
+                                <th>{{ __('frontend.str.status') }}</th>
+                                <th>{{ __('frontend.str.read') }}</th>
+                                <th>{{ __('frontend.str.error') }}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 
 @section('js')
 
     <!-- DataTables  & Plugins -->
-    {!! Html::script('/plugins/datatables/jquery.dataTables.min.js') !!}
-    {!! Html::script('/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/dataTables.responsive.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/dataTables.buttons.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/pdfmake.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/vfs_fonts.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.html5.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.print.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.colVis.min.js') !!}
+    <script src="{{ asset('vendor/datatables/js/dataTables.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive-bs5/js/responsive.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons-bs5/js/buttons.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/pdfmake.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/vfs_fonts.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.print.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
 
     <script>
         let itemListTable;
@@ -161,7 +135,7 @@
                         "sPrevious": "{{ __('pagination.s_paginate.previous') }}",
                     },
                 },
-                "sDom": "lrtip",
+                layout: {topStart: 'pageLength', topEnd: null, bottomStart: 'info', bottomEnd: 'paging'},
                 "autoWidth": false,
                 "responsive": true,
                 'createdRow': function (row, data, dataIndex) {
@@ -198,7 +172,6 @@
                     },
                     "sSearch": ' <i class="fas fa-search" aria-hidden="true"></i>'
                 },
-                "sDom": "flrtip",
                 "autoWidth": false,
                 "responsive": true,
                 'createdRow': function (row, data, dataIndex) {

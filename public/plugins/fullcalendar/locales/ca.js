@@ -1,27 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var ca = {
-    code: "ca",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "Anterior",
-      next: "Seg\xFCent",
-      today: "Avui",
-      month: "Mes",
-      week: "Setmana",
-      day: "Dia",
-      list: "Agenda"
-    },
-    weekText: "Set",
-    allDayText: "Tot el dia",
-    moreLinkText: "m\xE9s",
-    noEventsText: "No hi ha esdeveniments per mostrar"
-  };
-
-  return ca;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"ca",week:{dow:1,doy:4},buttonText:{prev:"Anterior",next:"Següent",today:"Avui",year:"Any",month:"Mes",week:"Setmana",day:"Dia",list:"Agenda"},weekText:"Set",allDayText:"Tot el dia",moreLinkText:"més",noEventsText:"No hi ha esdeveniments per mostrar"})}();

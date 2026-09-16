@@ -23,7 +23,7 @@ use Config;
 
 class InstallController extends Controller
 {
-    private const APPLICATION_VERSION = '7.3.1';
+    private const APPLICATION_VERSION = '8.0.0';
 
     /**
      * Show the first installer screen.

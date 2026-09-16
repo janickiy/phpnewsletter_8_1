@@ -9,50 +9,44 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <div class="card">
+                    <!-- /.card-header -->
+                    <div class="card-body">
 
-                    <div class="card">
-                        <!-- /.card-header -->
-                        <div class="card-body">
+                        <table id="itemList" class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                                <th>Cronjob</th>
+                                <th>{{ __('frontend.str.description') }}</th>
+                            </tr>
+                            </thead>
 
-                            <table id="itemList" class="table table-bordered table-striped">
-                                <thead>
+                            <tbody>
+
+                            @foreach($cronJob as $job)
                                 <tr>
-                                    <th>Cronjob</th>
-                                    <th>{{ __('frontend.str.description') }}</th>
+                                    <td>{{ $job['cron'] }}</td>
+                                    <td>{{ $job['description'] }}</td>
                                 </tr>
-                                </thead>
+                            @endforeach
 
-                                <tbody>
+                            </tbody>
+                        </table>
 
-                                @foreach($cronJob as $job)
-                                    <tr>
-                                        <td>{{ $job['cron'] }}</td>
-                                        <td>{{ $job['description'] }}</td>
-                                    </tr>
-                                @endforeach
-
-                                </tbody>
-                            </table>
-
-                        </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
+                    <!-- /.card-body -->
                 </div>
-                <!-- /.col -->
+                <!-- /.card -->
             </div>
-            <!-- /.row -->
+            <!-- /.col -->
         </div>
-        <!-- /.container-fluid -->
-
-    </section>
-    <!-- /.content -->
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 

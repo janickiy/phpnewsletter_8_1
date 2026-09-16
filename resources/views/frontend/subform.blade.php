@@ -23,31 +23,36 @@
 
             <div id="resultSub"></div>
 
-            {!! Form::open(['id' => 'addsub', 'autocomplete' => "off"]) !!}
+            <form method="POST" action="{{ url()->current() }}" accept-charset="UTF-8" id="addsub" autocomplete="off">
+                @csrf
+
+            @php
+                $selectedCategoryIds = collect(old('categoryId', []))->map(fn ($value) => (string) $value)->all();
+            @endphp
 
             @foreach($category as $row)
                 <div class="form-check">
                     <label class="form-check-label">
-                        {!! Form::checkbox('categoryId[]', $row['id'], false, ['class' => "form-check-input"]) !!} {!! $row['name'] !!}
+                        <input type="checkbox" name="categoryId[]" value="{{ $row['id'] }}" class="form-check-input" @checked(in_array((string) $row['id'], $selectedCategoryIds, true))> {{ $row['name'] }}
                     </label>
                 </div>
             @endforeach
 
             <div class="form-group">
-                {!! Form::label('name', trans('frontend.str.name')) !!}
-                {!! Form::text('name',old('name'),['class'=>"form-control", 'autocomplete'=>"off"]) !!}
+                <label for="name">{{ __('frontend.str.name') }}</label>
+                <input type="text" name="name" id="name" value="{{ old('name') }}" class="form-control" autocomplete="off">
             </div>
 
             <div class="form-group">
-                {!! Form::label('email', 'E-mail') !!}
-                {!! Form::text('email',old('email'),['class'=>"form-control",'autocomplete'=>"off"]) !!}
+                <label for="email">E-mail</label>
+                <input type="text" name="email" id="email" value="{{ old('email') }}" class="form-control" autocomplete="off">
 
                 <div id="error-email" class="text-danger"></div>
             </div>
 
-            {{ Form::button(trans('frontend.str.subscribe'), ['id' => "sub",'class' => 'btn btn-primary']) }}
+            <button type="button" id="sub" class="btn btn-primary">{{ __('frontend.str.subscribe') }}</button>
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
 

@@ -144,7 +144,7 @@ class SubscriberService
     }
 
     /**
-     * Import subscribers from a text file in chunks while extracting email and display name.
+     * Import subscribers from UTF-8 text in chunks while extracting email and display name.
      *
      * @param object $f
      * @param callable|null $onChunkProcessed
@@ -159,13 +159,14 @@ class SubscriberService
         $count = 0;
         $rows = [];
         $categoryIds = (array) ($f->categoryId ?? []);
+        $firstLine = true;
 
         while (($line = fgets($fp)) !== false) {
-            $str = trim($line);
-
-            if ($f->charset) {
-                $str = iconv($str, 'utf-8', $f->charset);
+            if ($firstLine && str_starts_with($line, "\xEF\xBB\xBF")) {
+                $line = substr($line, 3);
             }
+            $firstLine = false;
+            $str = trim($line);
 
             preg_match('/([a-z0-9&\-_.]+?)@([\w\-]+\.([\w\-\.]+\.)*[\w]+)/uis', $str, $out);
 
@@ -214,6 +215,10 @@ class SubscriberService
 
         $reader = IOFactory::createReader($inputFileType);
         $reader->setReadDataOnly(true);
+
+        if ($reader instanceof \PhpOffice\PhpSpreadsheet\Reader\Csv) {
+            $reader->setInputEncoding('UTF-8');
+        }
 
         if (method_exists($reader, 'setReadEmptyCells')) {
             $reader->setReadEmptyCells(false);

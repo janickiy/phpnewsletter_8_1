@@ -13,13 +13,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
 
     <!-- Font Awesome -->
-    {!! Html::style('plugins/fontawesome-free/css/all.min.css') !!}
-
-    <!-- icheck bootstrap -->
-    {!! Html::style('plugins/icheck-bootstrap/icheck-bootstrap.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome7/css/all.min.css') }}">
 
     <!-- Theme style -->
-    {!! Html::style('dist/css/adminlte.min.css?v=2') !!}
+    <link rel="stylesheet" href="{{ asset('vendor/adminlte4/css/adminlte.min.css') }}">
 
     <style>
         .auth-logo {
@@ -33,66 +30,59 @@
     </style>
 
 </head>
-<body class="hold-transition login-page">
+<body class="login-page bg-body-secondary">
 <div class="login-box">
     <!-- /.login-logo -->
     <div class="card card-outline card-primary">
         <div class="card-header text-center">
 
-            <img src="{{ url('/dist/img/logo-auth-install.png') }}?v={{ filemtime(public_path('dist/img/logo-auth-install.png')) }}" alt="PHP Newsletter" class="auth-logo">
+            <img src="{{ url('/assets/img/logo-auth-install.png') }}?v={{ filemtime(public_path('assets/img/logo-auth-install.png')) }}" alt="PHP Newsletter" class="auth-logo">
         </div>
         <div class="card-body">
 
-            {!! Form::open(['url' => route('login'), 'method' => 'post']) !!}
+            <form method="POST" action="{{ route('login') }}" accept-charset="UTF-8">
+                @csrf
 
                 <div class="input-group mb-3">
 
-                    {!! Form::text('login', old('login'), [ 'placeholder' => __('frontend.form.login'), 'class' => 'form-control']) !!}
+                    <input type="text" name="login" autocomplete="username" aria-label="{{ __('frontend.form.login') }}" value="{{ old('login') }}" placeholder="{{ __('frontend.form.login') }}" class="form-control">
 
-                    <div class="input-group-append">
-                        <div class="input-group-text">
-                            <span class="fas fa-user"></span>
-                        </div>
-                    </div>
+                    <span class="input-group-text"><i class="fas fa-user" aria-hidden="true"></i></span>
 
                     @if ($errors->has('login'))
-                        <p class="text-danger">{{ $errors->first('login') }}</p>
+                        <p class="text-danger w-100 mb-0 mt-1">{{ $errors->first('login') }}</p>
                     @endif
 
                 </div>
                 <div class="input-group mb-3">
 
-                    {!! Form::password('password',['class' => 'form-control', 'placeholder' => __('frontend.form.password'), 'type' => 'password']) !!}
+                    <input type="password" name="password" autocomplete="current-password" aria-label="{{ __('frontend.form.password') }}" class="form-control" placeholder="{{ __('frontend.form.password') }}">
 
-                    <div class="input-group-append">
-                        <div class="input-group-text">
-                            <span class="fas fa-lock"></span>
-                        </div>
-                    </div>
+                    <span class="input-group-text"><i class="fas fa-lock" aria-hidden="true"></i></span>
 
                     @if ($errors->has('password'))
-                        <p class="text-danger">{{ $errors->first('password') }}</p>
+                        <p class="text-danger w-100 mb-0 mt-1">{{ $errors->first('password') }}</p>
                     @endif
                 </div>
                 <div class="row">
                     <div class="col-8">
-                        <div class="icheck-primary">
+                        <div class="form-check">
 
-                            {!! Form::checkbox('remember', 1, old('remember') ? true : false , ['id' => "remember"]) !!}
+                            <input type="checkbox" name="remember" class="form-check-input" value="1" id="remember" @checked(old('remember'))>
 
-                            <label for="remember">
+                            <label for="remember" class="form-check-label">
                                 {{ __('frontend.str.remember_me') }}
                             </label>
                         </div>
                     </div>
                     <!-- /.col -->
                     <div class="col-4">
-                        {!! Form::submit(__('frontend.str.singin'), ['class' => 'btn btn-primary btn-block']) !!}
+                        <input type="submit" value="{{ __('frontend.str.singin') }}" class="btn btn-primary w-100">
                     </div>
                     <!-- /.col -->
                 </div>
 
-            {!! Form::close() !!}
+            </form>
 
         </div>
         <!-- /.card-body -->
@@ -102,10 +92,10 @@
 <!-- /.login-box -->
 
 <!-- jQuery -->
-{!! Html::script('plugins/jquery/jquery.min.js') !!}
-<!-- Bootstrap 4 -->
-{!! Html::script('plugins/bootstrap/js/bootstrap.bundle.min.js') !!}
+<script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
+<!-- Bootstrap 5 -->
+<script src="{{ asset('vendor/bootstrap5/js/bootstrap.bundle.min.js') }}"></script>
 <!-- AdminLTE App -->
-{!! Html::script('dist/js/adminlte.min.js') !!}
+<script src="{{ asset('vendor/adminlte4/js/adminlte.min.js') }}"></script>
 </body>
 </html>

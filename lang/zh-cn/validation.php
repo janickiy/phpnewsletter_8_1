@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'utf8_file' => ':attribute 文件必须使用 UTF-8 编码。',
 
     'accepted'   => ':attribute 必须被接受。',
     'active_url' => ':attribute 不是有效的 URL。',

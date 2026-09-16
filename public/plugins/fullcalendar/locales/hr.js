@@ -1,29 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var hr = {
-    code: "hr",
-    week: {
-      dow: 1,
-      doy: 7
-    },
-    buttonText: {
-      prev: "Prija\u0161nji",
-      next: "Sljede\u0107i",
-      today: "Danas",
-      month: "Mjesec",
-      week: "Tjedan",
-      day: "Dan",
-      list: "Raspored"
-    },
-    weekText: "Tje",
-    allDayText: "Cijeli dan",
-    moreLinkText: function(n) {
-      return "+ jo\u0161 " + n;
-    },
-    noEventsText: "Nema doga\u0111aja za prikaz"
-  };
-
-  return hr;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";var a={code:"hr",week:{dow:1,doy:7},buttonText:{prev:"Prijašnji",next:"Sljedeći",today:"Danas",year:"Godina",month:"Mjesec",week:"Tjedan",day:"Dan",list:"Raspored"},weekText:"Tje",allDayText:"Cijeli dan",moreLinkText:e=>"+ još "+e,noEventsText:"Nema događaja za prikaz"};FullCalendar.globalLocales.push(a)}();

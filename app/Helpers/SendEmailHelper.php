@@ -96,7 +96,7 @@ class SendEmailHelper
             $m->IsMail();
         }
 
-        $m->CharSet = SettingsHelper::getInstance()->getValueForKey('CHARSET');
+        $m->CharSet = PHPMailer\PHPMailer::CHARSET_UTF8;
 
         if ($prior == 1) {
             $m->Priority = 1;
@@ -127,13 +127,6 @@ class SendEmailHelper
         }
 
         $subject = str_replace('%NAME%', $name, $subject);
-        $subject = (int) SettingsHelper::getInstance()->getValueForKey('RENDOM_REPLACEMENT_SUBJECT') === 1
-            ? StringHelper::encodeString($subject)
-            : $subject;
-
-        if (SettingsHelper::getInstance()->getValueForKey('CHARSET') !== 'utf-8') {
-            $subject = iconv('utf-8', SettingsHelper::getInstance()->getValueForKey('CHARSET'), $subject);
-        }
 
         $m->Subject = $subject;
 
@@ -198,9 +191,6 @@ class SendEmailHelper
         $msg = str_replace('%SERVER_NAME%', $url_info['host'], $msg);
         $msg = str_replace('%USERID%', $subscriberId, $msg);
         $msg = str_replace('%URL_PATH%', URL::to('/'), $msg);
-        $msg = (int) SettingsHelper::getInstance()->getValueForKey('RANDOM_REPLACEMENT_BODY') === 1
-            ? StringHelper::encodeString($msg)
-            : $msg;
         $msg = StringHelper::macrosReplacement($msg);
 
         if ($attach) {
@@ -210,19 +200,11 @@ class SendEmailHelper
                 if (Storage::exists($path)) {
                     $storagePath = Storage::disk('local')->path($path);
 
-                    if (SettingsHelper::getInstance()->getValueForKey('CHARSET') !== 'utf-8') {
-                        $f->name = iconv('utf-8', SettingsHelper::getInstance()->getValueForKey('CHARSET'), $f->name);
-                    }
-
                     $ext = pathinfo($f->file_name, PATHINFO_EXTENSION);
                     $mime_type = StringHelper::getMimeType($ext);
                     $m->AddAttachment($storagePath, $f->name, 'base64', $mime_type);
                 }
             }
-        }
-
-        if (SettingsHelper::getInstance()->getValueForKey('CHARSET') !== 'utf-8') {
-            $msg = iconv('utf-8', SettingsHelper::getInstance()->getValueForKey('CHARSET'), $msg);
         }
 
         if (SettingsHelper::getInstance()->getValueForKey('CONTENT_TYPE') === 'html') {

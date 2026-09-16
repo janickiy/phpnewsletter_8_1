@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-
 use App\Helpers\PermissionsHelper;
 use App\Helpers\StringHelper;
 use App\Models\Category;
@@ -23,7 +22,6 @@ class DataTableController extends Controller
     /**
      * Return email template rows formatted for the templates DataTable.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getTemplates(): JsonResponse
@@ -34,29 +32,29 @@ class DataTableController extends Controller
 
         return DataTables::of($rows)
             ->addColumn('checkbox', fn ($row) => sprintf(
-                '<input type="checkbox" class="check" value="%d" name="templateId[]">',
+                '<input type="checkbox" class="form-check-input check" value="%d" name="templateId[]">',
                 $row->id
             ))
             ->addColumn('action', function ($row) {
                 $showBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-info" href="%s"><span class="fa fa-eye"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-info" href="%s"><span class="fa fa-eye"></span></a>',
                     __('frontend.str.template'),
                     route('admin.templates.show', ['id' => $row->id])
                 );
 
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-primary" href="%s"><span class="fa fa-edit"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.templates.edit', ['id' => $row->id])
                 );
 
-                return '<div class="nobr">' . $showBtn . $editBtn . '</div>';
+                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$showBtn.$editBtn.'</div>';
             })
             ->editColumn('name', function ($row) {
                 $body = preg_replace('/(<.*?>)|(&.*?;)/', '', $row->body);
 
-                return $row->name . '<br><br><small class="text-muted">' .
-                    StringHelper::shortText($body ?? '', 500) .
+                return $row->name.'<br><br><small class="text-muted">'.
+                    StringHelper::shortText($body ?? '', 500).
                     '</small>';
             })
             ->editColumn('prior', fn ($row) => $row->getPrior())
@@ -71,7 +69,6 @@ class DataTableController extends Controller
     /**
      * Return category rows with subscriber counts and action buttons for DataTables.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getCategory(): JsonResponse
@@ -84,18 +81,18 @@ class DataTableController extends Controller
         return DataTables::of($rows)
             ->addColumn('actions', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-primary" href="%s"><span class="fa fa-edit"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.category.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></a>',
+                    '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     __('frontend.str.remove'),
                     $row->id
                 );
 
-                return '<div class="nobr">' . $editBtn . $deleteBtn . '</div>';
+                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->rawColumns(['actions'])
             ->make(true);
@@ -104,7 +101,6 @@ class DataTableController extends Controller
     /**
      * Return SMTP account rows with status, checkbox, and action columns for DataTables.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getSmtp(): JsonResponse
@@ -113,7 +109,7 @@ class DataTableController extends Controller
 
         return DataTables::of($rows)
             ->addColumn('checkbox', fn ($row) => sprintf(
-                '<input type="checkbox" class="check" value="%d" name="activate[]">',
+                '<input type="checkbox" class="form-check-input check" value="%d" name="activate[]">',
                 $row->id
             ))
             ->editColumn('active', fn ($row) => $row->active === 1
@@ -122,23 +118,23 @@ class DataTableController extends Controller
             ->editColumn('activeStatus', fn ($row) => $row->active)
             ->addColumn('action', function ($row) {
                 $showBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-info" href="%s"><span class="fa fa-eye"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-info" href="%s"><span class="fa fa-eye"></span></a>',
                     __('frontend.str.smtp_server'),
                     route('admin.smtp.show', ['id' => $row->id])
                 );
 
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-primary" href="%s"><span class="fa fa-edit"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.smtp.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<a class="btn btn-xs btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></a>',
+                    '<button type="button" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     $row->id
                 );
 
-                return '<div class="nobr">' . $showBtn . $editBtn . $deleteBtn . '</div>';
+                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$showBtn.$editBtn.$deleteBtn.'</div>';
             })
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
             ->rawColumns(['action', 'checkbox'])
@@ -148,7 +144,6 @@ class DataTableController extends Controller
     /**
      * Return subscriber rows with category names, status, and action columns for DataTables.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getSubscribers(): JsonResponse
@@ -165,7 +160,7 @@ class DataTableController extends Controller
 
         return DataTables::of($rows)
             ->addColumn('checkbox', fn ($row) => sprintf(
-                '<input type="checkbox" class="check" value="%d" name="activate[]">',
+                '<input type="checkbox" class="form-check-input check" value="%d" name="activate[]">',
                 $row->id
             ))
             ->addColumn('subscriptions', function ($row) {
@@ -181,18 +176,18 @@ class DataTableController extends Controller
             ->editColumn('activeStatus', fn ($row) => $row->active)
             ->addColumn('action', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-primary" href="%s"><span class="fa fa-edit"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.subscribers.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></a>',
+                    '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     __('frontend.str.remove'),
                     $row->id
                 );
 
-                return '<div class="nobr">' . $editBtn . $deleteBtn . '</div>';
+                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
             ->rawColumns(['action', 'checkbox'])
@@ -202,7 +197,6 @@ class DataTableController extends Controller
     /**
      * Return admin user rows with role labels and action buttons for DataTables.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getUsers(): JsonResponse
@@ -212,20 +206,20 @@ class DataTableController extends Controller
         return DataTables::of($rows)
             ->addColumn('action', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-primary" href="%s"><span class="fa fa-edit"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.users.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = (int) $row->id !== (int) Auth::id()
                     ? sprintf(
-                        '<a title="%s" class="btn btn-xs btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></a>',
+                        '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                         __('frontend.str.remove'),
                         $row->id
                     )
                     : '';
 
-                return '<div class="nobr">' . $editBtn . $deleteBtn . '</div>';
+                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->editColumn('role', fn ($row) => $row->role_label)
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
@@ -236,16 +230,15 @@ class DataTableController extends Controller
     /**
      * Return mailing summary rows for the log overview DataTable.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getLogs(): JsonResponse
     {
         $rows = Logs::query()
             ->selectRaw(
-                'logs.id, logs.time AS event_start, ' .
-                'COUNT(ready_sent.id) AS count, ' .
-                'COALESCE(SUM(ready_sent.success = 1), 0) AS sent, ' .
+                'logs.id, logs.time AS event_start, '.
+                'COUNT(ready_sent.id) AS count, '.
+                'COALESCE(SUM(ready_sent.success = 1), 0) AS sent, '.
                 'COALESCE(SUM(ready_sent.readMail = 1), 0) AS read_mail'
             )
             ->join('ready_sent', 'logs.id', '=', 'ready_sent.log_id')
@@ -274,8 +267,6 @@ class DataTableController extends Controller
     /**
      * Return per-recipient delivery log rows, optionally filtered by mailing-log ID.
      *
-     * @param int|null $id
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getInfoLog(?int $id = null): JsonResponse
@@ -300,7 +291,6 @@ class DataTableController extends Controller
     /**
      * Return grouped redirect tracking rows with report links for DataTables.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getRedirectLogs(): JsonResponse
@@ -330,8 +320,6 @@ class DataTableController extends Controller
     /**
      * Return redirect tracking details for a single encoded URL.
      *
-     * @param string $url
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getInfoRedirectLog(string $url): JsonResponse
@@ -347,9 +335,6 @@ class DataTableController extends Controller
 
     /**
      * Encode binary-safe base64 for a single route segment.
-     *
-     * @param string $value
-     * @return string
      */
     private function encodeRouteBase64(string $value): string
     {
@@ -358,9 +343,6 @@ class DataTableController extends Controller
 
     /**
      * Decode URL-safe or regular base64 route parameters.
-     *
-     * @param string $value
-     * @return string
      */
     private function decodeRouteBase64(string $value): string
     {
@@ -377,7 +359,6 @@ class DataTableController extends Controller
     /**
      * Return macro rows with action buttons for the macros DataTable.
      *
-     * @return JsonResponse
      * @throws \Exception
      */
     public function getMacros(): JsonResponse
@@ -387,18 +368,18 @@ class DataTableController extends Controller
         return DataTables::of($rows)
             ->addColumn('actions', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-primary" href="%s"><span class="fa fa-edit"></span></a>&nbsp;',
+                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.macros.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<a title="%s" class="btn btn-xs btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></a>',
+                    '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     __('frontend.str.remove'),
                     $row->id
                 );
 
-                return '<div class="nobr">' . $editBtn . $deleteBtn . '</div>';
+                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->rawColumns(['actions'])
             ->make(true);
@@ -406,9 +387,6 @@ class DataTableController extends Controller
 
     /**
      * Normalize database or date-like values for display in DataTables.
-     *
-     * @param mixed $value
-     * @return string
      */
     private function formatDateTime(mixed $value): string
     {
@@ -426,5 +404,4 @@ class DataTableController extends Controller
             ? date('Y-m-d H:i:s', $timestamp)
             : (string) $value;
     }
-
 }

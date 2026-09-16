@@ -5,79 +5,72 @@
 @section('css')
 
     <!-- DataTables -->
-    {!! Html::style('/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-bs5/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-responsive-bs5/css/responsive.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-buttons-bs5/css/buttons.bootstrap5.min.css') }}">
 
 @endsection
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <div class="card card-outline card-primary">
+                    <!-- /.card-header -->
+                    <div class="card-body">
 
-                    <div class="card">
-                        <!-- /.card-header -->
-                        <div class="card-body">
+                        <p>« <a href="{{ route('admin.log.index') }}">{{ __('frontend.str.back') }}</a></p>
 
-                            <p>« <a href="{{ route('admin.log.index') }}">{{ __('frontend.str.back') }}</a></p>
+                        <table id="itemList" class="table table-striped table-hover align-middle w-100">
+                            <thead>
+                            <tr>
+                                <th>{{ __('frontend.str.newsletter') }}</th>
+                                <th>E-mail</th>
+                                <th>{{ __('frontend.str.time') }}</th>
+                                <th>{{ __('frontend.str.status') }}</th>
+                                <th>{{ __('frontend.str.read') }}</th>
+                                <th>{{ __('frontend.str.error') }}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
 
-                            <table id="itemList" class="table table-striped table-bordered table-hover">
-                                <thead>
-                                <tr>
-                                    <th>{{ __('frontend.str.newsletter') }}</th>
-                                    <th>E-mail</th>
-                                    <th>{{ __('frontend.str.time') }}</th>
-                                    <th>{{ __('frontend.str.status') }}</th>
-                                    <th>{{ __('frontend.str.read') }}</th>
-                                    <th>{{ __('frontend.str.error') }}</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-
-                        </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
+                    <!-- /.card-body -->
                 </div>
-                <!-- /.col -->
+                <!-- /.card -->
             </div>
-            <!-- /.row -->
+            <!-- /.col -->
         </div>
-        <!-- /.container-fluid -->
-
-    </section>
-    <!-- /.content -->
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 
 @section('js')
 
     <!-- DataTables  & Plugins -->
-    {!! Html::script('/plugins/datatables/jquery.dataTables.min.js') !!}
-    {!! Html::script('/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/dataTables.responsive.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/dataTables.buttons.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/pdfmake.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/vfs_fonts.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.html5.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.print.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.colVis.min.js') !!}
+    <script src="{{ asset('vendor/datatables/js/dataTables.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive-bs5/js/responsive.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons-bs5/js/buttons.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/pdfmake.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/vfs_fonts.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.print.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
 
     <script>
 
         $(document).ready(function () {
             $('#itemList').dataTable({
-                "sDom": "flrtip",
-                "autoWidth": true,
+                "autoWidth": false,
                 "oLanguage": {
                     "sLengthMenu": "{{ __('pagination.s_length_menu') }}",
                     "sZeroRecords": "{{ __('pagination.s_zero_records') }}",

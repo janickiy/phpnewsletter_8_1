@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'utf8_file' => 'O arquivo :attribute deve usar a codificação UTF-8.',
 
     'accepted'   => 'O campo :attribute deve ser aceito.',
     'active_url' => 'O campo :attribute não é uma URL válida.',

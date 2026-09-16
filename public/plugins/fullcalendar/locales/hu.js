@@ -1,27 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var hu = {
-    code: "hu",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "vissza",
-      next: "el\u0151re",
-      today: "ma",
-      month: "H\xF3nap",
-      week: "H\xE9t",
-      day: "Nap",
-      list: "Lista"
-    },
-    weekText: "H\xE9t",
-    allDayText: "Eg\xE9sz nap",
-    moreLinkText: "tov\xE1bbi",
-    noEventsText: "Nincs megjelen\xEDthet\u0151 esem\xE9ny"
-  };
-
-  return hu;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"hu",week:{dow:1,doy:4},buttonText:{prev:"vissza",next:"előre",today:"ma",year:"Év",month:"Hónap",week:"Hét",day:"Nap",list:"Lista"},weekText:"Hét",allDayText:"Egész nap",moreLinkText:"további",noEventsText:"Nincs megjeleníthető esemény"})}();

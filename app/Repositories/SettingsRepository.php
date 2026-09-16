@@ -34,9 +34,6 @@ class SettingsRepository extends BaseRepository
         $array['SHOW_UNSUBSCRIBE_LINK'] = isset($data['SHOW_UNSUBSCRIBE_LINK']) && $data['SHOW_UNSUBSCRIBE_LINK']  ? 1 : 0;
         $array['REQUEST_REPLY'] = isset($data['SHOW_UNSUBSCRIBE_LINK']) && $data['SHOW_UNSUBSCRIBE_LINK'] ? 1 : 0;
         $array['NEW_SUBSCRIBER_NOTIFY'] = isset($data['NEW_SUBSCRIBER_NOTIFY']) && $data['NEW_SUBSCRIBER_NOTIFY'] ? 1 : 0;
-        $array['RANDOM_SEND'] = isset($data['RANDOM_SEND']) && $data['RANDOM_SEND']  ? 1 : 0;
-        $array['RENDOM_REPLACEMENT_SUBJECT'] = isset($data['RENDOM_REPLACEMENT_SUBJECT']) && $data['RENDOM_REPLACEMENT_SUBJECT'] ? 1 : 0;
-        $array['RANDOM_REPLACEMENT_BODY'] = isset($data['RANDOM_REPLACEMENT_BODY']) && $data['RANDOM_REPLACEMENT_BODY'] ? 1 : 0;
         $array['ADD_DKIM'] = isset($data['ADD_DKIM']) && $data['ADD_DKIM'] ? 1 : 0;
         $array['LIMIT_SEND'] = isset($data['LIMIT_SEND']) && $data['LIMIT_SEND']  ? 1 : 0;
         $array['REQUEST_REPLY'] = isset($data['REQUEST_REPLY']) && $data['REQUEST_REPLY']  ? 1 : 0;

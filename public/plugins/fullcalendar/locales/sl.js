@@ -1,27 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var sl = {
-    code: "sl",
-    week: {
-      dow: 1,
-      doy: 7
-    },
-    buttonText: {
-      prev: "Prej\u0161nji",
-      next: "Naslednji",
-      today: "Trenutni",
-      month: "Mesec",
-      week: "Teden",
-      day: "Dan",
-      list: "Dnevni red"
-    },
-    weekText: "Teden",
-    allDayText: "Ves dan",
-    moreLinkText: "ve\u010D",
-    noEventsText: "Ni dogodkov za prikaz"
-  };
-
-  return sl;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"sl",week:{dow:1,doy:7},buttonText:{prev:"Prejšnji",next:"Naslednji",today:"Trenutni",year:"Leto",month:"Mesec",week:"Teden",day:"Dan",list:"Dnevni red"},weekText:"Teden",allDayText:"Ves dan",moreLinkText:"več",noEventsText:"Ni dogodkov za prikaz"})}();

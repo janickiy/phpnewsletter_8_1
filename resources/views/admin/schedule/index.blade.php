@@ -4,24 +4,26 @@
 
 @section('css')
 
-{!! Html::style('/plugins/fullcalendar/main.css') !!}
-{!! Html::style('/plugins/sweetalert2/sweetalert2.min.css') !!}
+<link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
 
 <style>
 
-    .fc-time-grid .fc-event {
-        overflow: auto;
-    }
-
-    .fc-day-today {
-        background-color: #0f0 !important;
+    #calendar {
+        --fc-border-color: var(--bs-border-color);
+        --fc-today-bg-color: rgba(var(--bs-primary-rgb), 0.08);
+        --fc-button-bg-color: var(--bs-primary);
+        --fc-button-border-color: var(--bs-primary);
+        --fc-button-hover-bg-color: #0b5ed7;
+        --fc-button-hover-border-color: #0a58ca;
+        --fc-button-active-bg-color: #0a58ca;
+        --fc-button-active-border-color: #0a53be;
     }
 
     #calendar a,
     #calendar a:hover,
     #calendar a:focus,
     #calendar a:active {
-        color: #00008B !important;
+        color: var(--bs-body-color) !important;
     }
 
     #calendar .fc-event-main,
@@ -44,30 +46,84 @@
     #calendar .fc-timegrid-event:hover,
     #calendar .fc-timegrid-event:focus,
     #calendar .fc-timegrid-event:active {
-        color: #00008B !important;
+        color: #fff !important;
     }
 
     #calendar .calendar-event-content,
-    #calendar .calendar-event-actions,
+    #calendar .calendar-event-time,
     #calendar .calendar-event-title {
-        color: #00008B !important;
+        color: #fff !important;
+    }
+
+    #calendar .calendar-list-event-title,
+    #calendar .fc-list-event-time,
+    #calendar .fc-list-event-title,
+    #calendar .fc-list-event-title a,
+    #calendar .fc-list-event .fc-event-title {
+        color: var(--bs-body-color) !important;
+    }
+
+    #calendar .fc-list-event:hover td {
+        background-color: var(--bs-tertiary-bg);
+    }
+
+    #calendar .calendar-list-event {
+        align-items: center;
+        display: flex;
+        gap: 0.5rem;
+        min-width: 0;
+        width: 100%;
+    }
+
+    #calendar .calendar-list-event-title {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #calendar .calendar-list-event-actions {
+        display: flex;
+        flex: 0 0 auto;
+        gap: 0.25rem;
+        margin-left: auto;
+    }
+
+    #calendar .calendar-list-event-actions .btn {
+        align-items: center;
+        display: inline-flex;
+        height: 1.75rem;
+        justify-content: center;
+        padding: 0;
+        width: 1.75rem;
+    }
+
+    #calendar .calendar-list-event-actions .btn-outline-primary {
+        color: var(--bs-primary) !important;
+    }
+
+    #calendar .calendar-list-event-actions .btn-outline-danger {
+        color: var(--bs-danger) !important;
+    }
+
+    #calendar .calendar-list-event-actions .btn-outline-primary:hover,
+    #calendar .calendar-list-event-actions .btn-outline-danger:hover {
+        color: #fff !important;
     }
 
     .fc-day-today a,
     .fc-day-today a:hover,
     .fc-day-today a:focus,
-    .fc-day-today a:active,
-    .fc-day-today .calendar-event-content,
-    .fc-day-today .calendar-event-actions,
-    .fc-day-today .calendar-event-title {
-        color: #00008B !important;
+    .fc-day-today a:active {
+        color: var(--bs-body-color) !important;
     }
 
     #calendar .fc-daygrid-event,
     #calendar .fc-timegrid-event {
         max-width: 100%;
         overflow: hidden;
-        white-space: normal;
+        white-space: nowrap;
     }
 
     #calendar .fc-daygrid-event .fc-event-main,
@@ -79,48 +135,92 @@
     }
 
     #calendar .calendar-event-content {
-        align-items: flex-start;
+        align-items: center;
         display: flex;
-        gap: 3px;
+        font-size: 0.875rem;
+        gap: 4px;
+        line-height: 1.2;
         max-width: 100%;
         min-width: 0;
         overflow: hidden;
-        white-space: normal;
+        padding: 1px 3px;
+        white-space: nowrap;
     }
 
     #calendar .calendar-event-dot {
-        background: #00008B;
+        background: #fff;
         border-radius: 50%;
         flex: 0 0 0.55rem;
         height: 0.55rem;
-        margin-top: 0.45rem;
         width: 0.55rem;
     }
 
     #calendar .calendar-event-time {
         flex: 0 0 auto;
         font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
     }
 
     #calendar .calendar-event-title {
         flex: 1 1 auto;
         min-width: 0;
-        overflow-wrap: anywhere;
-        white-space: normal;
-        word-break: break-word;
+        overflow: hidden;
+        overflow-wrap: normal;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        word-break: normal;
     }
 
     #calendar .calendar-event-actions {
         display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin-top: 4px;
+        flex: 0 0 auto;
+        gap: 2px;
+        margin-left: auto;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+    }
+
+    #calendar .calendar-event:hover .calendar-event-actions,
+    #calendar .calendar-event:focus-within .calendar-event-actions {
+        opacity: 1;
+        pointer-events: auto;
     }
 
     #calendar .calendar-event-actions .btn {
+        align-items: center;
+        display: inline-flex;
+        font-size: 0.7rem;
+        height: 1rem;
+        justify-content: center;
         line-height: 1;
-        padding: 0.16rem 0.35rem;
+        padding: 0;
+        width: 1rem;
+    }
+    @media (hover: none) {
+        #calendar .calendar-event-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        #calendar .fc-toolbar {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: .75rem;
+        }
+
+        #calendar .fc-toolbar-title {
+            font-size: 1.25rem;
+        }
+
+        #calendar .fc-button {
+            padding: .3rem .45rem;
+        }
     }
 </style>
 
@@ -128,47 +228,43 @@
 
 @section('content')
 
-<!-- Main content -->
-<section class="content">
-
-    <div class="container-fluid">
+    <div class="container-fluid schedule-page">
         <div class="row">
             <div class="col-12">
+                <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            {{ __('frontend.menu.schedule') }}
+                        </h3>
 
-                <div class="card">
-                    <!-- /.card-header -->
-                    <div class="card-body">
-                        <div class="pb-3">
-                            <a href="{{ route('admin.schedule.create') }}" class="btn btn-info btn-sm pull-left">
-                                <span class="fa fa-plus"> &nbsp;</span> {{ __('frontend.str.add_schedule') }}
+                        <div class="card-tools">
+                            <a href="{{ route('admin.schedule.create') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>
+                                {{ __('frontend.str.add_schedule') }}
                             </a>
                         </div>
-
-                        <div id='calendar'></div>
-
                     </div>
-                    <!-- /.card-body -->
-                </div>
-                <!-- /.card -->
-            </div>
-            <!-- /.col -->
-        </div>
-        <!-- /.row -->
-    </div>
-    <!-- /.container-fluid -->
 
-</section>
-<!-- /.content -->
+                    <div class="card-body">
+                        <div id='calendar'></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @endsection
 
 @section('js')
 
-{!! Html::script('/plugins/sweetalert2/sweetalert2.min.js') !!}
-{!! Html::script('/plugins/moment/moment.min.js') !!}
-{!! Html::script('/plugins/fullcalendar/main.js') !!}
+<script src="{{ asset('/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+<script src="{{ asset('/plugins/fullcalendar/main.js') }}"></script>
 
-{{ app()->getLocale() !== 'en' ? Html::script('/plugins/fullcalendar/locales/' . app()->getLocale() . '.js') : '' }}
+@php($calendarLocale = strtolower(app()->getLocale()))
+@if($calendarLocale !== 'en')
+    <script src="{{ asset('/plugins/fullcalendar/locales/' . $calendarLocale . '.js') }}"></script>
+@endif
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -190,35 +286,39 @@
             return hours + ':' + minutes;
         }
 
-        function renderCalendarEvent(event, showActions = false) {
+        function renderCalendarEvent(event, isListView = false) {
             let eventTitle = escapeHtml(event.title);
+
+            if (isListView) {
+                let listActions = '<span class="calendar-list-event-actions">' +
+                    '<a href="{{ url("schedule/edit") }}/' + event.id + '" class="btn btn-outline-primary btn-sm" title="{{ __('frontend.str.edit') }}"><i class="fas fa-edit"></i></a>' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm delete-event" data-id="' + event.id + '" title="{{ __('frontend.str.remove') }}"><i class="fas fa-trash"></i></button>' +
+                    '</span>';
+
+                return '<span class="calendar-list-event">' +
+                    '<span class="calendar-list-event-title">' + eventTitle + '</span>' +
+                    listActions +
+                    '</span>';
+            }
+
             let eventTime = formatEventTime(event);
-            let content = '<div class="calendar-event-content">' +
+            let actions = '<span class="calendar-event-actions">' +
+                '<a href="{{ url("schedule/edit") }}/' + event.id + '" class="btn btn-light btn-sm" title="{{ __('frontend.str.edit') }}"><i class="fas fa-edit"></i></a>' +
+                '<button type="button" class="btn btn-danger btn-sm delete-event" data-id="' + event.id + '" title="{{ __('frontend.str.remove') }}"><i class="fas fa-trash"></i></button>' +
+                '</span>';
+
+            return '<div class="calendar-event-content">' +
                 '<span class="calendar-event-dot"></span>' +
                 '<span class="calendar-event-time">' + eventTime + '</span>' +
                 '<span class="calendar-event-title">' + eventTitle + '</span>' +
-                '</div>';
-
-            if (!showActions) {
-                return content;
-            }
-
-            return content + '<div class="calendar-event-actions">' +
-                '<a href="{{ url("schedule/edit") }}/' + event.id + '" class="btn btn-info btn-xs" title="{{ __('frontend.str.edit') }}"><i class="fa fa-edit"></i></a>' +
-                '<button type="button" class="btn btn-danger btn-xs delete-event" data-id="' + event.id + '" title="{{ __('frontend.str.remove') }}"><i class="fa fa-trash"></i></button>' +
+                actions +
                 '</div>';
         }
 
         let calendar = new FullCalendar.Calendar(calendarEl, {
             eventClassNames: ['calendar-event'],
             eventContent: function(info) {
-                return { html: renderCalendarEvent(info.event) };
-            },
-            eventMouseEnter: function(info) {
-                info.el.innerHTML = renderCalendarEvent(info.event, true);
-            },
-            eventMouseLeave: function(info) {
-                info.el.innerHTML = renderCalendarEvent(info.event);
+                return { html: renderCalendarEvent(info.event, info.view.type.startsWith('list')) };
             },
             timeZone: initialTimeZone,
             headerToolbar: {
@@ -233,7 +333,7 @@
             displayEventTime: false,
             events: "{{ route('admin.schedule.list') }}",
 
-            @if(app()->getLocale()!= 'en') locale: '{{ app()->getLocale() }}', @endif
+            locale: @json($calendarLocale),
 
             eventTimeFormat: { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }
         });

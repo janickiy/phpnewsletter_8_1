@@ -5,141 +5,109 @@
 @section('css')
 
     <!-- DataTables -->
-    {!! Html::style('/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') !!}
-    {!! Html::style('/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') !!}
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-bs5/css/dataTables.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-responsive-bs5/css/responsive.bootstrap5.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/datatables-buttons-bs5/css/buttons.bootstrap5.min.css') }}">
 
 @endsection
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-
-            <div class="row">
-
-                <div class="col-lg-12"><p class="text-center">
-                        <a class="btn btn-outline btn-default btn-lg"
-                           title="{{ __('frontend.str.import_subscribers') }}"
-                           href="{{ route('admin.subscribers.import') }}">
-                            <span class="fa fa-download fa-x"></span> {{ __('frontend.str.import') }}
-                        </a>
-                        <a class="btn btn-outline btn-default btn-lg"
-                           title="{{ __('frontend.str.export_subscribers') }}"
-                           href="{{ route('admin.subscribers.export') }}">
-                            <span class="fa fa-upload fa-x"></span> {{ __('frontend.str.export') }}
-                        </a>
-                        <a id="removeAllSubscribersButton" class="btn btn-outline btn-danger btn-lg"
-                           title="{{ __('frontend.str.delete_all_subscribers') }}"
-                           onclick="confirmation(event)">
-                            <span class="fa fa-trash fa-x"></span> {{ __('frontend.str.delete_all') }}
-                        </a>
-                        <span id="removeAllSubscribersSpinner" class="ml-2 d-none">
-                            <span class="spinner-border spinner-border-sm text-danger" role="status" aria-hidden="true"></span>
-                        </span>
-                    </p>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-
-                    <div class="card">
-                        <!-- /.card-header -->
-                        <div class="card-body">
-                            <div class="pb-3">
-                                <a href="{{ route('admin.subscribers.create') }}"
-                                   class="btn btn-info btn-sm pull-left">
-                                    <span class="fa fa-plus"> &nbsp;</span> {{ __('frontend.str.add_subscriber') }}
-                                </a>
-                            </div>
-
-                            {!! Form::open(['url' => route('admin.subscribers.status'), 'method' => 'post']) !!}
-
-                            <table id="itemList" class="table table-bordered table-striped">
-                                <thead>
-                                <tr>
-                                    <th style="width: 10px">
-                                    <span>
-                                       <input type="checkbox" title="{{ __('frontend.str.check_uncheck_all') }}"
-                                              id="checkAll">
-                                    </span>
-                                    </th>
-                                    <th>{{ __('frontend.str.name') }}</th>
-                                    <th>E-mail</th>
-                                    <th>{{ __('frontend.str.category') }}</th>
-                                    <th>{{ __('frontend.str.status') }}</th>
-                                    <th>{{ __('frontend.str.added') }}</th>
-                                    <th style="width: 10%">{{ __('frontend.str.action') }}</th>
-                                </tr>
-                                </thead>
-                                <tfoot>
-                                <tr>
-                                    <th></th>
-                                    <th>{{ __('frontend.str.name') }}</th>
-                                    <th>E-mail</th>
-                                    <th>{{ __('frontend.str.category') }}</th>
-                                    <th>{{ __('frontend.str.status') }}</th>
-                                    <th>{{ __('frontend.str.added') }}</th>
-                                    <th style="width: 10%">{{ __('frontend.str.action') }}</th>
-                                </tr>
-                                </tfoot>
-                            </table>
-
-                            <div class="row">
-                                <div class="col-sm-12 padding-bottom-10">
-                                    <div class="form-inline">
-                                        <div class="control-group">
-
-                                            {!! Form::select('action',[
-                                            '1' => __('frontend.str.activate'),
-                                            '0' => __('frontend.str.deactivate'),
-                                            '2' => __('frontend.str.remove')
-                                            ],null,['class' => 'span3 form-control', 'id' => 'select_action','placeholder' => '--' . __('frontend.str.action') . '--']) !!}
-
-                                            <span class="help-inline">
-                                            {!! Form::submit(__('frontend.str.apply'), ['class' => 'btn btn-success', 'disabled' => "", 'id' => 'apply']) !!}
-                                        </span>
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {!! Form::close() !!}
-
+                <div class="card card-outline card-primary">
+                    <div class="card-header d-flex flex-wrap align-items-center gap-2">
+                        <h3 class="card-title">{{ $title }}</h3>
+                        <div class="card-tools ms-auto d-flex flex-wrap align-items-center gap-2">
+                            <a class="btn btn-outline-secondary btn-sm"
+                               title="{{ __('frontend.str.import_subscribers') }}"
+                               href="{{ route('admin.subscribers.import') }}">
+                                <span class="fas fa-download me-1"></span> {{ __('frontend.str.import') }}
+                            </a>
+                            <a class="btn btn-outline-secondary btn-sm"
+                               title="{{ __('frontend.str.export_subscribers') }}"
+                               href="{{ route('admin.subscribers.export') }}">
+                                <span class="fas fa-upload me-1"></span> {{ __('frontend.str.export') }}
+                            </a>
+                            <button type="button" id="removeAllSubscribersButton" class="btn btn-outline-danger btn-sm"
+                                    title="{{ __('frontend.str.delete_all_subscribers') }}"
+                                    onclick="confirmation(event)">
+                                <span class="fas fa-trash me-1"></span> {{ __('frontend.str.delete_all') }}
+                            </button>
+                            <span id="removeAllSubscribersSpinner" class="d-none">
+                                <span class="spinner-border spinner-border-sm text-danger" role="status" aria-hidden="true"></span>
+                            </span>
+                            <a href="{{ route('admin.subscribers.create') }}"
+                               class="btn btn-primary btn-sm">
+                                <span class="fas fa-plus me-1"></span> {{ __('frontend.str.add_subscriber') }}
+                            </a>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
-                </div>
-                <!-- /.col -->
-            </div>
-            <!-- /.row -->
-        </div>
-        <!-- /.container-fluid -->
+                    <div class="card-body">
 
-    </section>
-    <!-- /.content -->
+                        <form action="{{ route('admin.subscribers.status') }}" method="POST">
+                        @csrf
+
+                        <table id="itemList" class="table table-striped table-hover align-middle w-100">
+                            <thead>
+                            <tr>
+                                <th style="width: 10px">
+                                <span>
+                                   <input type="checkbox" class="form-check-input" title="{{ __('frontend.str.check_uncheck_all') }}"
+                                          id="checkAll">
+                                </span>
+                                </th>
+                                <th>{{ __('frontend.str.name') }}</th>
+                                <th>E-mail</th>
+                                <th>{{ __('frontend.str.category') }}</th>
+                                <th>{{ __('frontend.str.status') }}</th>
+                                <th>{{ __('frontend.str.added') }}</th>
+                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                            </tr>
+                            </thead>
+                        </table>
+
+                        <div class="input-group input-group-sm mt-3" style="max-width: 24rem">
+                            <select name="action" class="form-select" id="select_action">
+                                <option value="" @selected((string) old('action', '') === '')>--{{ __('frontend.str.action') }}--</option>
+                                <option value="1" @selected((string) old('action', '') === '1')>{{ __('frontend.str.activate') }}</option>
+                                <option value="0" @selected((string) old('action', '') === '0')>{{ __('frontend.str.deactivate') }}</option>
+                                <option value="2" @selected((string) old('action', '') === '2')>{{ __('frontend.str.remove') }}</option>
+                            </select>
+                            <input type="submit" value="{{ __('frontend.str.apply') }}" class="btn btn-success" disabled id="apply">
+                        </div>
+
+                        </form>
+
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 
 @section('js')
 
     <!-- DataTables  & Plugins -->
-    {!! Html::script('/plugins/datatables/jquery.dataTables.min.js') !!}
-    {!! Html::script('/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/dataTables.responsive.min.js') !!}
-    {!! Html::script('/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/dataTables.buttons.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/pdfmake.min.js') !!}
-    {!! Html::script('/plugins/pdfmake/vfs_fonts.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.html5.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.print.min.js') !!}
-    {!! Html::script('/plugins/datatables-buttons/js/buttons.colVis.min.js') !!}
+    <script src="{{ asset('vendor/datatables/js/dataTables.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-responsive-bs5/js/responsive.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons-bs5/js/buttons.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/pdfmake.min.js') }}"></script>
+    <script src="{{ asset('/plugins/pdfmake/vfs_fonts.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.print.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
 
     <script>
 
@@ -152,34 +120,34 @@
                     Swal.fire({
                         title: "Error",
                         text: "{{ __('frontend.str.select_action') }}",
-                        type: "error",
+                        icon: "error",
                         showCancelButton: false,
                         cancelButtonText: "{{ __('frontend.str.cancel') }}",
                         confirmButtonColor: "#DD6B55",
-                        closeOnConfirm: false
                     });
                 } else {
-                    if (idSelect === 2) {
+                    if (idSelect === '2') {
                         event.preventDefault();
                         let form = $(this).parents('form');
-                        swal({
+                        Swal.fire({
                             title: "{{ __('frontend.str.delete_confirmation') }}",
                             text: "{{ __('frontend.str.confirm_remove') }}",
-                            type: "warning",
+                            icon: "warning",
                             showCancelButton: true,
                             confirmButtonColor: "#DD6B55",
                             confirmButtonText: "{{ __('frontend.str.yes') }}",
                             cancelButtonText: "{{ __('frontend.str.cancel') }}",
-                            closeOnConfirm: false
-                        }, function (isConfirm) {
-                            if (isConfirm) form.submit();
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
                         });
                     }
                 }
             });
 
             $("#checkAll").click(function () {
-                $('input:checkbox').not(this).prop('checked', this.checked);
+                $('#itemList input.check').prop('checked', this.checked);
                 countChecked();
             });
 
@@ -211,15 +179,17 @@
                     if (data['activeStatus'] === 0) $(row).attr('class', 'table-danger');
                 },
                 aaSorting: [[5, 'desc']],
+                drawCallback: countChecked,
                 "processing": true,
                 "responsive": true,
-                "autoWidth": true,
+                "autoWidth": false,
                 "deferRender": true,
                 "searchDelay": 500,
                 'serverSide': true,
                 'ajax': {
                     url: '{{ route('admin.datatable.subscribers') }}'
                 },
+                columnDefs: [{targets: -1, className: 'text-end'}],
                 'columns': [
                     {data: 'checkbox', name: 'checkbox', orderable: false, searchable: false},
                     {data: 'name', name: 'name'},
@@ -231,7 +201,7 @@
                 ]
             });
 
-            $('#itemList').on('click', 'a.deleteRow', function () {
+            $('#itemList').on('click', '.deleteRow', function () {
                 let rowid = $(this).attr('id');
                 Swal.fire({
                     title: "{{ __('frontend.msg.are_you_sure') }}",
@@ -255,7 +225,7 @@
                             data: {_method: 'DELETE'},
                             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                             success: function () {
-                                $("#rowid_" + rowid).remove();
+                                $('#itemList').DataTable().ajax.reload(null, false);
                                 Swal.fire("{{ __('frontend.msg.done') }}", "{{ __('frontend.msg.data_successfully_deleted') }}", 'success');
                             },
                             error: function (xhr, ajaxOptions, thrownError) {
@@ -270,10 +240,11 @@
         });
 
         function countChecked() {
-            if ($('.check').is(':checked'))
-                $('#apply').attr('disabled', false);
-            else
-                $('#apply').attr('disabled', true);
+            const checkboxes = $('#itemList input.check');
+            const checked = checkboxes.filter(':checked').length;
+            $('#apply').prop('disabled', checked === 0);
+            $('#checkAll').prop('checked', checkboxes.length > 0 && checked === checkboxes.length);
+            $('#checkAll').prop('indeterminate', checked > 0 && checked < checkboxes.length);
         }
 
         function toggleRemoveAllSubscribersLoading(isLoading) {
@@ -298,12 +269,11 @@
             Swal.fire({
                 title: "{{ __('frontend.str.delete_all_subscribers') }}",
                 text: "{{ __('frontend.str.want_to_delete_all_subscribers')  }}",
-                type: "warning",
+                icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#DD6B55",
                 confirmButtonText: "{{ __('frontend.str.yes') }}",
                 cancelButtonText: "{{ __('frontend.str.cancel') }}",
-                closeOnConfirm: false
             }).then((result) => {
                 if (result.isConfirmed) {
                     toggleRemoveAllSubscribersLoading(true);

@@ -11,16 +11,17 @@
 
     @include('layouts.notifications')
 
-    {!! Form::open(['route' => 'install.installation']) !!}
+    <form method="POST" action="{{ route('install.installation') }}" accept-charset="UTF-8">
+        @csrf
 
     <div class="step-content">
         <h3>{{ __('install.str.database_information') }}</h3>
         <hr>
         <div class="form-group">
 
-            {!! Form::label('host', __('install.str.database_host')) !!}
+            <label for="host">{{ __('install.str.database_host') }}</label>
 
-            {!! Form::text('host', old('host'), ['class' => "form-control", 'placeholder' => "",'id' => "host"]) !!}
+            <input type="text" name="host" value="{{ old('host') }}" class="form-control" placeholder="" id="host">
 
             <small>{{ __('install.hint.database_host') }}</small>
             @if ($errors->has('host'))
@@ -29,9 +30,9 @@
         </div>
         <div class="form-group">
 
-            {!! Form::label('username', __('install.str.database_username')) !!}
+            <label for="username">{{ __('install.str.database_username') }}</label>
 
-            {!! Form::text('username', old('username'), ['class' => "form-control", 'placeholder' => "",'id' => "username"]) !!}
+            <input type="text" name="username" value="{{ old('username') }}" class="form-control" placeholder="" id="username">
 
             <small>{{ __('install.hint.database_username') }}</small>
             @if ($errors->has('username'))
@@ -40,9 +41,9 @@
         </div>
         <div class="form-group">
 
-            {!! Form::label('password', __('install.str.password')) !!}
+            <label for="password">{{ __('install.str.password') }}</label>
 
-            {!! Form::password('password', ['class' => "form-control", 'id' => "password"]) !!}
+            <input type="password" name="password" class="form-control" id="password">
 
             <small>{{ __('install.hint.database_password') }}</small>
             @if ($errors->has('password'))
@@ -50,9 +51,9 @@
             @endif
         </div>
         <div class="form-group">
-            {!! Form::label('database', __('install.str.database_name')) !!}
+            <label for="database">{{ __('install.str.database_name') }}</label>
 
-            {!! Form::text('database', old('database'), ['class' => "form-control", 'placeholder' => "",'id' => "database"]) !!}
+            <input type="text" name="database" value="{{ old('database') }}" class="form-control" placeholder="" id="database">
 
             <small>{{ __('install.hint.database_name') }}</small>
             @if ($errors->has('database'))
@@ -67,7 +68,7 @@
         <div class="clearfix"></div>
     </div>
 
-    {!! Form::close() !!}
+    </form>
 
 @endsection
 

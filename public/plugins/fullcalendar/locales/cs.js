@@ -1,29 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var cs = {
-    code: "cs",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "D\u0159\xEDve",
-      next: "Pozd\u011Bji",
-      today: "Nyn\xED",
-      month: "M\u011Bs\xEDc",
-      week: "T\xFDden",
-      day: "Den",
-      list: "Agenda"
-    },
-    weekText: "T\xFDd",
-    allDayText: "Cel\xFD den",
-    moreLinkText: function(n) {
-      return "+dal\u0161\xED: " + n;
-    },
-    noEventsText: "\u017D\xE1dn\xE9 akce k zobrazen\xED"
-  };
-
-  return cs;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";var n={code:"cs",week:{dow:1,doy:4},buttonText:{prev:"Dříve",next:"Později",today:"Nyní",year:"Rok",month:"Měsíc",week:"Týden",day:"Den",list:"Agenda"},weekText:"Týd",allDayText:"Celý den",moreLinkText:e=>"+další: "+e,noEventsText:"Žádné akce k zobrazení"};FullCalendar.globalLocales.push(n)}();

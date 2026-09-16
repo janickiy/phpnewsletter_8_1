@@ -9,41 +9,6 @@ use Symfony\Component\Mime\MimeTypes;
 
 class StringHelper
 {
-    private const CHARSET_TRANSLATIONS = [
-        'utf-8' => 'frontend.str.charutf8',
-        'iso-8859-1' => 'frontend.str.iso88591',
-        'iso-8859-2' => 'frontend.str.iso88592',
-        'iso-8859-3' => 'frontend.str.iso88593',
-        'iso-8859-4' => 'frontend.str.iso88594',
-        'iso-8859-5' => 'frontend.str.iso88595',
-        'koi8-r' => 'frontend.str.koi8r',
-        'koi8-u' => 'frontend.str.koi8u',
-        'iso-8859-6' => 'frontend.str.iso88596',
-        'iso-8859-7' => 'frontend.str.iso88597',
-        'iso-8859-8' => 'frontend.str.iso88598',
-        'iso-8859-9' => 'frontend.str.iso88599',
-        'iso-8859-10' => 'frontend.str.iso885910',
-        'iso-8859-13' => 'frontend.str.iso885913',
-        'iso-8859-14' => 'frontend.str.iso885914',
-        'iso-8859-15' => 'frontend.str.iso885915',
-        'iso-8859-16' => 'frontend.str.iso885916',
-        'windows-1250' => 'frontend.str.windows1250',
-        'windows-1251' => 'frontend.str.windows1251',
-        'windows-1252' => 'frontend.str.windows1252',
-        'windows-1253' => 'frontend.str.windows1253',
-        'windows-1254' => 'frontend.str.windows1254',
-        'windows-1255' => 'frontend.str.windows1255',
-        'windows-1256' => 'frontend.str.windows1256',
-        'windows-1257' => 'frontend.str.windows1257',
-        'windows-1258' => 'frontend.str.windows1258',
-        'windows-874' => 'frontend.str.windows874',
-        'gb2312' => 'frontend.str.gb2312',
-        'big5' => 'frontend.str.big5',
-        'iso-2022-jp' => 'frontend.str.iso2022jp',
-        'ks_c_5601-1987' => 'frontend.str.ksc56011987',
-        'euc-kr' => 'frontend.str.euckr',
-    ];
-
     /**
      * Generate a random alphanumeric string of the requested maximum length.
      *
@@ -173,45 +138,6 @@ class StringHelper
     }
 
     /**
-     * Randomly replace visually similar Cyrillic characters with Latin equivalents.
-     *
-     * @param string $str
-     * @return string
-     */
-    static public function encodeString(string $str): string
-    {
-        $replace = [
-            "А" => "A",
-            "В" => "B",
-            "Е" => "E",
-            "К" => "K",
-            "М" => "M",
-            "Н" => "H",
-            "О" => "O",
-            "Р" => "P",
-            "С" => "C",
-            "Т" => "T",
-            "Х" => "X",
-            "х" => "x",
-            "а" => "a",
-            "е" => "e",
-            "о" => "o",
-            "с" => "c",
-            "у" => "y"];
-
-
-        $result = [];
-
-        foreach (preg_split('//u', $str, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $char) {
-            $result[] = random_int(0, 1) === 1
-                ? strtr($char, $replace)
-                : $char;
-        }
-
-        return implode('', $result);
-    }
-
-    /**
      * Remove HTML markup and decode entities into plain text.
      *
      * @param string $str
@@ -324,24 +250,6 @@ class StringHelper
         } else {
             return '';
         }
-    }
-
-    /**
-     * Translate a charset identifier to its localized display label when available.
-     *
-     * @param string|null $str
-     * @return string|null
-     */
-    public static function charsetList(?string $str): ?string
-    {
-        if ($str === null || trim($str) === '') {
-            return $str;
-        }
-
-        $normalized = mb_strtolower(trim($str));
-        $translationKey = self::CHARSET_TRANSLATIONS[$normalized] ?? null;
-
-        return $translationKey ? __($translationKey) : $str;
     }
 
     /**

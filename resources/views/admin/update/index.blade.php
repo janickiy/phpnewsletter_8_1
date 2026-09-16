@@ -9,36 +9,30 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                @if (!empty($button_update))
+                    <div id="btn_refresh">
+                        <button type="button" id="start_update" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-arrows-rotate"></i> {!! $button_update !!}
+                        </button>
+                    </div>
+                @endif
 
-                    @if (!empty($button_update))
-                        <div id="btn_refresh">
-                            <a id="start_update" class="btn btn-outline btn-default">
-                                <i class="fa fa-sync-alt"></i> {!! $button_update !!}
-                            </a>
-                        </div>
-                    @endif
+                @if (!empty($msg_no_update))
+                    <button type="button" class="btn btn-outline-secondary" disabled>
+                        <i class="fa-solid fa-arrows-rotate"></i> {!! $msg_no_update !!}
+                    </button>
+                @endif
 
-                    @if (!empty($msg_no_update))
-                        <a class="btn btn-outline btn-default" disabled>
-                            <i class="fa fa-sync-alt"></i> {!! $msg_no_update !!}
-                        </a>
-                    @endif
-
-                </div>
-                <!-- /.col -->
             </div>
-            <!-- /.row -->
+            <!-- /.col -->
         </div>
-        <!-- /.container-fluid -->
-
-    </section>
-    <!-- /.content -->
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 
@@ -85,8 +79,8 @@
         }
 
         function renderRetryButton(message) {
-            const $button = $('<a>', {id: 'start_update', class: 'btn btn-outline btn-default'}).append(
-                $('<i>', {class: 'fa fa-sync-alt'})
+            const $button = $('<button>', {type: 'button', id: 'start_update', class: 'btn btn-outline-secondary'}).append(
+                $('<i>', {class: 'fa-solid fa-arrows-rotate'})
             ).append(' ' + buttonUpdateLabel);
             const $status = $('<p>', {class: 'text-muted text-danger', id: 'status_process'}).text(message || failedToUpdateText);
 

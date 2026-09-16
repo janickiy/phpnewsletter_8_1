@@ -4,7 +4,7 @@
 
 @section('css')
 
-    {!! Html::style('/plugins/highlightjs/styles/github-dark.css') !!}
+    <link rel="stylesheet" href="{{ asset('/plugins/highlightjs/styles/github-dark.css') }}">
 
     <style>
 
@@ -63,52 +63,47 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <div class="card">
+                    <!-- /.card-header -->
+                    <div class="card-body">
 
-                    <div class="card">
-                        <!-- /.card-header -->
-                        <div class="card-body">
+                        @include('include.subform')
 
-                            @include('include.subform')
+                        <div class="mb-3">
 
-                            <div class="form-group">
+                            <button type="button" class="btn btn-primary copy-code-button"
+                                    onclick="copyToClipboard('#codebox')">
+                                <span id="myTooltip">{{ __('frontend.str.copy_to_clipboard') }}</span>
+                            </button>
 
-                                <button type="button" class="btn btn-primary copy-code-button"
-                                        onclick="copyToClipboard('#codebox')">
-                                    <span id="myTooltip">{{ __('frontend.str.copy_to_clipboard') }}</span>
-                                </button>
+                            <pre><code class="language-html" id="codebox">{{ $embedCode }}</code></pre>
 
-                                <pre><code class="language-html" id="codebox">{{ $embedCode }}</code></pre>
-
-                            </div>
-
-                            <!-- /.card-body -->
                         </div>
-                        <!-- /.card -->
-                    </div>
-                    <!-- /.col -->
-                </div>
-                <!-- /.row -->
-            </div>
-            <!-- /.container-fluid -->
 
-    </section>
-    <!-- /.content -->
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 
 @section('js')
 
-    <!-- {!! Html::script('/plugins/highlightjs/highlight.js') !!} -->
-    <!-- {!! Html::script('/plugins/highlightjs/highlightjs-line-numbers.js') !!} -->
+    <!-- <script src="{{ asset('/plugins/highlightjs/highlight.js') }}"></script> -->
+    <!-- <script src="{{ asset('/plugins/highlightjs/highlightjs-line-numbers.js') }}"></script> -->
 
-    {!! Html::script('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js') !!}
-    {!! Html::script('https://cdnjs.cloudflare.com/ajax/libs/highlightjs-line-numbers.js/2.6.0/highlightjs-line-numbers.min.js') !!}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlightjs-line-numbers.js/2.6.0/highlightjs-line-numbers.min.js"></script>
 
     <script>hljs.highlightAll();</script>
     <script>hljs.initLineNumbersOnLoad();</script>

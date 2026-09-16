@@ -1,27 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var fi = {
-    code: "fi",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "Edellinen",
-      next: "Seuraava",
-      today: "T\xE4n\xE4\xE4n",
-      month: "Kuukausi",
-      week: "Viikko",
-      day: "P\xE4iv\xE4",
-      list: "Tapahtumat"
-    },
-    weekText: "Vk",
-    allDayText: "Koko p\xE4iv\xE4",
-    moreLinkText: "lis\xE4\xE4",
-    noEventsText: "Ei n\xE4ytett\xE4vi\xE4 tapahtumia"
-  };
-
-  return fi;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"fi",week:{dow:1,doy:4},buttonText:{prev:"Edellinen",next:"Seuraava",today:"Tänään",year:"Vuosi",month:"Kuukausi",week:"Viikko",day:"Päivä",list:"Tapahtumat"},weekText:"Vk",allDayText:"Koko päivä",moreLinkText:"lisää",noEventsText:"Ei näytettäviä tapahtumia"})}();

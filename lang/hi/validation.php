@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'utf8_file' => ':attribute फ़ाइल UTF-8 एन्कोडिंग में होनी चाहिए।',
 
     'accepted'   => ':attribute को स्वीकार करना आवश्यक है।',
     'active_url' => ':attribute एक वैध URL नहीं है।',

@@ -1,29 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var lv = {
-    code: "lv",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "Iepr.",
-      next: "N\u0101k.",
-      today: "\u0160odien",
-      month: "M\u0113nesis",
-      week: "Ned\u0113\u013Ca",
-      day: "Diena",
-      list: "Dienas k\u0101rt\u012Bba"
-    },
-    weekText: "Ned.",
-    allDayText: "Visu dienu",
-    moreLinkText: function(n) {
-      return "+v\u0113l " + n;
-    },
-    noEventsText: "Nav notikumu"
-  };
-
-  return lv;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";var t={code:"lv",week:{dow:1,doy:4},buttonText:{prev:"Iepr.",next:"Nāk.",today:"Šodien",year:"Gads",month:"Mēnesis",week:"Nedēļa",day:"Diena",list:"Dienas kārtība"},weekText:"Ned.",allDayText:"Visu dienu",moreLinkText:e=>"+vēl "+e,noEventsText:"Nav notikumu"};FullCalendar.globalLocales.push(t)}();

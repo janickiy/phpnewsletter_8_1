@@ -1,27 +1,6 @@
-FullCalendar.globalLocales.push(function () {
-  'use strict';
-
-  var nn = {
-    code: "nn",
-    week: {
-      dow: 1,
-      doy: 4
-    },
-    buttonText: {
-      prev: "F\xF8rre",
-      next: "Neste",
-      today: "I dag",
-      month: "M\xE5nad",
-      week: "Veke",
-      day: "Dag",
-      list: "Agenda"
-    },
-    weekText: "Veke",
-    allDayText: "Heile dagen",
-    moreLinkText: "til",
-    noEventsText: "Ingen hendelser \xE5 vise"
-  };
-
-  return nn;
-
-}());
+/*!
+FullCalendar Core v6.1.21
+Docs & License: https://fullcalendar.io
+(c) 2024 Adam Shaw
+*/
+!function(e){"use strict";FullCalendar.globalLocales.push({code:"nn",week:{dow:1,doy:4},buttonText:{prev:"Førre",next:"Neste",today:"I dag",year:"År",month:"Månad",week:"Veke",day:"Dag",list:"Agenda"},weekText:"Veke",allDayText:"Heile dagen",moreLinkText:"til",noEventsText:"Ingen hendelser å vise"})}();

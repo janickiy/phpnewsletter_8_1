@@ -4,48 +4,42 @@
 
 @section('css')
 
-    {!! Html::style('/plugins/jquery-treeview/jquery.treeview.css') !!}
+    <link rel="stylesheet" href="{{ asset('/plugins/jquery-treeview/jquery.treeview.css') }}">
 
 @endsection
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <div class="card">
+                    <!-- /.card-header -->
+                    <div class="card-body">
 
-                    <div class="card">
-                        <!-- /.card-header -->
-                        <div class="card-body">
+                        <div id="tree" style="padding-bottom: 15px;">
 
-                            <div id="tree" style="padding-bottom: 15px;">
-
-                                {!! StringHelper::tree($phpinfo) !!}
-
-                            </div>
+                            {!! StringHelper::tree($phpinfo) !!}
 
                         </div>
-                        <!-- /.card-body -->
-                    </div>
-                    <!-- /.card -->
-                </div>
-                <!-- /.col -->
-            </div>
-            <!-- /.row -->
-        </div>
-        <!-- /.container-fluid -->
 
-    </section>
-    <!-- /.content -->
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container-fluid -->
 
 @endsection
 
 @section('js')
 
-    {!! Html::script('/plugins/jquery-treeview/jquery.treeview.js') !!}
+    <script src="{{ asset('/plugins/jquery-treeview/jquery.treeview.js') }}"></script>
 
     <script>
         $(function () {

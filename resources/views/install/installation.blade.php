@@ -10,7 +10,8 @@
         'installation' => 'selected'
     ]])
 
-    {!! Form::open(['route' => 'install.install']) !!}
+    <form method="POST" action="{{ route('install.install') }}" accept-charset="UTF-8">
+        @csrf
 
     <div class="step-content">
         <h3>{{ __('install.str.install') }}</h3>
@@ -20,7 +21,7 @@
         <div class="form-group">
             <label for="login">{{ __('install.str.login') }}</label>
 
-            {!! Form::text('login', old('login'), ['class' => "form-control", 'id' => "login"]) !!}
+            <input type="text" name="login" value="{{ old('login') }}" class="form-control" id="login">
 
             @if ($errors->has('login'))
                 <span class="text-danger">{{ $errors->first('login') }}</span>
@@ -29,9 +30,9 @@
         </div>
         <div class="form-group">
 
-            {!! Form::label('password', __('install.str.password')) !!}
+            <label for="password">{{ __('install.str.password') }}</label>
 
-            {!! Form::password('password', ['class' => "form-control", 'id' => "password"]) !!}
+            <input type="password" name="password" class="form-control" id="password">
 
             @if ($errors->has('password'))
                 <span class="text-danger">{{ $errors->first('password') }}</span>
@@ -39,9 +40,9 @@
         </div>
         <div class="form-group">
 
-            {!! Form::label('confirm_password', __('install.str.confirm_password')) !!}
+            <label for="confirm_password">{{ __('install.str.confirm_password') }}</label>
 
-            {!! Form::password('confirm_password', ['class' => "form-control", 'id' => "confirm_password"]) !!}
+            <input type="password" name="confirm_password" class="form-control" id="confirm_password">
 
             @if ($errors->has('confirm_password'))
                 <span class="text-danger">{{ $errors->first('confirm_password') }}</span>
@@ -54,7 +55,7 @@
         <div class="clearfix"></div>
     </div>
 
-    {!! Form::close() !!}
+    </form>
 
 @endsection
 

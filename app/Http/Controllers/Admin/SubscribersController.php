@@ -9,7 +9,6 @@ use App\Helpers\StringHelper;
 use App\Http\Requests\Admin\Subscribers\EditRequest;
 use App\Http\Requests\Admin\Subscribers\ImportRequest;
 use App\Http\Requests\Admin\Subscribers\StoreRequest;
-use App\Models\Charsets;
 use App\Repositories\CategoryRepository;
 use App\Repositories\SubscriberRepository;
 use App\Repositories\SubscriptionRepository;
@@ -175,14 +174,13 @@ class SubscribersController extends Controller
     }
 
     /**
-     * Show the subscriber import form with charset and category options.
+     * Show the subscriber import form with category options.
      *
      * @return View
      */
     public function import(): View
     {
         return view('admin.subscribers.import', [
-            'charsets' => Charsets::getOption(),
             'category_options' => $this->categoryRepository->getOption(),
             'maxUploadFileSize' => StringHelper::maxUploadFileSize(),
             'infoAlert' => __('frontend.hint.subscribers_import'),

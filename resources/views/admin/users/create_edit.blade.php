@@ -16,132 +16,137 @@
 
 @section('content')
 
-    <!-- Main content -->
-    <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+                <!-- general form elements -->
+                <div class="card card-outline card-primary">
 
-                    <!-- general form elements -->
-                    <header class="card card-primary">
+                    <!-- form start -->
+                    <form action="{{ isset($row) ? route('admin.users.update') : route('admin.users.store') }}" method="POST">
+                        @csrf
+                        @if (isset($row))
+                            @method('PUT')
+                        @endif
 
-                        <!-- form start -->
-                        {!! Form::open(['url' => isset($row) ? route('admin.users.update') : route('admin.users.store'), 'method' => isset($row) ? 'put' : 'post']) !!}
+                    @if (isset($row))
+                        <input type="hidden" name="id" value="{{ $row->id }}">
+                    @endif
 
-                        {!! isset($row) ? Form::hidden('id', $row->id) : '' !!}
+                    <div class="card-body">
 
-                        <div class="card-body">
+                        <p>*-{{ __('frontend.form.required_fields') }}</p>
 
-                            <p>*-{{ __('frontend.form.required_fields') }}</p>
+                        <div class="mb-3">
 
-                            <div class="form-group">
+                            <label for="name" class="form-label">{{ __('frontend.form.name') }}</label>
 
-                                {!! Form::label('name', __('frontend.form.name')) !!}
+                            <input type="text" name="name" value="{{ old('name', $row->name ?? null) }}" class="form-control" placeholder="{{ __('frontend.form.name') }}" id="name">
 
-                                {!! Form::text('name', old('name', $row->name ?? null), ['class' => 'form-control', 'placeholder' => __('frontend.form.name')]) !!}
+                            @if ($errors->has('name'))
+                                <p class="text-danger">{{ $errors->first('name') }}</p>
+                            @endif
+                        </div>
 
-                                @if ($errors->has('name'))
-                                    <p class="text-danger">{{ $errors->first('name') }}</p>
-                                @endif
-                            </div>
+                        <div class="mb-3">
 
-                            <div class="form-group">
+                            <label for="login" class="form-label">{{ __('frontend.form.login') }}</label>
 
-                                {!! Form::label('login', __('frontend.form.login')) !!}
+                            <input type="text" name="login" value="{{ old('login', $row->login ?? null) }}" placeholder="{{ __('frontend.form.login') }}" class="form-control" id="login">
 
-                                {!! Form::text('login', old('login', $row->login ?? null), [ 'placeholder' => __('frontend.form.login'), 'class' => 'form-control']) !!}
-
-                                @if ($errors->has('login'))
-                                    <p class="text-danger">{{ $errors->first('login') }}</p>
-                                @endif
-
-                            </div>
-
-                            <div class="form-group">
-
-                                {!! Form::label('description', __('frontend.form.description')) !!}
-
-                                {!! Form::textarea('description', old('description', $row->description ?? null), [ 'placeholder' => __('frontend.form.description'), 'rows' => 3, 'class' => 'form-control']) !!}
-
-                                @if ($errors->has('description'))
-                                    <p class="text-danger">{{ $errors->first('description') }}</p>
-                                @endif
-
-                            </div>
-
-                            @if ((isset($row->id) && $row->id != Auth::user()->id) || !isset($row->id))
-
-                                <div class="form-group">
-
-                                    {!! Form::label('role', __('frontend.form.role')) !!}
-
-                                    {!! Form::select('role', $options, $row->role ?? 'admin', ['placeholder' => __('frontend.form.select_role'), 'class' => 'custom-select']) !!}
-
-                                    @if ($errors->has('role'))
-                                        <p class="text-danger">{{ $errors->first('role') }}</p>
-                                    @endif
-
-                                </div>
-
-                            @else
-                                {!! Form::hidden('role', $row->role) !!}
+                            @if ($errors->has('login'))
+                                <p class="text-danger">{{ $errors->first('login') }}</p>
                             @endif
 
-                            <div class="form-group">
+                        </div>
 
-                                {!! Form::label('password', __('frontend.form.password')) !!}
+                        <div class="mb-3">
 
-                                {!! Form::password('password', ['class' => 'form-control', 'autocomplete' => 'new-password']) !!}
+                            <label for="description" class="form-label">{{ __('frontend.form.description') }}</label>
 
-                                @if (isset($row))
-                                    <small class="form-text text-muted">
-                                        {{ __('frontend.form.leave_blank_password') }}
-                                    </small>
-                                @endif
+                            <textarea name="description" placeholder="{{ __('frontend.form.description') }}" rows="3" class="form-control" id="description" cols="50">{{ old('description', $row->description ?? null) }}</textarea>
 
-                                @if ($errors->has('password'))
-                                    <p class="text-danger">{{ $errors->first('password') }}</p>
+                            @if ($errors->has('description'))
+                                <p class="text-danger">{{ $errors->first('description') }}</p>
+                            @endif
+
+                        </div>
+
+                        @if ((isset($row->id) && $row->id != Auth::user()->id) || !isset($row->id))
+
+                            <div class="mb-3">
+
+                                <label for="role" class="form-label">{{ __('frontend.form.role') }}</label>
+
+                                <select name="role" class="form-select" id="role">
+                                    <option value="" @selected((string) old('role', $row->role ?? 'admin') === '')>{{ __('frontend.form.select_role') }}</option>
+                                    @foreach ($options as $value => $label)
+                                        <option value="{{ $value }}" @selected((string) old('role', $row->role ?? 'admin') === (string) $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+
+                                @if ($errors->has('role'))
+                                    <p class="text-danger">{{ $errors->first('role') }}</p>
                                 @endif
 
                             </div>
 
-                            <div class="form-group">
+                        @else
+                            <input type="hidden" name="role" value="{{ old('role', $row->role) }}" id="role">
+                        @endif
 
-                                {!! Form::label('password_again', __('frontend.form.password_again')) !!}
+                        <div class="mb-3">
 
-                                {!! Form::password('password_again', ['class' => 'form-control', 'autocomplete' => 'new-password']) !!}
+                            <label for="password" class="form-label">{{ __('frontend.form.password') }}</label>
 
-                                @if ($errors->has('password_again'))
-                                    <p class="text-danger">{{ $errors->first('password_again') }}</p>
-                                @endif
+                            <input type="password" name="password" class="form-control" autocomplete="new-password" id="password">
 
-                            </div>
+                            @if (isset($row))
+                                <small class="form-text text-muted">
+                                    {{ __('frontend.form.leave_blank_password') }}
+                                </small>
+                            @endif
+
+                            @if ($errors->has('password'))
+                                <p class="text-danger">{{ $errors->first('password') }}</p>
+                            @endif
 
                         </div>
-                        <!-- /.card-body -->
 
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">
-                                {{ isset($row) ? __('frontend.form.edit') : __('frontend.form.add') }}
-                            </button>
-                            <a class="btn btn-default float-sm-right" href="{{ route('admin.users.index') }}">
-                                <i class="fas fa-arrow-left mr-1"></i>
-                                {{ __('frontend.form.back') }}
-                            </a>
+                        <div class="mb-3">
+
+                            <label for="password_again" class="form-label">{{ __('frontend.form.password_again') }}</label>
+
+                            <input type="password" name="password_again" class="form-control" autocomplete="new-password" id="password_again">
+
+                            @if ($errors->has('password_again'))
+                                <p class="text-danger">{{ $errors->first('password_again') }}</p>
+                            @endif
+
                         </div>
 
-                        {!! Form::close() !!}
+                    </div>
+                    <!-- /.card-body -->
 
-                    </header>
+                    <div class="card-footer d-flex flex-wrap justify-content-between gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            {{ isset($row) ? __('frontend.form.edit') : __('frontend.form.add') }}
+                        </button>
+                        <a class="btn btn-secondary" href="{{ route('admin.users.index') }}">
+                            <i class="fa-solid fa-arrow-left me-1"></i>
+                            {{ __('frontend.form.back') }}
+                        </a>
+                    </div>
+
+                    </form>
 
                 </div>
-                <!-- /.card -->
-            </div>
-        </div>
 
-    </section>
-    <!-- /.content -->
+            </div>
+            <!-- /.card -->
+        </div>
+    </div>
 
 @endsection
 
