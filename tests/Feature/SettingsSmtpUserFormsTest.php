@@ -87,8 +87,8 @@ class SettingsSmtpUserFormsTest extends TestCase
         $this->assertSame('POST', $xpath->evaluate('string(//form/@method)'));
         $this->assertSame('25', $xpath->evaluate('string(//input[@name="port"]/@value)'));
         $this->assertSame('5', $xpath->evaluate('string(//input[@name="timeout"]/@value)'));
-        $this->assertSame(1, $xpath->query('//input[@id="secure_no"][@checked]')->length);
-        $this->assertSame(1, $xpath->query('//input[@id="authentication_no"][@checked]')->length);
+        $this->assertSame('no', $xpath->evaluate('string(//select[@name="secure"]/option[@selected]/@value)'));
+        $this->assertSame('no', $xpath->evaluate('string(//select[@name="authentication"]/option[@selected]/@value)'));
         $this->assertSame(0, $xpath->query('//input[@name="_method"]')->length);
 
         $xpath = $this->page(route('admin.smtp.index'), ['_old_input' => ['action' => '0']]);
@@ -117,7 +117,8 @@ class SettingsSmtpUserFormsTest extends TestCase
         $this->assertSame('Stored "<&> secret', $xpath->evaluate('string(//input[@name="password"]/@value)'));
         $this->assertSame('PUT', $xpath->evaluate('string(//form/input[@name="_method"]/@value)'));
         $this->assertSame((string) $smtp->id, $xpath->evaluate('string(//input[@name="id"]/@value)'));
-        $this->assertSame(1, $xpath->query('//input[@id="secure_tls"][@checked]')->length);
+        $this->assertSame('tls', $xpath->evaluate('string(//select[@name="secure"]/option[@selected]/@value)'));
+        $this->assertSame('plain', $xpath->evaluate('string(//select[@name="authentication"]/option[@selected]/@value)'));
 
         $xpath = $this->page(route('admin.smtp.edit', ['id' => $smtp->id]), [
             '_old_input' => [
@@ -133,8 +134,8 @@ class SettingsSmtpUserFormsTest extends TestCase
         $this->assertSame(0, $xpath->query('//*[@id="injected"]')->length);
         $this->assertSame('', $xpath->evaluate('string(//input[@name="password"]/@value)'));
         $this->assertSame('465', $xpath->evaluate('string(//input[@name="port"]/@value)'));
-        $this->assertSame(1, $xpath->query('//input[@id="secure_ssl"][@checked]')->length);
-        $this->assertSame(1, $xpath->query('//input[@id="authentication_crammd5"][@checked]')->length);
+        $this->assertSame('ssl', $xpath->evaluate('string(//select[@name="secure"]/option[@selected]/@value)'));
+        $this->assertSame('crammd5', $xpath->evaluate('string(//select[@name="authentication"]/option[@selected]/@value)'));
     }
 
     public function test_user_forms_restore_safe_fields_but_never_repopulate_passwords(): void

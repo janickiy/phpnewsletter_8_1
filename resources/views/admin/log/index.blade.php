@@ -57,7 +57,7 @@
                     </div>
                 </div>
 
-                <div class="card card-outline card-secondary">
+                <div class="card card-outline card-secondary mt-4">
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i>

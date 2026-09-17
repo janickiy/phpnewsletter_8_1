@@ -61,7 +61,7 @@
                     <div class="card card-outline card-primary">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fa-solid fa-envelope-open-text me-2" aria-hidden="true"></i>
+                                <i class="fa-solid {{ isset($template) ? 'fa-pen-to-square' : 'fa-envelope-open-text' }} me-2" aria-hidden="true"></i>
                                 {{ $title }}
                             </h3>
                         </div>
@@ -180,11 +180,12 @@
                         </div>
                         <!-- /.card-body -->
 
-                        <div class="card-footer form-actions-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="card-footer">
                             <button type="submit" class="btn btn-primary">
                                 {{ isset($template) ? __('frontend.form.edit') : __('frontend.form.add') }}
                             </button>
-                            <a class="btn btn-outline-secondary btn-back" href="{{ route('admin.templates.index') }}">
+                            <a class="btn btn-outline-secondary float-sm-end" href="{{ route('admin.templates.index') }}">
+                                <i class="fa-solid fa-arrow-left me-1"></i>
                                 {{ __('frontend.form.back') }}
                             </a>
 
