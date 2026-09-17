@@ -23,7 +23,7 @@
                 <!-- general form elements -->
                 <div class="card card-outline card-primary">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-list' }} me-2" aria-hidden="true"></i>{{ $title }}</h3>
+                        <h3 class="card-title"><i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-plus' }} me-2" aria-hidden="true"></i>{{ $title }}</h3>
                     </div>
 
                     <!-- form start -->
@@ -40,6 +40,22 @@
                     <div class="card-body">
 
                         <p>*-{{ __('frontend.form.required_fields') }}</p>
+
+                        <div class="mb-3">
+                            <label for="project_id" class="form-label">{{ __('frontend.str.projects.project') }}{{ !isset($row) || $row->project_id !== null ? '*' : '' }}</label>
+                            @if(isset($row))
+                                <input type="hidden" name="project_id" value="{{ $row->project_id }}">
+                                <input id="project_id" class="form-control" value="{{ $projects->firstWhere('id', $row->project_id)?->name ?? __('frontend.str.projects.subscriber_unassigned') }}" readonly>
+                            @else
+                                <select name="project_id" id="project_id" class="form-select" required>
+                                    <option value="">{{ __('frontend.str.projects.select') }}</option>
+                                    @foreach($projects as $projectOption)
+                                        <option value="{{ $projectOption->id }}" @selected((int) old('project_id', $projects->first()?->id) === $projectOption->id)>{{ $projectOption->name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+                            @error('project_id')<p class="text-danger">{{ $message }}</p>@enderror
+                        </div>
 
                         <div class="mb-3">
                             <label for="name" class="form-label">{{ __('frontend.form.name') }}*</label>

@@ -11,7 +11,13 @@ class Redirect extends Model
 
     protected $table = 'redirect';
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     protected $fillable = [
+        'project_id',
         'url',
         'email'
     ];

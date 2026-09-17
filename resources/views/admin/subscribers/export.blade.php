@@ -34,6 +34,8 @@
 
                         <p>*-{{ __('frontend.form.required_fields') }}</p>
 
+                        @include('admin.subscribers.project_field')
+
                         <fieldset class="mb-3">
                             <legend class="fs-6 form-label">{{ __('frontend.form.format') }}</legend>
 
@@ -72,14 +74,13 @@
                                 $selectedCategoryIds = array_map('strval', (array) old('categoryId', []));
                             @endphp
                             <select name="categoryId[]" id="categoryId" multiple class="form-select">
-                                <option value="">{{ __('frontend.form.select_category') }}</option>
                                 @foreach($options as $categoryValue => $categoryLabel)
                                     <option value="{{ $categoryValue }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>{{ $categoryLabel }}</option>
                                 @endforeach
                             </select>
 
-                            @if ($errors->has('categoryId'))
-                                <p class="text-danger">{{ $errors->first('categoryId') }}</p>
+                            @if ($errors->has('categoryId') || $errors->has('categoryId.*'))
+                                <p class="text-danger">{{ $errors->first('categoryId') ?: $errors->first('categoryId.*') }}</p>
                             @endif
 
                         </div>
@@ -109,6 +110,7 @@
 @endsection
 
 @section('js')
+    @include('admin.subscribers.project_categories_js')
 
 
 @endsection

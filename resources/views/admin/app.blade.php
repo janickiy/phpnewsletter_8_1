@@ -78,7 +78,7 @@
 
             <li class="nav-item">
                 <a class="nav-link navbar-user-link"
-                   href="{{ route('admin.users.edit', ['id' => Auth::user()->id ]) }}">
+                   @if(auth()->user()->isAdmin()) href="{{ route('admin.users.edit', ['id' => Auth::user()->id ]) }}" @endif>
                     {{ Auth::user()->login }} @if(!empty(Auth::user()->name))
                         ({{ Auth::user()->name }})
                     @endif
@@ -126,6 +126,16 @@
                         </a>
                     </li>
 
+                    @if(auth()->user()->canManageProjects())
+                        <li class="nav-item">
+                            <a href="{{ route('admin.projects.index') }}" class="nav-link{{ Request::is('projects*') ? ' active' : '' }}" title="{{ __('frontend.str.projects.index') }}">
+                                <i class="nav-icon fa-solid fa-folder-open"></i>
+                                <p>{{ __('frontend.str.projects.index') }}</p>
+                            </a>
+                        </li>
+                    @endif
+
+                    @if(auth()->user()->canManageProjects())
                     <li class="nav-item">
                         <a href="{{ route('admin.templates.index') }}" class="nav-link{{ Request::is('templates*') || Request::is('template*') ? ' active' : '' }}"
                            title="{{ __('frontend.menu.templates') }}">
@@ -133,8 +143,9 @@
                             <p>{{ __('frontend.menu.templates') }}</p>
                         </a>
                     </li>
+                    @endif
 
-                    @if(PermissionsHelper::has_permission('admin|moderator'))
+                    @if(PermissionsHelper::has_permission('admin|project_admin|moderator'))
 
                         <li class="nav-item">
                             <a href="{{ route('admin.subscribers.index') }}" class="nav-link{{ Request::is('subscribers*') ? ' active' : '' }}"
@@ -144,6 +155,9 @@
                             </a>
                         </li>
 
+                    @endif
+
+                    @if(auth()->user()->isAdmin())
                         <li class="nav-item">
                             <a href="{{ route('admin.macros.index') }}" class="nav-link{{ Request::is('macros*') ? ' active' : '' }}"
                                title="{{ __('frontend.menu.macros') }}">
@@ -154,6 +168,7 @@
 
                     @endif
 
+                    @if(auth()->user()->canManageProjects())
                     <li class="nav-item">
                         <a href="{{ route('admin.schedule.index') }}" class="nav-link{{ Request::is('schedule*') ? ' active' : '' }}"
                            title="{{ __('frontend.menu.schedule') }}">
@@ -161,8 +176,9 @@
                             <p>{{ __('frontend.menu.schedule') }}</p>
                         </a>
                     </li>
+                    @endif
 
-                    @if(PermissionsHelper::has_permission('admin|moderator'))
+                    @if(auth()->user()->isAdmin())
 
                         <li class="nav-item">
                             <a href="{{ route('admin.category.index') }}" class="nav-link{{ Request::is('category*') ? ' active' : '' }}"
@@ -215,7 +231,7 @@
                         </ul>
                     </li>
 
-                    @if(PermissionsHelper::has_permission(Auth::user()->role,'admin'))
+                    @if(auth()->user()->isAdmin())
 
                         <li class="nav-item">
                             <a href="{{ route('admin.settings.index') }}" class="nav-link{{  Request::is('settings*') ? ' active' : '' }}"
@@ -227,7 +243,7 @@
 
                     @endif
 
-                    @if(PermissionsHelper::has_permission(Auth::user()->role,'admin'))
+                    @if(auth()->user()->isAdmin())
 
                         <li class="nav-item">
                             <a href="{{ route('admin.users.index') }}" class="nav-link{{ Request::is('users*') ? ' active' : '' }}"
@@ -239,7 +255,7 @@
 
                     @endif
 
-                    @if(PermissionsHelper::has_permission(Auth::user()->role,'admin'))
+                    @if(auth()->user()->isAdmin())
 
                         <li class="nav-item">
                             <a href="{{ route('admin.update.index') }}" class="nav-link{{ Request::is('update*') ? ' active' : '' }}" title="{{ __('frontend.menu.update') }}">
@@ -276,7 +292,7 @@
                                 </a>
                             </li>
 
-                            @if(PermissionsHelper::has_permission(Auth::user()->role,'admin|moderator'))
+                            @if(PermissionsHelper::has_permission('admin|project_admin|moderator'))
 
                                 <li class="nav-item">
                                     <a href="{{ route('admin.pages.cron_job_list') }}" class="nav-link{{ Request::is('pages/cron-job-list*') ? ' active' : '' }}"

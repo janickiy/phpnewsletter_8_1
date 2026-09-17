@@ -30,46 +30,44 @@
                             </a>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <form action="{{ route('admin.smtp.status') }}" method="POST">
+                        @csrf
+                        <div class="card-body">
+                            <table id="itemList" class="table table-striped table-hover align-middle w-100">
+                                <thead>
+                                <tr>
+                                    <th style="width: 10px">
+                                    <span>
+                                       <input type="checkbox" class="form-check-input" title="{{ __('frontend.str.check_uncheck_all') }}" id="checkAll">
+                                    </span>
+                                    </th>
+                                    <th>{{ __('frontend.str.smtp_server') }}</th>
+                                    <th>E-mail</th>
+                                    <th>{{ __('frontend.str.login') }}</th>
+                                    <th>{{ __('frontend.str.port') }}</th>
+                                    <th>{{ __('frontend.str.connection_timeout') }}</th>
+                                    <th>{{ __('frontend.str.connection') }}</th>
+                                    <th>{{ __('frontend.str.authentication_method') }}</th>
+                                    <th>{{ __('frontend.str.status') }}</th>
+                                    <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                </tr>
+                                </thead>
+                            </table>
 
-                        <form action="{{ route('admin.smtp.status') }}" method="POST">
-                            @csrf
-
-                        <table id="itemList" class="table table-striped table-hover align-middle w-100">
-                            <thead>
-                            <tr>
-                                <th style="width: 10px">
-                                <span>
-                                   <input type="checkbox" class="form-check-input" title="{{ __('frontend.str.check_uncheck_all') }}" id="checkAll">
-                                </span>
-                                </th>
-                                <th>{{ __('frontend.str.smtp_server') }}</th>
-                                <th>E-mail</th>
-                                <th>{{ __('frontend.str.login') }}</th>
-                                <th>{{ __('frontend.str.port') }}</th>
-                                <th>{{ __('frontend.str.connection_timeout') }}</th>
-                                <th>{{ __('frontend.str.connection') }}</th>
-                                <th>{{ __('frontend.str.authentication_method') }}</th>
-                                <th>{{ __('frontend.str.status') }}</th>
-                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
-                            </tr>
-                            </thead>
-                        </table>
-
-                        <div class="input-group input-group-sm mt-3" style="max-width: 24rem">
-                            <select name="action" class="form-select" id="select_action">
-                                <option value="" @selected((string) old('action', null) === '')>{{ '--' . __('frontend.str.action') . '--' }}</option>
-                                @foreach ([ '1' => __('frontend.str.activate'), '0' => __('frontend.str.deactivate'), '2' => __('frontend.str.remove') ] as $value => $label)
-                                <option value="{{ $value }}" @selected((string) old('action', null) === (string) $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn btn-success" id="apply" disabled>{{ __('frontend.str.apply') }}</button>
                         </div>
-
-                        </form>
-
-                    </div>
-                        <!-- /.card-body -->
+                        <div class="card-footer">
+                            <div class="input-group flex-nowrap" style="max-width: 22rem">
+                                <span class="input-group-text"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
+                                <select name="action" class="form-select" id="select_action" aria-label="{{ __('frontend.str.action') }}">
+                                    <option value="" @selected((string) old('action', null) === '')>{{ '--' . __('frontend.str.action') . '--' }}</option>
+                                    @foreach ([ '1' => __('frontend.str.activate'), '0' => __('frontend.str.deactivate'), '2' => __('frontend.str.remove') ] as $value => $label)
+                                    <option value="{{ $value }}" @selected((string) old('action', null) === (string) $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn btn-success" id="apply" disabled>{{ __('frontend.str.apply') }}</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <!-- /.card -->
             </div>

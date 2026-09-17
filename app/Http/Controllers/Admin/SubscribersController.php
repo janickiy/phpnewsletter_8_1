@@ -7,17 +7,19 @@ use App\DTO\Create\SubscriberCreateData;
 use App\DTO\Update\SubscriberUpdateData;
 use App\Helpers\StringHelper;
 use App\Http\Requests\Admin\Subscribers\EditRequest;
+use App\Http\Requests\Admin\Subscribers\ExportRequest;
+use App\Models\Category;
+use App\Models\Subscribers;
+use App\Services\ProjectAccess;
+use Illuminate\Validation\Rule;
 use App\Http\Requests\Admin\Subscribers\ImportRequest;
 use App\Http\Requests\Admin\Subscribers\StoreRequest;
-use App\Repositories\CategoryRepository;
 use App\Repositories\SubscriberRepository;
-use App\Repositories\SubscriptionRepository;
 use App\Services\DownloadService;
 use App\Services\SubscriberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -29,8 +31,6 @@ class SubscribersController extends Controller
      */
     public function __construct(
         private readonly SubscriberRepository $subscribersRepository,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly SubscriptionRepository $subscriptionRepository,
         private readonly DownloadService $downloadService,
         private readonly SubscriberService $subscriberService,
     ) {
@@ -58,7 +58,7 @@ class SubscribersController extends Controller
     public function create(): View
     {
         return view('admin.subscribers.create_edit', [
-            'options' => $this->categoryRepository->getOption(),
+            ...$this->projectFormData(),
             'infoAlert' => __('frontend.hint.subscribers_create'),
             'title' => __('frontend.title.subscribers_create'),
         ]);
@@ -78,6 +78,7 @@ class SubscribersController extends Controller
             $this->subscribersRepository->add(
                 new SubscriberCreateData(
                     email: $data['email'],
+                    projectIds: array_map('intval', $data['project_ids'] ?? []),
                     name: $data['name'] ?? '',
                     active: 1,
                     token: StringHelper::token(),
@@ -104,15 +105,11 @@ class SubscribersController extends Controller
      */
     public function edit(int $id): View
     {
-        $row = $this->subscribersRepository->find($id);
+        $row = ProjectAccess::subscribers(Subscribers::query())->findOrFail($id);
 
-
-        //dd($this->subscribersRepository->getSubscriberCategoryIdList($id));
-
-        abort_if(!$row, 404);
 
         return view('admin.subscribers.create_edit', [
-            'options' => $this->categoryRepository->getOption(),
+            ...$this->projectFormData($row),
             'row' => $row,
             'subscriberCategoryIds' => $this->subscribersRepository->getSubscriberCategoryIdList($id),
             'infoAlert' => __('frontend.hint.subscribers_edit'),
@@ -129,24 +126,16 @@ class SubscribersController extends Controller
     public function update(EditRequest $request): RedirectResponse
     {
         try {
-            DB::transaction(function () use ($request) {
-                $data = $request->validated();
-
-                $this->subscribersRepository->update(
-                    (int) $data['id'],
-                    new SubscriberUpdateData(
-                        email: $data['email'],
-                        name: $data['name'] ?? null,
-                    )
-                );
-
-                if (!empty($data['categoryId'])) {
-                    $this->subscriptionRepository->updateSubscriptions(
-                        $data['categoryId'],
-                        (int) $data['id']
-                    );
-                }
-            });
+            $data = $request->validated();
+            $this->subscribersRepository->update(
+                (int) $data['id'],
+                new SubscriberUpdateData(
+                    email: $data['email'],
+                    name: $data['name'] ?? null,
+                    projectIds: array_map('intval', $data['project_ids'] ?? []),
+                    categoryIds: array_map('intval', $data['categoryId'] ?? []),
+                )
+            );
         } catch (\Throwable $e) {
             report($e);
 
@@ -167,10 +156,7 @@ class SubscribersController extends Controller
      */
     public function destroy(int $id): void
     {
-        DB::transaction(function () use ($id) {
-            $this->subscriptionRepository->removeBySubscriberId($id);
-            $this->subscribersRepository->delete($id);
-        });
+        abort_unless($this->subscribersRepository->delete($id), 404);
     }
 
     /**
@@ -181,7 +167,7 @@ class SubscribersController extends Controller
     public function import(): View
     {
         return view('admin.subscribers.import', [
-            'category_options' => $this->categoryRepository->getOption(),
+            ...$this->projectFormData(),
             'maxUploadFileSize' => StringHelper::maxUploadFileSize(),
             'infoAlert' => __('frontend.hint.subscribers_import'),
             'title' => __('frontend.title.subscribers_import'),
@@ -258,7 +244,7 @@ class SubscribersController extends Controller
     public function export(): View
     {
         return view('admin.subscribers.export', [
-            'options' => $this->categoryRepository->getOption(),
+            ...$this->projectFormData(),
             'infoAlert' => __('frontend.hint.subscribers_export'),
             'title' => __('frontend.title.subscribers_export'),
         ]);
@@ -270,7 +256,7 @@ class SubscribersController extends Controller
      * @param Request $request
      * @return Response|StreamedResponse
      */
-    public function exportSubscribers(Request $request): Response|StreamedResponse
+    public function exportSubscribers(ExportRequest $request): Response|StreamedResponse
     {
         return $this->downloadService->exportSubscribers($request);
     }
@@ -283,10 +269,8 @@ class SubscribersController extends Controller
     public function removeAll(): RedirectResponse
     {
         try {
-            DB::transaction(function () {
-                $this->subscriptionRepository->deleteAll();
-                $this->subscribersRepository->deleteAll();
-            });
+            $ids = ProjectAccess::subscribers(Subscribers::query())->pluck('subscribers.id')->all();
+            $this->subscribersRepository->updateStatus(2, $ids);
         } catch (\Throwable $e) {
             report($e);
 
@@ -304,10 +288,17 @@ class SubscribersController extends Controller
      */
     public function status(Request $request): RedirectResponse
     {
+        $data = $request->validate([
+            'action' => ['required', Rule::in([0, 1, 2])],
+            'activate' => ['required', 'array', 'min:1'],
+            'activate.*' => ['required', 'integer', 'distinct'],
+        ]);
+        $ids = array_map('intval', $data['activate']);
+        abort_unless(ProjectAccess::subscribers(Subscribers::query())->whereIn('id', $ids)->count() === count($ids), 403);
         try {
             $this->subscribersRepository->updateStatus(
-                (int) $request->action,
-                (array) $request->activate
+                (int) $data['action'],
+                $ids
             );
         } catch (\Throwable $e) {
             report($e);
@@ -316,5 +307,33 @@ class SubscribersController extends Controller
         }
 
         return to_route('admin.subscribers.index')->with('success', __('message.actions_completed'));
+    }
+
+    /**
+     * @param Subscribers|null $subscriber
+     * @return array
+     */
+    private function projectFormData(?Subscribers $subscriber = null): array
+    {
+        $projects = ProjectAccess::projects()->orderBy('name')->get();
+        $defaultIds = $subscriber
+            ? $subscriber->projects()->whereIn('projects.id', $projects->pluck('id'))->pluck('projects.id')->all()
+            : (array) request('project_ids', request('project_id') ? [request('project_id')] : []);
+        $selectedProjectIds = array_values(array_intersect(
+            array_map('intval', (array) (session()->hasOldInput() ? old('project_ids', []) : $defaultIds)),
+            $projects->pluck('id')->all()
+        ));
+        $categories = ProjectAccess::scope(Category::query())->with('project')->orderBy('name')->get();
+        $options = $categories->whereIn('project_id', $selectedProjectIds)
+            ->mapWithKeys(fn ($category) => [$category->id => $category->project->name.' — '.$category->name]);
+
+        return [
+            'projects' => $projects,
+            'selectedProjectIds' => $selectedProjectIds,
+            'projectSelectionRequired' => !$subscriber && !auth()->user()->isAdmin(),
+            'categories' => $categories,
+            'options' => $options,
+            'category_options' => $options,
+        ];
     }
 }

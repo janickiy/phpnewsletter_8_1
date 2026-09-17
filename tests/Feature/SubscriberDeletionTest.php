@@ -23,13 +23,12 @@ class SubscriberDeletionTest extends TestCase
             'password' => bcrypt('secret123'),
         ]);
 
-        $subscriber = Subscribers::query()->create([
-            'name' => 'Delete Me',
+        $subscriber = $this->subscriberFixture(['name' => 'Delete Me',
             'email' => 'delete-me@example.com',
             'active' => 1,
             'token' => str_repeat('b', 32),
             'timeSent' => now(),
-        ]);
+        ], [$this->testProjectId()]);
 
         $route = Route::getRoutes()->match(
             Request::create('/subscribers/destroy/' . $subscriber->id, 'DELETE')

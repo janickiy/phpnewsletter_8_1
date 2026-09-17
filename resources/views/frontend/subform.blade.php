@@ -25,6 +25,7 @@
 
             <form method="POST" action="{{ url()->current() }}" accept-charset="UTF-8" id="addsub" autocomplete="off">
                 @csrf
+                <input type="hidden" name="project_id" value="{{ $project->id }}">
 
             @php
                 $selectedCategoryIds = collect(old('categoryId', []))->map(fn ($value) => (string) $value)->all();

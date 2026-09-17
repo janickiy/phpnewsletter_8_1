@@ -15,6 +15,8 @@ return new class extends Migration
             $table->engine = 'InnoDB';
 
             $table->increments('id');
+            $table->unsignedInteger('project_id')->index();
+            $table->foreign('project_id')->references('id')->on('projects')->restrictOnDelete();
             $table->string('event_name');
             $table->dateTime('event_start');
             $table->dateTime('event_end');

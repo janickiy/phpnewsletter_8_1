@@ -2,12 +2,21 @@
 
 namespace App\Http\Requests\Frontend;
 
+use Illuminate\Database\Query\Builder;
+use Illuminate\Validation\Rule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AddSubRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('email'))) {
+            $this->merge(['email' => strtolower(trim($this->input('email')))]);
+        }
+    }
+
     /**
      * Allow public visitors to submit the newsletter subscription form.
      */
@@ -24,10 +33,18 @@ class AddSubRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email:rfc', 'max:255', 'unique:subscribers,email'],
+            'project_id' => ['required', 'integer', Rule::exists('projects', 'id')->where('status', 1)],
+            'email' => ['required', 'email:rfc', 'max:255', Rule::unique('subscribers', 'email')->where(function (Builder $query): void {
+                $query->whereExists(function (Builder $memberships): void {
+                    $memberships->selectRaw('1')
+                        ->from('project_subscriber')
+                        ->whereColumn('project_subscriber.subscriber_id', 'subscribers.id')
+                        ->where('project_subscriber.project_id', (int) $this->input('project_id'));
+                });
+            })],
             'name' => ['nullable', 'string', 'max:255'],
             'categoryId' => ['nullable', 'array'],
-            'categoryId.*' => ['integer', 'exists:categories,id'],
+            'categoryId.*' => ['integer', 'distinct', Rule::exists('categories', 'id')->where('project_id', (int) $this->input('project_id'))],
         ];
     }
 

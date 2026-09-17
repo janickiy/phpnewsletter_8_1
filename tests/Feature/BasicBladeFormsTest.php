@@ -64,15 +64,15 @@ class BasicBladeFormsTest extends TestCase
 
     public function test_subscription_form_restores_multiple_categories_and_escapes_their_labels(): void
     {
-        $unselected = Category::query()->create(['name' => 'One']);
-        $selected = Category::query()->create(['name' => '<script id="injected">unsafe</script>']);
-        $anotherSelected = Category::query()->create(['name' => 'Three']);
+        $unselected = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'One']);
+        $selected = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => '<script id="injected">unsafe</script>']);
+        $anotherSelected = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Three']);
 
         $response = $this->withSession(['_token' => 'subscription-token', '_old_input' => [
             'categoryId' => [(string) $selected->id, (string) $anotherSelected->id],
             'name' => 'Subscriber & friend',
             'email' => 'subscriber@example.com',
-        ]])->get(route('frontend.form'))->assertOk();
+        ]])->get(route('frontend.form', ['project_id' => $this->testProjectId()]))->assertOk();
 
         $xpath = $this->parse($response->getContent());
         $this->assertSame(2, $xpath->query('//input[@name="categoryId[]"][@checked]')->length);
@@ -87,7 +87,7 @@ class BasicBladeFormsTest extends TestCase
     public function test_category_edit_form_keeps_put_method_and_empty_old_name(): void
     {
         $this->signIn();
-        $category = Category::query()->create(['name' => 'Saved category']);
+        $category = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Saved category']);
         $response = $this->withSession(['_old_input' => ['name' => null]])
             ->get(route('admin.category.edit', ['id' => $category->id]))->assertOk();
 
@@ -115,9 +115,9 @@ class BasicBladeFormsTest extends TestCase
     public function test_schedule_edit_keeps_saved_choices_then_clears_omitted_old_categories(): void
     {
         $this->signIn();
-        $category = Category::query()->create(['name' => 'Newsletter readers']);
-        $template = Templates::query()->create(['name' => 'Newsletter', 'body' => '<p>News</p>', 'prior' => 0]);
-        $schedule = Schedule::query()->create([
+        $category = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Newsletter readers']);
+        $template = Templates::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Newsletter', 'body' => '<p>News</p>', 'prior' => 0]);
+        $schedule = Schedule::query()->create(['project_id' => $this->testProjectId(),
             'event_name' => 'Mailing',
             'event_start' => now()->addDays(2),
             'event_end' => now()->addDays(3),

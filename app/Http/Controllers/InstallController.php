@@ -165,9 +165,8 @@ class InstallController extends Controller
             config(['app.debug' => true]);
 
             Artisan::call('migrate', ['--force' => true]);
-            Artisan::call('db:seed', ['--force' => true]);
-
             User::create(['name' => 'admin', 'login' => $request->input('login'), 'role' => 'admin', 'password' => Hash::make($request->input('password'))]);
+            Artisan::call('db:seed', ['--force' => true]);
 
             return redirect()
                 ->route('install.complete')

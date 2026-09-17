@@ -14,6 +14,9 @@ class UpdateHelper
 
     /**
      * Initialize update checks for the current locale and installed application version.
+     *
+     * @param string $language
+     * @param string $currentVersion
      */
     public function __construct(string $language, string $currentVersion)
     {
@@ -49,7 +52,7 @@ class UpdateHelper
     public function getUrlInfo(): string
     {
         return $this->url . '?' . http_build_query([
-                'id' => 5,
+                'id' => 6,
                 'version' => $this->currentVersion,
                 'lang' => $this->language,
                 'ip' => $this->getIP(),
@@ -300,6 +303,9 @@ class UpdateHelper
 
     /**
      * Extract the first valid IP from single-value or comma-separated proxy headers.
+     *
+     * @param string|null $value
+     * @return string|null
      */
     private function extractValidIp(?string $value): ?string
     {

@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('logs', function (Blueprint $table) {
             $table->increments('id');
             $table->timestamp('time');
+            $table->unsignedInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
         });
     }
 

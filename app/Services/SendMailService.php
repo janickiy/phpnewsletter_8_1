@@ -7,6 +7,11 @@ use App\DTO\Create\ReadySentCreateData;
 use App\Helpers\SettingsHelper;
 use App\Models\Subscribers;
 use App\Models\Templates;
+use App\Models\Category;
+use App\Models\Logs;
+use App\Models\User;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\{
     ReadySentRepository,
@@ -53,6 +58,11 @@ class SendMailService
         $prior = $request->input('prior');
         $email = $request->input('email');
         $templateId = (int) $request->input('id');
+        $project = ProjectAccess::authorizeProject($request->integer('project_id'), 'manage');
+        abort_unless((bool) $project->status, 422, __('frontend.str.projects.inactive_mailing'));
+        if ($templateId > 0) {
+            abort_unless(ProjectAccess::scope(Templates::query(), 'manage')->whereKey($templateId)->where('project_id', $project->id)->exists(), 404);
+        }
 
         $errors = [];
 
@@ -108,30 +118,9 @@ class SendMailService
      */
     public function sendOut(Request $request): array
     {
-        $templateIds = collect((array) $request->input('templateId', []))
-            ->filter(static fn ($id) => is_numeric($id))
-            ->map(static fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
+        [$templates, $categoryIds, $logId] = $this->mailingSelection($request);
 
-        $categoryIds = collect((array) $request->input('categoryId', []))
-            ->filter(static fn ($id) => is_numeric($id))
-            ->map(static fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-
-        $logId = (int) $request->input('logId');
-
-        if (empty($templateIds) || empty($categoryIds) || $logId <= 0) {
-            return [
-                'result' => false,
-                'errors' => __('frontend.str.error_server'),
-            ];
-        }
-
-        $this->processRepository->updateByUserId(Auth::user('web')->id, ProcessStatus::Start->value);
+        $this->processRepository->updateByUserId(Auth::id(), ProcessStatus::Start->value);
 
         $mailCount = 0;
         $attemptCount = 0;
@@ -153,7 +142,6 @@ class SendMailService
                 $interval = null;
         }
 
-        $templates = Templates::whereIn('id', $templateIds)->get();
 
         foreach ($templates ?? [] as $template) {
 
@@ -162,7 +150,7 @@ class SendMailService
             $subscriberUpdates = [];
 
             foreach ($subscribers ?? [] as $subscriber) {
-                if ($this->processRepository->getProcess(Auth::user('web')->id) === 'stop' || $this->processRepository->getProcess(Auth::user('web')->id) === 'pause') {
+                if ($this->processRepository->getProcess(Auth::id()) === 'stop' || $this->processRepository->getProcess(Auth::id()) === 'pause') {
                     return [
                         'result' => true,
                         'completed' => true,
@@ -171,7 +159,7 @@ class SendMailService
 
                 $this->mailingDelayService->waitBetween($attemptCount);
 
-                $sendEmail = new SendEmailHelper();
+                $sendEmail = $this->createSendEmailHelper();
                 $sendEmail->body = $template->body;
                 $sendEmail->subject = $template->name;
                 $sendEmail->prior = $template->prior;
@@ -180,7 +168,7 @@ class SendMailService
                 $sendEmail->subscriberId = $subscriber->id;
                 $sendEmail->name = $subscriber->name;
                 $sendEmail->templateId = $template->id;
-                $result = $sendEmail->sendEmail();
+                $result = $sendEmail->sendEmail($template->id);
                 $attemptCount++;
 
                 if ($result['result'] === true) {
@@ -193,7 +181,8 @@ class SendMailService
                         email: $subscriber->email,
                         template: $template->name,
                         errorMsg: null,
-                        readMail: null
+                        readMail: null,
+                        projectId: (int) $template->project_id,
                     ));
 
                     $mailCount++;
@@ -208,12 +197,13 @@ class SendMailService
                         email: $subscriber->email,
                         template: $template->name,
                         errorMsg: $result['error'],
-                        readMail: null
+                        readMail: null,
+                        projectId: (int) $template->project_id,
                     ));
                 }
 
                 if ((int)SettingsHelper::getInstance()->getValueForKey('LIMIT_SEND') === 1 && (int)SettingsHelper::getInstance()->getValueForKey('LIMIT_NUMBER') === $mailCount) {
-                    $this->processRepository->updateByUserId(Auth::user('web')->id, ProcessStatus::Stop->value);
+                    $this->processRepository->updateByUserId(Auth::id(), ProcessStatus::Stop->value);
                     $this->resultSend($subscriberUpdates);
                     return [
                         'result' => true,
@@ -226,7 +216,7 @@ class SendMailService
         }
 
         if ((int)SettingsHelper::getInstance()->getValueForKey('LIMIT_SEND') === 1 && (int)SettingsHelper::getInstance()->getValueForKey('LIMIT_NUMBER') === $mailCount) {
-            $this->processRepository->updateByUserId(Auth::user('web')->id, ProcessStatus::Stop->value);
+            $this->processRepository->updateByUserId(Auth::id(), ProcessStatus::Stop->value);
 
             return [
                 'result' => true,
@@ -234,7 +224,7 @@ class SendMailService
             ];
         }
 
-        $this->processRepository->updateByUserId(Auth::user('web')->id, ProcessStatus::Stop->value);
+        $this->processRepository->updateByUserId(Auth::id(), ProcessStatus::Stop->value);
 
         return [
             'result' => true,
@@ -250,21 +240,7 @@ class SendMailService
      */
     public function countSend(Request $request): array
     {
-        if (!$request->logId || !$request->categoryId) {
-            return [
-                'result' => false
-            ];
-        }
-
-        $categoryId = [];
-
-        foreach ($request->categoryId ?? [] as $id) {
-            if (is_numeric($id)) {
-                $categoryId[] = $id;
-            }
-        }
-
-        $logId = $request->input('logId');
+        [$templates, $categoryId, $logId] = $this->mailingSelection($request);
 
         $limit = (int)SettingsHelper::getInstance()->getValueForKey('LIMIT_SEND') === 1 ? (int)SettingsHelper::getInstance()->getValueForKey('LIMIT_NUMBER') : null;
 
@@ -282,13 +258,16 @@ class SendMailService
                 $interval = null;
         }
 
-        $total = $this->subscribersRepository->countSubscriptions($categoryId, $limit, $interval);
+        $total = $templates->sum(fn ($template) => $this->subscribersRepository->countSubscriptions($categoryId, $limit, $interval, (int) $template->project_id));
+        if ($limit !== null) {
+            $total = min($total, $limit);
+        }
         $success = $this->readySentRepository->countStatus($logId, 1);
         $unsuccess = $this->readySentRepository->countStatus($logId, 0);
 
         $sleepSetting = (int) SettingsHelper::getInstance()->getValueForKey('SLEEP');
         $sleep = $sleepSetting === 0 ? 0.5 : $sleepSetting;
-        $timeSec = intval(($total - ($success + $unsuccess)) * $sleep);
+        $timeSec = max(0, intval(($total - ($success + $unsuccess)) * $sleep));
 
         $datetime = new DateTime();
         $datetime->setTime(0, 0, $timeSec);
@@ -300,8 +279,34 @@ class SendMailService
             'success' => $success,
             'unsuccessful' => $unsuccess,
             'time' => $datetime->format('H:i:s'),
-            'leftsend' => $total > 0 ? round(($success + $unsuccess) / $total * 100, 2) : 0,
+            'leftsend' => $total > 0 ? min(100, round(($success + $unsuccess) / $total * 100, 2)) : 0,
         ];
+    }
+
+    /**
+     * Validate every selected identifier before a manual mailing can read or send data.
+     *
+     * @return array{Collection, array, int}
+     */
+    private function mailingSelection(Request $request): array
+    {
+        abort_unless(Auth::check(), 403);
+        $data = $request->validate([
+            'templateId' => ['required', 'array', 'min:1'],
+            'templateId.*' => ['required', 'integer', 'distinct'],
+            'categoryId' => ['required', 'array', 'min:1'],
+            'categoryId.*' => ['required', 'integer', 'distinct', Rule::in(ProjectAccess::scope(Category::query(), 'manage')->pluck('id')->all())],
+            'logId' => ['required', 'integer'],
+        ]);
+
+        $templates = ProjectAccess::scope(Templates::query(), 'manage')->with('project')->whereIn('id', $data['templateId'])->get();
+        abort_unless($templates->count() === count($data['templateId']), 404);
+        abort_if($templates->contains(fn ($template) => !(bool) $template->project->status), 422, __('frontend.str.projects.inactive_mailing'));
+
+        $log = Logs::query()->findOrFail($data['logId']);
+        abort_unless(Auth::user()->role === User::ROLE_ADMIN || (int) $log->user_id === (int) Auth::id(), 404);
+
+        return [$templates, array_map('intval', $data['categoryId']), (int) $log->id];
     }
 
     /**

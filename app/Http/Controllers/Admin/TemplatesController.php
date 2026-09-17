@@ -9,6 +9,8 @@ use App\Http\Requests\Admin\Templates\StoreRequest;
 use App\Http\Requests\Admin\Templates\DeleteRequest;
 use App\Http\Requests\Admin\Templates\UpdateRequest;
 use App\Models\Macros;
+use App\Models\Category;
+use App\Services\ProjectAccess;
 use App\Repositories\CategoryRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\TemplateService;
@@ -41,7 +43,7 @@ class TemplatesController extends Controller
     public function index(): View
     {
         return view('admin.templates.index', [
-            'categoryOptions' => $this->categoryRepository->getOption(),
+            'categoryOptions' => ProjectAccess::scope(Category::query(), 'manage')->with('project')->orderBy('name')->get()->mapWithKeys(fn ($category) => [$category->id => $category->project->name . ' — ' . $category->name])->all(),
             'infoAlert' => __('frontend.hint.template_index'),
             'title' => __('frontend.title.template_index'),
         ]);
@@ -57,6 +59,7 @@ class TemplatesController extends Controller
         return view('admin.templates.create_edit', [
             'infoAlert' => __('frontend.hint.template_create'),
             'macrosList' => $this->getMacros(),
+            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
             'title' => __('frontend.title.template_create'),
         ]);
     }
@@ -96,6 +99,7 @@ class TemplatesController extends Controller
                     name: $data['name'],
                     body: $data['body'],
                     prior: (int) $data['prior'],
+                    projectId: (int) $data['project_id'],
                 )
             );
 
@@ -128,6 +132,7 @@ class TemplatesController extends Controller
             'attachment' => $template->attach,
             'infoAlert' => __('frontend.hint.template_edit'),
             'macrosList' => $this->getMacros(),
+            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
             'title' => __('frontend.title.template_edit'),
         ]);
     }
@@ -149,6 +154,7 @@ class TemplatesController extends Controller
                     name: $data['name'],
                     body: $data['body'],
                     prior: (int) $data['prior'],
+                    projectId: (int) $data['project_id'],
                 )
             );
 
@@ -172,6 +178,8 @@ class TemplatesController extends Controller
      */
     public function destroy(int $id): RedirectResponse
     {
+        abort_unless($this->templateRepository->find($id), 404);
+
         try {
             $this->templateRepository->remove($id);
         } catch (\Throwable $e) {

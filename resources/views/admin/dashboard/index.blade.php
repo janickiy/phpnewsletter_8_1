@@ -51,6 +51,10 @@
             margin-bottom: 1rem;
         }
 
+        .dashboard-panels-reader {
+            grid-template-areas: "actions mailings" "delivery mailings";
+        }
+
         .dashboard-quick-actions { grid-area: actions; }
         .dashboard-mailings { grid-area: mailings; }
         .dashboard-delivery { grid-area: delivery; }
@@ -131,7 +135,8 @@
         }
 
         @media (max-width: 991.98px) {
-            .dashboard-panels {
+            .dashboard-panels,
+            .dashboard-panels-reader {
                 grid-template-columns: minmax(0, 1fr);
                 grid-template-areas: "actions" "delivery" "mailings" "templates";
             }
@@ -149,143 +154,64 @@
 @section('content')
 
     <div class="container-fluid dashboard-page">
+        @php
+            $cards = [
+                ['key' => 'projects', 'label' => __('frontend.str.projects.index'), 'note' => '', 'icon' => 'fa-folder-open', 'color' => 'secondary', 'route' => 'admin.projects.index', 'visible' => $canManage],
+                ['key' => 'templates', 'label' => __('frontend.menu.templates'), 'note' => __('frontend.str.add_template'), 'icon' => 'fa-envelope-open-text', 'color' => 'info', 'route' => 'admin.templates.index', 'visible' => $canManage],
+                ['key' => 'subscribers', 'label' => __('frontend.menu.subscribers'), 'note' => __('frontend.dashboard.active_count', ['count' => number_format($stats['activeSubscribers'])]), 'icon' => 'fa-user-group', 'color' => 'success', 'route' => 'admin.subscribers.index', 'visible' => true],
+                ['key' => 'schedule', 'label' => __('frontend.menu.schedule'), 'note' => __('frontend.dashboard.active_count', ['count' => number_format($stats['upcomingSchedule'])]), 'icon' => 'fa-calendar-days', 'color' => 'warning', 'route' => 'admin.schedule.index', 'visible' => $canManage],
+                ['key' => 'sentTotal', 'label' => __('frontend.menu.mailing_log'), 'note' => number_format($stats['sentFailed']).' '.__('frontend.str.error'), 'icon' => 'fa-paper-plane', 'color' => 'danger', 'route' => 'admin.log.index', 'visible' => true],
+                ['key' => 'categories', 'label' => __('frontend.menu.subscribers_category'), 'note' => __('frontend.str.category'), 'icon' => 'fa-list', 'color' => 'primary', 'route' => 'admin.category.index', 'visible' => $isAdmin],
+                ['key' => 'smtp', 'label' => __('frontend.str.smtp_server'), 'note' => __('frontend.dashboard.active_count', ['count' => number_format($stats['activeSmtp'])]), 'icon' => 'fa-inbox', 'color' => 'secondary', 'route' => 'admin.smtp.index', 'visible' => $isAdmin],
+                ['key' => 'clicks', 'label' => __('frontend.str.redirect'), 'note' => __('frontend.str.redirect_number'), 'icon' => 'fa-link', 'color' => 'dark', 'route' => 'admin.redirect.index', 'visible' => true],
+                ['key' => 'users', 'label' => __('frontend.menu.users'), 'note' => number_format($stats['macros']).' '.__('frontend.menu.macros'), 'icon' => 'fa-users-gear', 'color' => 'light', 'route' => 'admin.users.index', 'visible' => $isAdmin],
+            ];
+        @endphp
         <div class="row g-3 mb-3">
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-info dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['templates']) }}</h3>
-                        <p>{{ __('frontend.menu.templates') }}</p>
-                        <span class="dashboard-note">{{ __('frontend.str.add_template') }}</span>
+            @foreach($cards as $card)
+                @if($card['visible'])
+                    <div class="col-xl-3 col-sm-6 d-flex">
+                        <div class="small-box text-bg-{{ $card['color'] }} dashboard-small-box">
+                            <div class="inner">
+                                <h3>{{ number_format($stats[$card['key']]) }}</h3>
+                                <p>{{ $card['label'] }}</p>
+                                <span class="dashboard-note">{{ $card['note'] }}</span>
+                            </div>
+                            <i class="small-box-icon fa-solid {{ $card['icon'] }}" aria-hidden="true"></i>
+                            <a href="{{ route($card['route']) }}" class="small-box-footer {{ in_array($card['color'], ['info', 'warning', 'light']) ? 'link-dark' : 'link-light' }} link-underline-opacity-0 link-underline-opacity-50-hover">
+                                {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
+                            </a>
+                        </div>
                     </div>
-                    <i class="small-box-icon fa-solid fa-envelope-open-text" aria-hidden="true"></i>
-                    <a href="{{ route('admin.templates.index') }}" class="small-box-footer link-dark link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-success dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['subscribers']) }}</h3>
-                        <p>{{ __('frontend.menu.subscribers') }}</p>
-                        <span class="dashboard-note">{{ __('frontend.dashboard.active_count', ['count' => number_format($stats['activeSubscribers'])]) }}</span>
-                    </div>
-                    <i class="small-box-icon fa-solid fa-user-group" aria-hidden="true"></i>
-                    <a href="{{ route('admin.subscribers.index') }}" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-warning dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['schedule']) }}</h3>
-                        <p>{{ __('frontend.menu.schedule') }}</p>
-                        <span class="dashboard-note">{{ __('frontend.dashboard.active_count', ['count' => number_format($stats['upcomingSchedule'])]) }}</span>
-                    </div>
-                    <i class="small-box-icon fa-solid fa-calendar-days" aria-hidden="true"></i>
-                    <a href="{{ route('admin.schedule.index') }}" class="small-box-footer link-dark link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-danger dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['sentTotal']) }}</h3>
-                        <p>{{ __('frontend.menu.mailing_log') }}</p>
-                        <span class="dashboard-note">{{ number_format($stats['sentFailed']) }} {{ __('frontend.str.error') }}</span>
-                    </div>
-                    <i class="small-box-icon fa-solid fa-paper-plane" aria-hidden="true"></i>
-                    <a href="{{ route('admin.log.index') }}" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
+                @endif
+            @endforeach
         </div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-primary dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['categories']) }}</h3>
-                        <p>{{ __('frontend.menu.subscribers_category') }}</p>
-                        <span class="dashboard-note">{{ __('frontend.str.category') }}</span>
-                    </div>
-                    <i class="small-box-icon fa-solid fa-list" aria-hidden="true"></i>
-                    <a href="{{ route('admin.category.index') }}" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-secondary dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['smtp']) }}</h3>
-                        <p>{{ __('frontend.str.smtp_server') }}</p>
-                        <span class="dashboard-note">{{ __('frontend.dashboard.active_count', ['count' => number_format($stats['activeSmtp'])]) }}</span>
-                    </div>
-                    <i class="small-box-icon fa-solid fa-inbox" aria-hidden="true"></i>
-                    <a href="{{ route('admin.smtp.index') }}" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-dark dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['clicks']) }}</h3>
-                        <p>{{ __('frontend.str.redirect') }}</p>
-                        <span class="dashboard-note">{{ __('frontend.str.redirect_number') }}</span>
-                    </div>
-                    <i class="small-box-icon fa-solid fa-link" aria-hidden="true"></i>
-                    <a href="{{ route('admin.redirect.index') }}" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-sm-6 d-flex">
-                <div class="small-box text-bg-light dashboard-small-box">
-                    <div class="inner">
-                        <h3>{{ number_format($stats['users']) }}</h3>
-                        <p>{{ __('frontend.menu.users') }}</p>
-                        <span class="dashboard-note">{{ number_format($stats['macros']) }} {{ __('frontend.menu.macros') }}</span>
-                    </div>
-                    <i class="small-box-icon fa-solid fa-users-gear" aria-hidden="true"></i>
-                    <a href="{{ route('admin.users.index') }}" class="small-box-footer link-dark link-underline-opacity-0 link-underline-opacity-50-hover">
-                        {{ __('frontend.dashboard.open_section') }} <i class="fa-solid fa-circle-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="dashboard-panels">
+        <div class="dashboard-panels {{ $canManage ? '' : 'dashboard-panels-reader' }}">
             <div class="card card-outline card-primary dashboard-quick-actions">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fa-solid fa-bolt text-primary me-2" aria-hidden="true"></i>{{ __('frontend.dashboard.quick_actions') }}</h3>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
+                        @if($canManage)
                         <a href="{{ route('admin.templates.create') }}" class="list-group-item list-group-item-action">
                             <i class="fa-solid fa-plus text-info me-2"></i>{{ __('frontend.str.add_template') }}
                             <i class="fa-solid fa-angle-right float-end mt-1"></i>
                         </a>
-                        @if(PermissionsHelper::has_permission('admin|moderator'))
+                        @endif
+                        @if(PermissionsHelper::has_permission('admin|project_admin|moderator'))
                             <a href="{{ route('admin.subscribers.import') }}" class="list-group-item list-group-item-action">
                                 <i class="fa-solid fa-file-import text-success me-2"></i>{{ __('frontend.str.import_subscribers') }}
                                 <i class="fa-solid fa-angle-right float-end mt-1"></i>
                             </a>
                         @endif
+                        @if($canManage)
                         <a href="{{ route('admin.schedule.create') }}" class="list-group-item list-group-item-action">
                             <i class="fa-solid fa-calendar-plus text-warning me-2"></i>{{ __('frontend.str.add_schedule') }}
                             <i class="fa-solid fa-angle-right float-end mt-1"></i>
                         </a>
+                        @endif
                         @if(PermissionsHelper::has_permission('admin'))
                             <a href="{{ route('admin.settings.index') }}" class="list-group-item list-group-item-action">
                                 <i class="fa-solid fa-gears text-secondary me-2"></i>{{ __('frontend.menu.settings') }}
@@ -378,6 +304,7 @@
                 </div>
             </div>
 
+            @if($canManage)
             <div class="card card-outline card-primary dashboard-templates">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fa-solid fa-envelope-open-text text-primary me-2" aria-hidden="true"></i>{{ __('frontend.menu.templates') }}</h3>
@@ -418,6 +345,7 @@
                     </table>
                 </div>
             </div>
+            @endif
         </div>
 
         <div class="row g-3 mb-3">
@@ -466,6 +394,7 @@
                 </div>
             </div>
 
+            @if($canManage)
             <div class="col-md-6 d-flex">
                 <div class="card card-outline card-warning w-100">
                     <div class="card-header">
@@ -508,6 +437,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 

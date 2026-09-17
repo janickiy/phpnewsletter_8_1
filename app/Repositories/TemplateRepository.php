@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\DTO\Create\TemplatesCreateData;
 use App\DTO\Update\TemplatesUpdateData;
 use App\Models\Templates;
+use App\Services\ProjectAccess;
 
 class TemplateRepository extends BaseRepository
 {
@@ -24,6 +25,8 @@ class TemplateRepository extends BaseRepository
      */
     public function add(TemplatesCreateData $data): Templates
     {
+        ProjectAccess::authorizeProject($data->projectId, 'manage');
+
         return $this->create($this->mapping($data->toArray()));
     }
 
@@ -36,7 +39,10 @@ class TemplateRepository extends BaseRepository
      */
     public function update(int $id, TemplatesUpdateData $data): bool
     {
-        return $this->updateModel($id, $this->mapping($data->toArray()));
+        $template = $this->find($id);
+        abort_unless($template && (int) $template->project_id === $data->projectId, 404);
+
+        return $template->fill($this->mapping($data->toArray()))->save();
     }
 
     /**
@@ -46,7 +52,8 @@ class TemplateRepository extends BaseRepository
      */
     public function getOption(): array
     {
-        return $this->model->orderBy('name')->get()->pluck('name', 'id')->toArray();
+        return ProjectAccess::scope(Templates::query(), 'manage')->with('project')->orderBy('name')->get()
+            ->mapWithKeys(fn ($template) => [$template->id => $template->project->name . ' — ' . $template->name])->all();
     }
 
     /**
@@ -59,7 +66,8 @@ class TemplateRepository extends BaseRepository
     public function updateStatus(array $Ids, int $action): void
     {
         if ($action === 1) {
-            $templates = $this->model->whereIN('id', $Ids)->get();
+            $templates = ProjectAccess::scope(Templates::query(), 'manage')->whereIn('id', $Ids)->get();
+            abort_unless($templates->count() === count(array_unique($Ids)), 404);
 
             foreach ($templates as $template) {
                 $template->remove();
@@ -75,7 +83,14 @@ class TemplateRepository extends BaseRepository
      */
     public function remove(int $id)
     {
-        $this->model->remove($id);
+        $template = $this->find($id);
+        abort_unless($template, 404);
+        $template->remove();
+    }
+
+    public function find(int $id): ?Templates
+    {
+        return ProjectAccess::scope(Templates::query(), 'manage')->find($id);
     }
 
     /**

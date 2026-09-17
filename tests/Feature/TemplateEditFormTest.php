@@ -23,6 +23,7 @@ class TemplateEditFormTest extends TestCase
             'password' => 'password',
         ]);
         $template = Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'Template without attachments',
             'body' => '<p>Body</p>',
             'prior' => 0,

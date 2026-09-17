@@ -1,20 +1,16 @@
 <script>
     $(document).ready(function () {
         $.ajax({
-            url: "{{ route('frontend.categories') }}",
+            url: "{{ route('frontend.categories', ['project_id' => $project?->id]) }}",
             method: "get",
             dataType: "json",
             success: function (data) {
                 $.each(data.items, function (key, item) {
-                    let checkBox = ''
-                        + '<div class="form-check">'
-                        + '<label class="form-check-label">'
-                        + '<input checked="checked" name="categoryId[]" type="checkbox" value="' + item.id + '"> '
-                        + item.name
-                        + '</label>'
-                        + '</div>';
-
-                    $(checkBox).prependTo('#addsub');
+                    const wrapper = $('<div>', {class: 'form-check'});
+                    const label = $('<label>', {class: 'form-check-label'}).appendTo(wrapper);
+                    $('<input>', {type: 'checkbox', name: 'categoryId[]', value: item.id, checked: true, class: 'form-check-input'}).appendTo(label);
+                    label.append(document.createTextNode(' ' + item.name));
+                    wrapper.prependTo('#addsub');
                 });
             }
         });

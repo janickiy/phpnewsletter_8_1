@@ -21,7 +21,9 @@ class SettingsController extends Controller
     }
 
     /**
-     * Show the application settings page with custom header options.
+     * Show the application settings page with custom header options.\
+     *
+     * @return View
      */
     public function index(): View
     {
@@ -34,6 +36,9 @@ class SettingsController extends Controller
 
     /**
      * Persist application settings submitted from the settings form.
+     *
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function update(Request $request): RedirectResponse
     {

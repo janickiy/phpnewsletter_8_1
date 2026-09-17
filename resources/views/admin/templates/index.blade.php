@@ -45,43 +45,42 @@
                             </a>
                         </div>
                     </div>
-                    <div class="card-body">
-
-                        <form action="{{ route('admin.templates.status') }}" method="POST">
+                    <form action="{{ route('admin.templates.status') }}" method="POST">
                         @csrf
+                        <div class="card-body">
+                            <table id="itemList" class="table table-striped table-hover align-middle w-100">
+                                <thead>
+                                <tr>
+                                    <th style="width: 10px">
+                                        <span>
+                                            <input type="checkbox" class="form-check-input" title="{{ __('frontend.str.check_uncheck_all') }}"
+                                                   id="checkAll">
+                                        </span>
+                                    </th>
+                                    <th style="width: 10px">ID</th>
+                                    <th>{{ __('frontend.str.template') }}</th>
+                                    <th>{{ __('frontend.str.projects.project') }}</th>
+                                    <th>{{ __('frontend.str.importance') }}</th>
+                                    <th>{{ __('frontend.str.attachments') }}</th>
+                                    <th>{{ __('frontend.str.date') }}</th>
+                                    <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                </tr>
+                                </thead>
+                            </table>
 
-                        <table id="itemList" class="table table-striped table-hover align-middle w-100">
-                            <thead>
-                            <tr>
-                                <th style="width: 10px">
-                                    <span>
-                                        <input type="checkbox" class="form-check-input" title="{{ __('frontend.str.check_uncheck_all') }}"
-                                               id="checkAll">
-                                    </span>
-                                </th>
-                                <th style="width: 10px">ID</th>
-                                <th>{{ __('frontend.str.template') }}</th>
-                                <th>{{ __('frontend.str.importance') }}</th>
-                                <th>{{ __('frontend.str.attachments') }}</th>
-                                <th>{{ __('frontend.str.date') }}</th>
-                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
-                            </tr>
-                            </thead>
-                        </table>
-
-                        <div class="input-group input-group-sm mt-3" style="max-width: 24rem">
-                            <select name="action" class="form-select" id="select_action">
-                                <option value="" @selected((string) old('action', '') === '')>--{{ __('frontend.str.action') }}--</option>
-                                <option value="0" data-id="sendmail" class="open_modal" @selected((string) old('action', '') === '0')>{{ __('frontend.str.send') }}</option>
-                                <option value="1" @selected((string) old('action', '') === '1')>{{ __('frontend.str.remove') }}</option>
-                            </select>
-                            <input type="submit" value="{{ __('frontend.str.apply') }}" class="btn btn-success" disabled id="apply">
                         </div>
-
-                        </form>
-
-                        <!-- /.card-body -->
-                    </div>
+                        <div class="card-footer">
+                            <div class="input-group flex-nowrap" style="max-width: 22rem">
+                                <span class="input-group-text"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
+                                <select name="action" class="form-select" id="select_action" aria-label="{{ __('frontend.str.action') }}">
+                                    <option value="" @selected((string) old('action', '') === '')>--{{ __('frontend.str.action') }}--</option>
+                                    <option value="0" data-id="sendmail" class="open_modal" @selected((string) old('action', '') === '0')>{{ __('frontend.str.send') }}</option>
+                                    <option value="1" @selected((string) old('action', '') === '1')>{{ __('frontend.str.remove') }}</option>
+                                </select>
+                                <button type="submit" class="btn btn-success" disabled id="apply">{{ __('frontend.str.apply') }}</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <!-- /.card -->
             </div>
@@ -299,6 +298,7 @@
                     {data: 'checkbox', name: 'checkbox', orderable: false, searchable: false},
                     {data: 'id', name: 'id'},
                     {data: 'name', name: 'name'},
+                    {data: 'project', name: 'project.name'},
                     {data: 'prior', name: 'prior', searchable: false},
                     {data: 'attach', name: 'attach.id', searchable: false},
                     {data: 'created_at', name: 'created_at'},
@@ -399,6 +399,8 @@
                 headers: {'X-CSRF-TOKEN': csrfToken},
                 data: {
                     action: 'start_mailing',
+                    templateId: templateIds,
+                    categoryId: categoryIds,
                 },
                 dataType: 'json'
             }).done(function (data) {
@@ -483,6 +485,7 @@
                 headers: {'X-CSRF-TOKEN': csrfToken},
                 data: {
                     action: 'count_send',
+                    templateId: getSelectedTemplateIds(),
                     logId: logId,
                     categoryId: getSelectedCategoryIds(),
                 },
@@ -522,6 +525,7 @@
                 headers: {'X-CSRF-TOKEN': csrfToken},
                 data: {
                     action: 'log_online',
+                    logId: $('#logId').val(),
                 },
                 dataType: 'json',
                 success: function (data) {

@@ -25,6 +25,8 @@ class SpreadsheetCompatibilityTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->testProjectId();
+        $this->actingAs(\App\Models\User::query()->where('role', \App\Models\User::ROLE_ADMIN)->firstOrFail());
 
         $this->temporaryDirectory = storage_path('app/tests/spreadsheets-'.bin2hex(random_bytes(8)));
         File::ensureDirectoryExists($this->temporaryDirectory);
@@ -44,14 +46,14 @@ class SpreadsheetCompatibilityTest extends TestCase
     #[DataProvider('spreadsheetFormats')]
     public function test_import_preserves_subscriber_values_and_category_memberships(string $extension, ?string $lineEnding): void
     {
-        $oldCategory = Category::query()->create(['name' => 'Previous category']);
-        $firstCategory = Category::query()->create(['name' => 'First import category']);
-        $secondCategory = Category::query()->create(['name' => 'Second import category']);
+        $oldCategory = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Previous category']);
+        $firstCategory = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'First import category']);
+        $secondCategory = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Second import category']);
         $categoryIds = [$firstCategory->id, $secondCategory->id];
         $existing = $this->createSubscriber('existing@example.test', 'Original name');
         $this->subscribe($existing, $oldCategory);
 
-        $request = Request::create('/import', 'POST', ['categoryId' => $categoryIds], [], [
+        $request = Request::create('/import', 'POST', ['project_ids' => [$this->testProjectId()], 'categoryId' => $categoryIds], [], [
             'import' => $this->createImportFile($extension, $lineEnding),
         ]);
         $progress = [];
@@ -101,7 +103,7 @@ class SpreadsheetCompatibilityTest extends TestCase
 
     public function test_exported_xlsx_is_readable_and_contains_only_active_selected_subscribers(): void
     {
-        $category = Category::query()->create(['name' => 'Export category']);
+        $category = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Export category']);
         $first = $this->createSubscriber('anna@example.test', 'Анна, "Тест" & компания');
         $second = $this->createSubscriber('second@example.test', 'Second subscriber');
         $inactive = $this->createSubscriber('inactive@example.test', 'Inactive subscriber', 0);
@@ -112,6 +114,7 @@ class SpreadsheetCompatibilityTest extends TestCase
         }
 
         $response = app(DownloadService::class)->exportSubscribers(Request::create('/export', 'POST', [
+            'project_ids' => [$this->testProjectId()],
             'export_type' => 'excel',
             'categoryId' => [$category->id],
         ]));
@@ -181,12 +184,11 @@ class SpreadsheetCompatibilityTest extends TestCase
 
     private function createSubscriber(string $email, string $name, int $active = 1): Subscribers
     {
-        return Subscribers::query()->create([
-            'email' => $email,
+        return $this->subscriberFixture(['email' => $email,
             'name' => $name,
             'active' => $active,
             'token' => md5($email),
-        ]);
+        ], [$this->testProjectId()]);
     }
 
     private function subscribe(Subscribers $subscriber, Category $category): void

@@ -233,7 +233,9 @@ class UpdateService
      */
     private function updateDatabase(): array
     {
-        Artisan::call('migrate', ['--force' => true]);
+        if (Artisan::call('migrate', ['--force' => true]) !== 0) {
+            return $this->makeResponse(false, __('frontend.msg.failed_to_update'));
+        }
 
         return $this->makeResponse(
             true,

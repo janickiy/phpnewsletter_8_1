@@ -56,6 +56,48 @@ random-order and character-substitution settings are no longer supported.
 - import and export tools
 - subscription confirmation and unsubscribe flow
 
+### Projects and user roles
+
+Templates, categories, schedules and delivery/click statistics belong to a project.
+Subscribers have one record per email address and can belong to multiple projects
+or none. Name, email, active status, unsubscribe token and last-send time are shared
+across projects; unsubscribing stops all mailings for that subscriber.
+Manual campaigns, scheduled delivery, retries and exports keep project data separate.
+
+- **Administrator** has full access and manages users, global settings, SMTP,
+  macros and subscriber categories. Only administrators can change a project owner.
+- **Project administrator** creates projects and manages owned or assigned projects,
+  their templates, subscribers, schedules and reports.
+- **Moderator** manages subscribers (including import, export and deletion) and
+  views/downloads reports for assigned projects. A moderator cannot send campaigns
+  or clear reports. Project ownership retains management access to that project.
+
+Create users with the appropriate role in **Users**, then assign them in
+**Projects → Edit**. Administrators and the project owner can assign project
+administrators; assigned project administrators can also assign moderators.
+Changing a user's global role clears their assignments, so assign their new role
+to the relevant projects afterwards. Dashboard cards and navigation follow access.
+
+Inactive projects retain their data, but do not send campaigns or accept public
+subscriptions. Deleting a project after confirmation also deletes its templates,
+attachments, scheduled mailings and statistics. Subscriber records, categories and
+their subscription links are preserved, including contacts left without projects.
+Categories from a deleted project are marked as unassigned and remain manageable
+by administrators. They are excluded from project mailing selections. Shared mailing logs are
+retained while they contain results from another project.
+Choose zero or more projects when creating, editing or importing subscribers.
+Only administrators can create or view contacts without projects and permanently
+delete contact records. Project administrators and moderators see contacts assigned
+to their projects; removing a contact removes only their accessible memberships and
+categories. Editing memberships or importing cannot remove links to projects the
+current user cannot access.
+Imports reuse an existing email without overwriting its name or active status.
+Exports combine the selected projects without duplicate contacts; an empty project
+selection exports unassigned contacts for administrators. Templates require one
+project and their project link cannot be changed after creation.
+Generate subscription embed code separately for each project in **Subscription form**.
+Previously embedded forms must be copied again to include the required `project_id`.
+
 ### Analytics and Reporting
 
 - sent and failed delivery history
@@ -77,7 +119,7 @@ for versions and maintenance details.
 1. Install the application and complete the setup wizard.
 2. Log in to the admin panel as the administrator.
 3. Configure the delivery method: SMTP, `mail()`, or `sendmail`.
-4. Create subscriber categories.
+4. Create a project and its subscriber categories.
 5. Add or import subscribers.
 6. Create a template and define macros if needed.
 7. Send a test email.
@@ -169,6 +211,21 @@ whose creation migrations have already run: older installations must first have
 nullable `ready_sent.schedule_id` and `log_id` with `ON DELETE SET NULL`, and the
 `subscribers` indexes on `name` and `created_at`. Retired charset/randomization
 settings and the `charsets` table are not part of this baseline.
+Installations from before project support also require a separate schema and data
+migration to associate their existing records with projects.
+
+Existing category tables must also allow `categories.project_id` to be null and
+use `ON DELETE SET NULL` for the project foreign key, so project deletion preserves
+categories and their subscriber links.
+
+Installations with the former `subscribers.project_id` column also need a data
+conversion before using this version: copy memberships to `project_subscriber`,
+reconcile duplicate email records and their categories/statistics, then replace
+the project/email unique index with a global unique email index and remove the
+old column. Preserve the global subscriber status, token and delivery timestamps.
+Running `migrate` alone only creates the membership table; it does not convert an
+existing subscribers table. Perform this conversion with the application and
+scheduler stopped, after taking a database backup.
 
 The application runs on Laravel 13 and PHP 8.4. Keep a backup of the database,
 `.env`, and uploaded files before upgrading. Keep the existing `.env` and database
@@ -182,6 +239,11 @@ docker compose -f docker/docker-compose.yml run --rm --no-deps --user www-data -
 docker compose -f docker/docker-compose.yml run --rm --no-deps --user www-data --entrypoint php app artisan migrate --force
 docker compose -f docker/docker-compose.yml up -d --wait
 ```
+
+Template attachments are stored privately. Downloads are served through an
+authenticated endpoint that checks the template's project.
+Apache denies the old public attachment paths via `public/.htaccess`; on Nginx,
+also deny requests to `/storage/attach/` in the server configuration.
 
 `composer.lock` is included in version control to keep installations reproducible.
 The web container synchronizes dependencies with this lock file at startup,
@@ -390,7 +452,10 @@ If cron is not configured, scheduled campaigns will not start automatically.
 Main roles:
 
 - `admin` - full access to all modules, including SMTP, settings, and users
-- `moderator` - access to categories, subscribers, and macros
+- `project_admin` - manages owned or assigned projects, templates, subscribers,
+  schedules and reports
+- `moderator` - manages subscribers and views/downloads reports in assigned projects;
+  project owners retain management access to their projects
 
 Recommendations:
 
@@ -421,7 +486,8 @@ Recommendations:
 ### Subscriptions Do Not Arrive
 
 - check that the public subscription form is available and `/add-sub` works;
-- make sure the email address is not already in the database;
+- make sure the email address is not already subscribed to the selected project;
+  an existing contact from another project is reused with its current global status;
 - verify whether confirmation is enabled and whether confirmation emails are delivered.
 
 ### Open Tracking Does Not Work

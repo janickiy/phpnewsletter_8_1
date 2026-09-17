@@ -5,6 +5,8 @@ namespace App\Repositories;
 use App\DTO\Create\ScheduleCreateData;
 use App\DTO\Update\ScheduleUpdateData;
 use App\Models\Schedule;
+use App\Models\Templates;
+use App\Services\ProjectAccess;
 use App\Models\ScheduleCategory;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\Request;
@@ -49,6 +51,8 @@ class ScheduleRepository extends BaseRepository
      */
     public function update(int $id, ScheduleUpdateData $data): bool
     {
+        abort_unless($this->find($id), 404);
+
         return $this->database->transaction(function () use ($id, $data) {
             ScheduleCategory::where('schedule_id', $id)->delete();
 
@@ -68,7 +72,7 @@ class ScheduleRepository extends BaseRepository
     public function removeSchedule(int $id): ?bool
     {
         return $this->database->transaction(function () use ($id) {
-            $model = $this->model->find($id);
+            $model = $this->find($id);
 
             if (!$model) {
                 return false;
@@ -88,6 +92,9 @@ class ScheduleRepository extends BaseRepository
     public function getScheduleEvent(): ?Collection
     {
         return $this->model
+            ->with('template.project')
+            ->whereHas('project', fn ($query) => $query->where('status', 1))
+            ->whereHas('template', fn ($query) => $query->whereColumn('templates.project_id', 'schedule.project_id'))
             ->where('event_start', '<=', Carbon::now()->toDateTimeString())
             ->where('event_end', '>=', Carbon::now()->toDateTimeString())
             ->get();
@@ -101,7 +108,7 @@ class ScheduleRepository extends BaseRepository
      */
     public function getScheduleByDateInterval(Request $request): array
     {
-        $rows = $this->model
+        $rows = ProjectAccess::scope(Schedule::query(), 'manage')
             ->whereDate('event_start', '>=', $request->start)
             ->whereDate('event_end', '<=', $request->end)
             ->get(['id', 'event_name', 'event_start', 'event_end']);
@@ -129,11 +136,18 @@ class ScheduleRepository extends BaseRepository
      */
     public function remove(int $id): ?bool
     {
+        abort_unless($this->find($id), 404);
+
         return $this->database->transaction(function () use ($id) {
             ScheduleCategory::where('schedule_id', $id)->delete();
 
             return $this->delete($id);
         });
+    }
+
+    public function find(int $id): ?Schedule
+    {
+        return ProjectAccess::scope(Schedule::query(), 'manage')->find($id);
     }
 
     /**
@@ -164,11 +178,13 @@ class ScheduleRepository extends BaseRepository
     private function mapping(array $data): array
     {
         [$eventStart, $eventEnd] = $this->resolveEventDates($data);
+        $template = ProjectAccess::scope(Templates::query(), 'manage')->findOrFail($data['template_id']);
 
         return collect($data)
             ->merge([
                 'event_start' => $eventStart,
                 'event_end' => $eventEnd,
+                'project_id' => $template->project_id,
             ])
             ->only($this->model->getFillable())
             ->map(function ($value, $key) {

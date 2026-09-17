@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Admin\Templates;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Services\ProjectAccess;
+use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -22,6 +24,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'project_id' => ['required', 'integer', Rule::in(ProjectAccess::projects('manage')->pluck('id')->all())],
             'name' => [
                 'required',
                 'string',

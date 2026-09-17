@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Admin\Users;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -11,7 +13,7 @@ class StoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->role === User::ROLE_ADMIN;
     }
 
     /**
@@ -37,6 +39,7 @@ class StoreRequest extends FormRequest
             'role' => [
                 'required',
                 'string',
+                Rule::in(array_keys(User::getOptions())),
             ],
             'description' => [
                 'nullable',

@@ -5,7 +5,12 @@ namespace App\Repositories;
 use App\DTO\Create\SubscriberCreateData;
 use App\DTO\Update\SubscriberUpdateData;
 use App\Models\Subscribers;
+use App\Models\Templates;
+use App\Models\Schedule;
 use App\Models\Subscriptions;
+use App\Models\Category;
+use App\Models\Project;
+use App\Services\ProjectAccess;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Collection;
 
@@ -31,7 +36,27 @@ class SubscriberRepository extends BaseRepository
      */
     public function update(int $id, SubscriberUpdateData $data): bool
     {
-        return $this->updateModel($id, $this->mapping($data->toArray()));
+        return $this->database->transaction(function () use ($id, $data): bool {
+            $subscriber = ProjectAccess::subscribers($this->model->newQuery())->lockForUpdate()->findOrFail($id);
+            $visibleProjectIds = ProjectAccess::projects()->pluck('projects.id')->all();
+            $projectIds = $data->projectIds ?? $subscriber->projects()->whereIn('projects.id', $visibleProjectIds)->pluck('projects.id')->all();
+            $this->validateAssignments($projectIds, $data->categoryIds ?? []);
+
+            $saved = $subscriber->fill([...$data->toArray(), 'email' => strtolower(trim($data->email))])->save();
+            if ($data->projectIds !== null) {
+                $removedIds = $subscriber->projects()->whereIn('projects.id', $visibleProjectIds)
+                    ->whereNotIn('projects.id', $projectIds)->pluck('projects.id')->all();
+                $this->removeCategories([$id], $removedIds);
+                $subscriber->projects()->detach($removedIds);
+                $subscriber->projects()->syncWithoutDetaching($projectIds);
+            }
+            if ($data->categoryIds !== null) {
+                $this->removeCategories([$id], $visibleProjectIds);
+                $this->syncSubscriptions($id, $data->categoryIds);
+            }
+
+            return $saved;
+        });
     }
 
     /**
@@ -43,9 +68,21 @@ class SubscriberRepository extends BaseRepository
      */
     public function add(SubscriberCreateData $data): Subscribers
     {
-        return $this->database->transaction(function () use ($data) {
-            $model = $this->model->create($this->mapping($data->toArray()));
+        abort_unless(auth()->check(), 403);
+        abort_unless(auth()->user()->isAdmin() || $data->projectIds !== [], 403);
+        $this->validateAssignments($data->projectIds, $data->categoryIds);
 
+        return $this->persistSubscriber($data);
+    }
+
+    private function persistSubscriber(SubscriberCreateData $data): Subscribers
+    {
+        return $this->database->transaction(function () use ($data) {
+            $model = $this->model->newQuery()->firstOrCreate(
+                ['email' => strtolower(trim($data->email))],
+                $this->mapping([...$data->toArray(), 'email' => strtolower(trim($data->email))])
+            );
+            $model->projects()->syncWithoutDetaching($data->projectIds);
             $this->syncSubscriptions($model->id, $data->categoryIds);
 
             return $model;
@@ -61,7 +98,27 @@ class SubscriberRepository extends BaseRepository
      */
     public function createFrontendSubscriber(SubscriberCreateData $data): Subscribers
     {
-        return $this->add($data);
+        $this->validateAssignments($data->projectIds, $data->categoryIds, true);
+
+        return $this->persistSubscriber($data);
+    }
+
+    public function find(int $id): ?Subscribers
+    {
+        return ProjectAccess::subscribers($this->model->newQuery())->find($id);
+    }
+
+    /**
+     * Administrators remove the contact; project users remove only their visible memberships.
+     */
+    public function delete(int $id): bool
+    {
+        if (!$this->find($id)) {
+            return false;
+        }
+        $this->updateStatus(2, [$id]);
+
+        return true;
     }
 
     /**
@@ -87,6 +144,11 @@ class SubscriberRepository extends BaseRepository
         $q = $this->model->select('subscribers.email', 'subscribers.token', 'subscribers.id', 'subscribers.name')
             ->distinct()
             ->join('subscriptions', 'subscribers.id', '=', 'subscriptions.subscriber_id')
+            ->join('categories', 'subscriptions.category_id', '=', 'categories.id')
+            ->join('project_subscriber', function ($join) {
+                $join->on('project_subscriber.subscriber_id', '=', 'subscribers.id')
+                    ->on('project_subscriber.project_id', '=', 'categories.project_id');
+            })
             ->leftJoin('ready_sent', function ($join) use ($templateId, $logId) {
                 $join->on('subscribers.id', '=', 'ready_sent.subscriber_id')
                     ->where('ready_sent.template_id', $templateId)
@@ -98,6 +160,7 @@ class SubscriberRepository extends BaseRepository
             })
             ->whereNull('ready_sent.subscriber_id')
             ->whereIn('subscriptions.category_id', $categoryId)
+            ->where('project_subscriber.project_id', Templates::query()->select('project_id')->whereKey($templateId))
             ->where('subscribers.active', 1);
 
         if ($interval) {
@@ -117,13 +180,19 @@ class SubscriberRepository extends BaseRepository
      * @param string|null $interval
      * @return int
      */
-    public function countSubscriptions(array $categoryId, ?int $limit = null, ?string $interval = null): int
+    public function countSubscriptions(array $categoryId, ?int $limit = null, ?string $interval = null, ?int $projectId = null): int
     {
         $q = Subscriptions::query()
             ->select('subscribers.id')
             ->join('subscribers', 'subscriptions.subscriber_id', '=', 'subscribers.id')
+            ->join('categories', 'subscriptions.category_id', '=', 'categories.id')
+            ->join('project_subscriber', function ($join) {
+                $join->on('project_subscriber.subscriber_id', '=', 'subscribers.id')
+                    ->on('project_subscriber.project_id', '=', 'categories.project_id');
+            })
             ->where('subscribers.active', 1)
-            ->whereIn('subscriptions.category_id', $categoryId);
+            ->whereIn('subscriptions.category_id', $categoryId)
+            ->where('project_subscriber.project_id', $projectId ?? 0);
 
         if ($interval) {
             $q->whereRaw($interval);
@@ -159,6 +228,11 @@ class SubscriberRepository extends BaseRepository
         ])
             ->distinct()
             ->join('subscriptions', 'subscribers.id', '=', 'subscriptions.subscriber_id')
+            ->join('categories', 'subscriptions.category_id', '=', 'categories.id')
+            ->join('project_subscriber', function ($join) {
+                $join->on('project_subscriber.subscriber_id', '=', 'subscribers.id')
+                    ->on('project_subscriber.project_id', '=', 'categories.project_id');
+            })
             ->join('schedule_category', function ($join) use ($scheduleId) {
                 $join->on('subscriptions.category_id', '=', 'schedule_category.category_id')
                     ->where('schedule_category.schedule_id', $scheduleId);
@@ -172,7 +246,8 @@ class SubscriberRepository extends BaseRepository
                     });
             })
             ->whereNull('ready_sent.subscriber_id')
-            ->where('subscribers.active', 1);
+            ->where('subscribers.active', 1)
+            ->where('project_subscriber.project_id', Schedule::query()->select('project_id')->whereKey($scheduleId));
 
         if ($interval) {
             $q->whereRaw($interval);
@@ -207,6 +282,11 @@ class SubscriberRepository extends BaseRepository
         ])
             ->distinct()
             ->join('subscriptions', 'subscribers.id', '=', 'subscriptions.subscriber_id')
+            ->join('categories', 'subscriptions.category_id', '=', 'categories.id')
+            ->join('project_subscriber', function ($join) {
+                $join->on('project_subscriber.subscriber_id', '=', 'subscribers.id')
+                    ->on('project_subscriber.project_id', '=', 'categories.project_id');
+            })
             ->join('schedule_category', function ($join) use ($scheduleId) {
                 $join->on('subscriptions.category_id', '=', 'schedule_category.category_id')
                     ->where('schedule_category.schedule_id', $scheduleId);
@@ -216,7 +296,8 @@ class SubscriberRepository extends BaseRepository
                     ->where('ready_sent.schedule_id', $scheduleId)
                     ->where('ready_sent.success', 0);
             })
-            ->where('subscribers.active', 1);
+            ->where('subscribers.active', 1)
+            ->where('project_subscriber.project_id', Schedule::query()->select('project_id')->whereKey($scheduleId));
 
         if ($interval) {
             $q->whereRaw($interval);
@@ -237,6 +318,7 @@ class SubscriberRepository extends BaseRepository
     {
         return Subscriptions::query()
             ->where('subscriber_id', $subscriberId)
+            ->whereIn('category_id', ProjectAccess::scope(Category::query())->select('categories.id'))
             ->pluck('category_id')
             ->toArray();
     }
@@ -250,16 +332,23 @@ class SubscriberRepository extends BaseRepository
      */
     public function updateStatus(int $action, array $ids = []): void
     {
-        switch ($action) {
-            case 0:
-            case 1:
-                $this->model->whereIn('id', $ids)->update(['active' => $action]);
-                break;
-            case 2:
-                Subscriptions::query()->whereIn('subscriber_id', $ids)->delete();
-                $this->model->whereIn('id', $ids)->delete();
-                break;
-        }
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        $this->database->transaction(function () use ($action, $ids): void {
+            $visibleIds = ProjectAccess::subscribers($this->model->newQuery())
+                ->whereIn('id', $ids)->lockForUpdate()->pluck('id');
+            abort_unless($visibleIds->count() === count($ids), 403);
+
+            if (in_array($action, [0, 1], true)) {
+                $this->model->newQuery()->whereIn('id', $ids)->update(['active' => $action]);
+            } elseif ($action === 2 && auth()->user()->isAdmin()) {
+                $this->model->newQuery()->whereIn('id', $ids)->delete();
+            } elseif ($action === 2) {
+                $projectIds = ProjectAccess::projects()->pluck('projects.id')->all();
+                $this->removeCategories($ids, $projectIds);
+                $this->database->table('project_subscriber')->whereIn('subscriber_id', $ids)
+                    ->whereIn('project_id', $projectIds)->delete();
+            }
+        });
     }
 
     /**
@@ -276,11 +365,27 @@ class SubscriberRepository extends BaseRepository
                 continue;
             }
 
-            Subscriptions::query()->create([
+            Subscriptions::query()->firstOrCreate([
                 'subscriber_id' => $subscriberId,
                 'category_id' => (int)$categoryId,
             ]);
         }
+    }
+
+    private function removeCategories(array $subscriberIds, array $projectIds): void
+    {
+        Subscriptions::query()->whereIn('subscriber_id', $subscriberIds)
+            ->whereIn('category_id', Category::query()->whereIn('project_id', $projectIds)->select('id'))
+            ->delete();
+    }
+
+    private function validateAssignments(array $projectIds, array $categoryIds, bool $public = false): void
+    {
+        $projects = $public ? Project::query()->where('status', 1) : ProjectAccess::projects();
+        abort_unless((!$public || count($projectIds) === 1)
+            && $projects->whereIn('projects.id', $projectIds)->count() === count(array_unique($projectIds)), 403);
+        abort_unless(Category::query()->whereIn('project_id', $projectIds)->whereIn('id', $categoryIds)->count()
+            === count(array_unique($categoryIds)), 422);
     }
 
     /**

@@ -15,6 +15,7 @@ final class SubscriberCreateData
         public readonly int $active,
         public readonly string $token,
         public readonly CarbonInterface|string $timeSent,
+        public readonly array $projectIds = [],
         public readonly array $categoryIds = [],
     ) {
     }

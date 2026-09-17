@@ -134,9 +134,11 @@
                                 Swal.fire("{{ __('frontend.msg.done') }}", "{{ __('frontend.msg.data_successfully_deleted') }}", 'success');
                             },
                             error: function (xhr, ajaxOptions, thrownError) {
-                                Swal.fire("{{ __('frontend.msg.error_deleting') }}", "{{ __('frontend.msg.try_again') }}", 'error');
-                                console.log(ajaxOptions);
-                                console.log(thrownError);
+                                Swal.fire({
+                                    title: @json(__('frontend.msg.error_deleting')),
+                                    text: xhr.status === 422 ? @json(__('frontend.str.projects.owner_has_projects')) : @json(__('frontend.msg.try_again')),
+                                    icon: 'error'
+                                });
                             }
                         });
                     }

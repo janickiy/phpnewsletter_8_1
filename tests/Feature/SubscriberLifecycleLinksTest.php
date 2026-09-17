@@ -67,11 +67,10 @@ class SubscriberLifecycleLinksTest extends TestCase
 
     private function createSubscriber(string $token, bool $active = true): Subscribers
     {
-        return Subscribers::query()->create([
-            'name' => 'Lifecycle subscriber',
+        return $this->subscriberFixture(['name' => 'Lifecycle subscriber',
             'email' => strtolower($token) . '@example.test',
             'active' => $active ? 1 : 0,
             'token' => $token,
-        ]);
+        ], [$this->testProjectId()]);
     }
 }

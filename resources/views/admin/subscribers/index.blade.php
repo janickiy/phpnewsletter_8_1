@@ -31,11 +31,13 @@
                                href="{{ route('admin.subscribers.export') }}">
                                 <span class="fas fa-upload me-1"></span> {{ __('frontend.str.export') }}
                             </a>
-                            <button type="button" id="removeAllSubscribersButton" class="btn btn-outline-danger btn-sm"
-                                    title="{{ __('frontend.str.delete_all_subscribers') }}"
-                                    onclick="confirmation(event)">
+                            <form id="removeAllSubscribersForm" action="{{ route('admin.subscribers.remove_all') }}" method="POST" onsubmit="confirmation(event)">
+                                @csrf
+                            <button type="submit" id="removeAllSubscribersButton" class="btn btn-outline-danger btn-sm"
+                                    title="{{ __('frontend.str.delete_all_subscribers') }}">
                                 <span class="fas fa-trash me-1"></span> {{ __('frontend.str.delete_all') }}
                             </button>
+                            </form>
                             <span id="removeAllSubscribersSpinner" class="d-none">
                                 <span class="spinner-border spinner-border-sm text-danger" role="status" aria-hidden="true"></span>
                             </span>
@@ -45,44 +47,43 @@
                             </a>
                         </div>
                     </div>
-                    <div class="card-body">
-
-                        <form action="{{ route('admin.subscribers.status') }}" method="POST">
+                    <form action="{{ route('admin.subscribers.status') }}" method="POST">
                         @csrf
+                        <div class="card-body">
+                            <table id="itemList" class="table table-striped table-hover align-middle w-100">
+                                <thead>
+                                <tr>
+                                    <th style="width: 10px">
+                                    <span>
+                                       <input type="checkbox" class="form-check-input" title="{{ __('frontend.str.check_uncheck_all') }}"
+                                              id="checkAll">
+                                    </span>
+                                    </th>
+                                    <th>{{ __('frontend.str.name') }}</th>
+                                    <th>E-mail</th>
+                                    <th>{{ __('frontend.str.projects.index') }}</th>
+                                    <th>{{ __('frontend.str.category') }}</th>
+                                    <th>{{ __('frontend.str.status') }}</th>
+                                    <th>{{ __('frontend.str.added') }}</th>
+                                    <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                </tr>
+                                </thead>
+                            </table>
 
-                        <table id="itemList" class="table table-striped table-hover align-middle w-100">
-                            <thead>
-                            <tr>
-                                <th style="width: 10px">
-                                <span>
-                                   <input type="checkbox" class="form-check-input" title="{{ __('frontend.str.check_uncheck_all') }}"
-                                          id="checkAll">
-                                </span>
-                                </th>
-                                <th>{{ __('frontend.str.name') }}</th>
-                                <th>E-mail</th>
-                                <th>{{ __('frontend.str.category') }}</th>
-                                <th>{{ __('frontend.str.status') }}</th>
-                                <th>{{ __('frontend.str.added') }}</th>
-                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
-                            </tr>
-                            </thead>
-                        </table>
-
-                        <div class="input-group input-group-sm mt-3" style="max-width: 24rem">
-                            <select name="action" class="form-select" id="select_action">
-                                <option value="" @selected((string) old('action', '') === '')>--{{ __('frontend.str.action') }}--</option>
-                                <option value="1" @selected((string) old('action', '') === '1')>{{ __('frontend.str.activate') }}</option>
-                                <option value="0" @selected((string) old('action', '') === '0')>{{ __('frontend.str.deactivate') }}</option>
-                                <option value="2" @selected((string) old('action', '') === '2')>{{ __('frontend.str.remove') }}</option>
-                            </select>
-                            <input type="submit" value="{{ __('frontend.str.apply') }}" class="btn btn-success" disabled id="apply">
                         </div>
-
-                        </form>
-
-                    </div>
-                    <!-- /.card-body -->
+                        <div class="card-footer">
+                            <div class="input-group flex-nowrap" style="max-width: 22rem">
+                                <span class="input-group-text"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
+                                <select name="action" class="form-select" id="select_action" aria-label="{{ __('frontend.str.action') }}">
+                                    <option value="" @selected((string) old('action', '') === '')>--{{ __('frontend.str.action') }}--</option>
+                                    <option value="1" @selected((string) old('action', '') === '1')>{{ __('frontend.str.activate') }}</option>
+                                    <option value="0" @selected((string) old('action', '') === '0')>{{ __('frontend.str.deactivate') }}</option>
+                                    <option value="2" @selected((string) old('action', '') === '2')>{{ __('frontend.str.remove') }}</option>
+                                </select>
+                                <button type="submit" class="btn btn-success" disabled id="apply">{{ __('frontend.str.apply') }}</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <!-- /.card -->
             </div>
@@ -178,7 +179,7 @@
                     $(row).attr('id', 'rowid_' + data['id']);
                     if (data['activeStatus'] === 0) $(row).attr('class', 'table-danger');
                 },
-                aaSorting: [[5, 'desc']],
+                aaSorting: [[6, 'desc']],
                 drawCallback: countChecked,
                 "processing": true,
                 "responsive": true,
@@ -194,6 +195,7 @@
                     {data: 'checkbox', name: 'checkbox', orderable: false, searchable: false},
                     {data: 'name', name: 'name'},
                     {data: 'email', name: 'email'},
+                    {data: 'projects', name: 'projects', orderable: false, searchable: false},
                     {data: 'subscriptions', name: 'subscriptions', orderable: false, searchable: false},
                     {data: 'active', name: 'active', searchable: false},
                     {data: 'created_at', name: 'created_at'},
@@ -205,7 +207,7 @@
                 let rowid = $(this).attr('id');
                 Swal.fire({
                     title: "{{ __('frontend.msg.are_you_sure') }}",
-                    text: "{{ __('frontend.msg.will_not_be_able_to_recover_information') }}",
+                    text: @json(auth()->user()->isAdmin() ? __('frontend.msg.will_not_be_able_to_recover_information') : __('frontend.str.projects.subscriber_detach_confirmation')),
                     showCancelButton: true,
                     icon: 'warning',
                     cancelButtonText: "{{ __('frontend.str.cancel') }}",
@@ -261,6 +263,7 @@
         });
 
         function confirmation(event) {
+            event.preventDefault();
             if ($('#removeAllSubscribersButton').hasClass('disabled')) {
                 event.preventDefault();
                 return;
@@ -268,7 +271,7 @@
 
             Swal.fire({
                 title: "{{ __('frontend.str.delete_all_subscribers') }}",
-                text: "{{ __('frontend.str.want_to_delete_all_subscribers')  }}",
+                text: @json(auth()->user()->isAdmin() ? __('frontend.str.want_to_delete_all_subscribers') : __('frontend.str.projects.subscriber_detach_confirmation')),
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#DD6B55",
@@ -277,7 +280,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     toggleRemoveAllSubscribersLoading(true);
-                    window.location.href = "{{ route('admin.subscribers.remove_all') }}";
+                    document.getElementById('removeAllSubscribersForm').submit();
                 }
             });
         }

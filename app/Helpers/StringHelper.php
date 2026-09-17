@@ -199,7 +199,8 @@ class StringHelper
     static public function phpinfoArray(): array
     {
         ob_start();
-        phpinfo();
+        // Environment and request variables can contain application keys and credentials.
+        phpinfo(INFO_GENERAL | INFO_CONFIGURATION | INFO_MODULES);
         $info_arr = [];
         $info_lines = explode("\n", strip_tags(ob_get_clean(), "<tr><td><h2>"));
         $cat = "General";
@@ -213,7 +214,41 @@ class StringHelper
             }
         }
 
-        return $info_arr;
+        // phpinfo() emits plain text under the CLI; keep basic diagnostics available there too.
+        $info_arr['General'] = ['PHP Version' => PHP_VERSION, 'Server API' => PHP_SAPI] + ($info_arr['General'] ?? []);
+
+        return self::sanitizePhpInfo($info_arr);
+    }
+
+    private static function sanitizePhpInfo(array $information): array
+    {
+        foreach ($information as $section => &$values) {
+            if (preg_match('/environment|variables/i', $section)) {
+                unset($information[$section]);
+                continue;
+            }
+
+            foreach ($values as $name => $value) {
+                if (preg_match('/password|passwd|(?:^|[._ ])pw($|[._ ])|secret|token|credential|private.?key|app.?key|authorization|cookie|path|directory|(^|[._ ])dir($|[._ ])|file|configure command/i', $name)) {
+                    unset($values[$name]);
+                    continue;
+                }
+
+                foreach ((array) $value as $setting) {
+                    $setting = html_entity_decode((string) $setting, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    if (preg_match('~(?:^|[=;\\s])(?:/(?!/)|[a-zA-Z]:[\\\\/])|://[^/\\s]+:[^/\\s]+@|(?:^|[;,\\s])(?:password|passwd|pwd|secret|token|api[_-]?key)\\s*=~i', $setting)) {
+                        unset($values[$name]);
+                        break;
+                    }
+                }
+            }
+
+            if ($values === []) {
+                unset($information[$section]);
+            }
+        }
+
+        return $information;
     }
 
     /**

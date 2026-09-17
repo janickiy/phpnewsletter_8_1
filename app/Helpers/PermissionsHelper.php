@@ -12,7 +12,8 @@ class PermissionsHelper
      */
     public static function has_permission(string $permissions = ''): bool
     {
-        if (\Auth::user()->role === 'admin') return true;
+        if (!\Auth::check()) return false;
+        if (\Auth::user()->isAdmin()) return true;
 
         $permissions = explode('|', $permissions);
 

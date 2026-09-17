@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('templates', function (Blueprint $table) {
             $table->increments('id');
+            $table->unsignedInteger('project_id')->index();
+            $table->foreign('project_id')->references('id')->on('projects')->restrictOnDelete();
             $table->string('name');
             $table->mediumText('body');
             $table->tinyInteger('prior');

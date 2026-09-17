@@ -23,7 +23,7 @@
                 <!-- general form elements -->
                 <div class="card card-outline card-primary">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-scroll' }} me-2" aria-hidden="true"></i>{{ $title }}</h3>
+                        <h3 class="card-title"><i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-plus' }} me-2" aria-hidden="true"></i>{{ $title }}</h3>
                     </div>
 
                     <!-- form start -->

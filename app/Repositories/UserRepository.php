@@ -7,6 +7,8 @@ use App\DTO\Create\UserCreateData;
 use App\DTO\Update\UserUpdateData;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class UserRepository extends BaseRepository
 {
@@ -16,6 +18,17 @@ class UserRepository extends BaseRepository
     public function __construct(User $model)
     {
         parent::__construct($model);
+    }
+
+    /**
+     * Return user names and logins for selection fields, optionally restricted by role.
+     */
+    public function getForSelection(?string $role = null): Collection
+    {
+        return $this->model->newQuery()
+            ->when($role !== null, fn ($query) => $query->where('role', $role))
+            ->orderBy('name')
+            ->get(['id', 'name', 'login']);
     }
 
     /**
@@ -54,7 +67,19 @@ class UserRepository extends BaseRepository
      */
     public function update(int $id, UserUpdateData $data): bool
     {
-        return $this->updateModel($id, $this->mapping($data->toArray()));
+        return DB::transaction(function () use ($id, $data): bool {
+            $user = User::query()->lockForUpdate()->find($id);
+            if (!$user) {
+                return false;
+            }
+
+            if ($user->role !== $data->role) {
+                // Memberships belong to a role and must be assigned again after a role change.
+                $user->projects()->detach();
+            }
+
+            return $user->fill($this->mapping($data->toArray()))->save();
+        });
     }
 
     /**

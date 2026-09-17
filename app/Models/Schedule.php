@@ -14,7 +14,13 @@ class Schedule extends Model
 
     protected $table = 'schedule';
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     protected $fillable = [
+        'project_id',
         'event_name',
         'event_start',
         'event_end',

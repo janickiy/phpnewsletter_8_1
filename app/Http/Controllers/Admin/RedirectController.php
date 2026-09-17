@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 
 use App\Services\DownloadService;
+use App\Services\ProjectAccess;
 use App\Models\Redirect;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -40,8 +41,9 @@ class RedirectController  extends Controller
      */
     public function clear(): JsonResponse
     {
+        abort_unless(auth()->user()->canManageProjects(), 403);
         try {
-            Redirect::truncate();
+            ProjectAccess::scope(Redirect::query(), 'manage')->delete();
 
             return response()->json([
                 'success' => true,
@@ -76,6 +78,10 @@ class RedirectController  extends Controller
      */
     public function info(string $url): View
     {
+        $normalized = strtr($url, '-_', '+/');
+        $normalized .= str_repeat('=', (4 - strlen($normalized) % 4) % 4);
+        $decodedUrl = base64_decode($normalized, true);
+        abort_unless($decodedUrl !== false && ProjectAccess::scope(Redirect::query())->where('url', $decodedUrl)->exists(), 404);
         return view('admin.redirect.info', [
             'url' => $url,
             'infoAlert' => __('frontend.hint.redirectlog_info'),

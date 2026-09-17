@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Project;
 use App\Models\Subscribers;
 use App\Models\Subscriptions;
 use App\Models\Templates;
@@ -17,6 +18,8 @@ class NewsletterFormsTest extends TestCase
 {
     use RefreshDatabase;
 
+    private Project $project;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,6 +30,7 @@ class NewsletterFormsTest extends TestCase
             'role' => User::ROLE_ADMIN,
             'password' => 'password',
         ]));
+        $this->project = Project::query()->create(['name' => 'Forms project', 'owner_id' => auth()->id(), 'status' => 1]);
     }
 
     public function test_template_forms_keep_uploads_methods_and_escape_saved_content(): void
@@ -41,7 +45,7 @@ class NewsletterFormsTest extends TestCase
         $this->assertTrue($this->node($page, '//input[@id="attachfile" and @name="attachfile[]" and @type="file"]')->hasAttribute('multiple'));
         $this->assertTrue($this->node($page, '//input[@id="prior_normal"]')->hasAttribute('checked'));
 
-        $template = Templates::query()->create([
+        $template = Templates::query()->create(['project_id' => $this->project->id,
             'name' => '"><script id="injected">alert(1)</script>',
             'body' => '</textarea><script id="injected">alert(2)</script><p>Hello & welcome</p>',
             'prior' => 2,
@@ -59,7 +63,7 @@ class NewsletterFormsTest extends TestCase
 
     public function test_template_validation_repopulates_body_independently_of_name_and_preserves_priority(): void
     {
-        $template = Templates::query()->create(['name' => 'Saved name', 'body' => 'Saved body', 'prior' => 0]);
+        $template = Templates::query()->create(['project_id' => $this->project->id, 'name' => 'Saved name', 'body' => 'Saved body', 'prior' => 0]);
         $body = '</textarea><script id="injected">alert(1)</script>';
         $this->withSession(['_old_input' => [
             'name' => 'Submitted name',
@@ -80,26 +84,28 @@ class NewsletterFormsTest extends TestCase
 
     public function test_subscriber_edit_preserves_values_and_restores_submitted_category_selections(): void
     {
-        $savedCategory = Category::query()->create(['name' => 'Saved category']);
-        $newCategory = Category::query()->create(['name' => '<b id="injected">Submitted category</b>']);
-        $subscriber = Subscribers::query()->create([
-            'name' => 'Subscriber "name" & company',
+        $savedCategory = Category::query()->create(['project_id' => $this->project->id, 'name' => 'Saved category']);
+        $newCategory = Category::query()->create(['project_id' => $this->project->id, 'name' => '<b id="injected">Submitted category</b>']);
+        $subscriber = $this->subscriberFixture(['name' => 'Subscriber "name" & company',
             'email' => 'saved@example.test',
             'active' => 1,
             'token' => str_repeat('a', 32),
-        ]);
+        ], [$this->project->id]);
         Subscriptions::query()->create(['subscriber_id' => $subscriber->id, 'category_id' => $savedCategory->id]);
         $page = $this->page('admin.subscribers.edit', ['id' => $subscriber->id]);
 
         $this->assertSame(route('admin.subscribers.update'), $this->node($page, '//form')->getAttribute('action'));
         $this->assertSame('PUT', $this->node($page, '//input[@name="_method"]')->getAttribute('value'));
         $this->assertSame((string) $subscriber->id, $this->node($page, '//input[@name="id"]')->getAttribute('value'));
+        $this->assertTrue($this->node($page, '//select[@name="project_ids[]"]')->hasAttribute('multiple'));
+        $this->assertSame((string) $this->project->id, $this->node($page, '//select[@name="project_ids[]"]/option[@selected]')->getAttribute('value'));
         $this->assertSame($subscriber->name, $this->node($page, '//input[@name="name"]')->getAttribute('value'));
         $this->assertSame($subscriber->email, $this->node($page, '//input[@name="email"]')->getAttribute('value'));
         $this->assertSame((string) $savedCategory->id, $this->node($page, '//select[@name="categoryId[]"]/option[@selected]')->getAttribute('value'));
         $this->assertCsrfToken($page);
 
         $this->withSession(['_old_input' => [
+            'project_ids' => [$this->project->id],
             'name' => '"><script id="injected">alert(1)</script>',
             'email' => 'submitted@example.test',
             'categoryId' => [(string) $newCategory->id],
@@ -111,7 +117,7 @@ class NewsletterFormsTest extends TestCase
         $this->assertSame(0, $page->query('//*[@id="injected"]')->length);
         $this->assertTrue($this->node($page, '//select[@id="categoryId"]')->hasAttribute('multiple'));
 
-        $this->withSession(['_old_input' => ['name' => 'No categories selected', 'email' => 'invalid-email']]);
+        $this->withSession(['_old_input' => ['project_ids' => [$this->project->id], 'name' => 'No categories selected', 'email' => 'invalid-email']]);
         $page = $this->page('admin.subscribers.edit', ['id' => $subscriber->id]);
 
         $this->assertSame(0, $page->query('//select[@id="categoryId"]/option[@selected]')->length);
@@ -119,9 +125,10 @@ class NewsletterFormsTest extends TestCase
 
     public function test_subscriber_import_keeps_upload_filters_and_categories_without_a_charset_control(): void
     {
-        $firstCategory = Category::query()->create(['name' => 'First category']);
-        $secondCategory = Category::query()->create(['name' => 'Second category']);
+        $firstCategory = Category::query()->create(['project_id' => $this->project->id, 'name' => 'First category']);
+        $secondCategory = Category::query()->create(['project_id' => $this->project->id, 'name' => 'Second category']);
         $this->withSession(['_old_input' => [
+            'project_ids' => [$this->project->id],
             'charset' => 'Windows-1251',
             'categoryId' => [(string) $firstCategory->id, $secondCategory->id],
         ]]);
@@ -140,7 +147,7 @@ class NewsletterFormsTest extends TestCase
 
     public function test_subscriber_export_uses_text_defaults_and_restores_export_options(): void
     {
-        $category = Category::query()->create(['name' => 'Export category']);
+        $category = Category::query()->create(['project_id' => $this->project->id, 'name' => 'Export category']);
         $page = $this->page('admin.subscribers.export');
 
         $this->assertSame(route('admin.subscribers.export_subscribers'), $this->node($page, '//form')->getAttribute('action'));
@@ -149,6 +156,7 @@ class NewsletterFormsTest extends TestCase
         $this->assertSame('none', $this->node($page, '//input[@name="compress" and @checked]')->getAttribute('value'));
 
         $this->withSession(['_old_input' => [
+            'project_ids' => [$this->project->id],
             'export_type' => 'excel',
             'compress' => 'zip',
             'categoryId' => [(string) $category->id],
@@ -162,7 +170,7 @@ class NewsletterFormsTest extends TestCase
 
     public function test_bulk_forms_preserve_zero_actions_and_javascript_hooks(): void
     {
-        $category = Category::query()->create(['name' => 'Mailing category']);
+        $category = Category::query()->create(['project_id' => $this->project->id, 'name' => 'Mailing category']);
         $this->withSession(['_old_input' => ['action' => '0', 'categoryId' => [$category->id]]]);
         $page = $this->page('admin.templates.index');
 
@@ -172,15 +180,15 @@ class NewsletterFormsTest extends TestCase
         $this->assertSame('0', $sendOption->getAttribute('value'));
         $this->assertSame('sendmail', $sendOption->getAttribute('data-id'));
         $this->assertSame('open_modal', $sendOption->getAttribute('class'));
-        $this->assertTrue($this->node($page, '//input[@id="apply"]')->hasAttribute('disabled'));
+        $this->assertTrue($this->node($page, '//button[@id="apply"]')->hasAttribute('disabled'));
         $this->assertSame((string) $category->id, $this->node($page, '//select[@id="categoryId"]/option[@selected]')->getAttribute('value'));
 
         $page = $this->page('admin.subscribers.index');
 
-        $this->assertSame(route('admin.subscribers.status'), $this->node($page, '//form')->getAttribute('action'));
+        $this->assertSame(route('admin.subscribers.status'), $this->node($page, '//form[not(@id="removeAllSubscribersForm")]')->getAttribute('action'));
         $this->assertCsrfToken($page);
         $this->assertSame('0', $this->node($page, '//select[@id="select_action"]/option[@selected]')->getAttribute('value'));
-        $this->assertTrue($this->node($page, '//input[@id="apply"]')->hasAttribute('disabled'));
+        $this->assertTrue($this->node($page, '//button[@id="apply"]')->hasAttribute('disabled'));
     }
 
     private function page(string $route, array $parameters = []): DOMXPath
@@ -209,6 +217,10 @@ class NewsletterFormsTest extends TestCase
 
     private function assertCsrfToken(DOMXPath $page): void
     {
-        $this->assertSame(session()->token(), $this->node($page, '//form/input[@name="_token"]')->getAttribute('value'));
+        $tokens = $page->query('//form/input[@name="_token"]');
+        $this->assertGreaterThan(0, $tokens->length);
+        foreach ($tokens as $token) {
+            $this->assertSame(session()->token(), $token->getAttribute('value'));
+        }
     }
 }

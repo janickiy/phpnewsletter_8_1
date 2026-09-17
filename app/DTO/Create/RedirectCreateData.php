@@ -13,6 +13,7 @@ class RedirectCreateData
         public readonly string $url,
         public readonly CarbonInterface|string $time,
         public readonly string $email,
+        public readonly int $projectId,
     ) {
     }
 
@@ -22,6 +23,7 @@ class RedirectCreateData
     public function toArray(): array
     {
         return [
+            'project_id' => $this->projectId,
             'url' => $this->url,
             'time' => $this->time,
             'email' => $this->email,

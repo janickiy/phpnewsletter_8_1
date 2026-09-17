@@ -14,7 +14,8 @@ class User extends Authenticatable
 
     public const ROLE_ADMIN = 'admin';
     public const ROLE_MODERATOR = 'moderator';
-    public const ROLE_EDITOR = 'editor';
+    public const ROLE_PROJECT_ADMIN = 'project_admin';
+    public const ROLE_EDITOR = self::ROLE_PROJECT_ADMIN;
 
     /**
      * The attributes that are mass assignable.
@@ -35,9 +36,9 @@ class User extends Authenticatable
     public function getRoleLabelAttribute(): string
     {
         $roles = [
-            self::ROLE_ADMIN => __('frontend.str.admin'),
-            self::ROLE_MODERATOR => __('frontend.str.moderator'),
-            self::ROLE_EDITOR => __('frontend.str.editor'),
+            self::ROLE_ADMIN => __('frontend.str.projects.roles.admin'),
+            self::ROLE_PROJECT_ADMIN => __('frontend.str.projects.roles.project_admin'),
+            self::ROLE_MODERATOR => __('frontend.str.projects.roles.moderator'),
         ];
 
         return $roles[$this->role] ?? $this->role;
@@ -49,9 +50,9 @@ class User extends Authenticatable
     public static function getOptions(): array
     {
         return [
-            self::ROLE_ADMIN => __('frontend.str.admin'),
-            self::ROLE_MODERATOR => __('frontend.str.moderator'),
-            self::ROLE_EDITOR => __('frontend.str.editor'),
+            self::ROLE_ADMIN => __('frontend.str.projects.roles.admin'),
+            self::ROLE_PROJECT_ADMIN => __('frontend.str.projects.roles.project_admin'),
+            self::ROLE_MODERATOR => __('frontend.str.projects.roles.moderator'),
         ];
     }
 
@@ -64,6 +65,36 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isProjectAdmin(): bool
+    {
+        return $this->role === self::ROLE_PROJECT_ADMIN;
+    }
+
+    public function isModerator(): bool
+    {
+        return $this->role === self::ROLE_MODERATOR;
+    }
+
+    public function projects(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Project::class)->withPivot('role')->withTimestamps();
+    }
+
+    public function ownedProjects(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Project::class, 'owner_id');
+    }
+
+    public function canManageProjects(): bool
+    {
+        return $this->isAdmin() || $this->isProjectAdmin() || $this->ownedProjects()->exists();
+    }
 
     /**
      * The attributes that should be cast.

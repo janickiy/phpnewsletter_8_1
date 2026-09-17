@@ -17,6 +17,7 @@ final class ReadySentCreateData
         public readonly string  $template,
         public readonly ?string $errorMsg,
         public readonly ?int    $readMail,
+        public readonly int     $projectId,
     )
     {
     }

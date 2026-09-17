@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Helpers\StringHelper;
+use App\Services\ProjectAccess;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PagesController extends Controller
@@ -69,13 +71,19 @@ class PagesController extends Controller
     /**
      * Show the embeddable subscription form preview and copyable source code.
      *
+     * @param Request $request
      * @return View
      * @throws \Throwable
      */
-    public function subscriptionForm(): View
+    public function subscriptionForm(Request $request): View
     {
-        $subform = view('include.subform')->render();
-        $subformJs = view('include.subform_js')->render();
+        $projects = ProjectAccess::projects()->where('status', 1)->orderBy('name')->get();
+        $project = $request->filled('project_id')
+            ? ProjectAccess::authorizeProject((int) $request->input('project_id'))
+            : $projects->first();
+        abort_if($project && !$project->status, 404);
+        $subform = view('include.subform', compact('project'))->render();
+        $subformJs = view('include.subform_js', compact('project'))->render();
 
         $subform = preg_replace('/<input name="_token" type="hidden"[^>]*>\s*/si', "\n\n    ", $subform);
         $embedCode = trim($subform) . "\n"
@@ -85,6 +93,8 @@ class PagesController extends Controller
         return view('admin.pages.subscription_form', [
             'infoAlert' => __('frontend.hint.subscription_form'),
             'embedCode' => $embedCode,
+            'project' => $project,
+            'projects' => $projects,
             'title' => __('frontend.title.subscription_form'),
         ]);
     }

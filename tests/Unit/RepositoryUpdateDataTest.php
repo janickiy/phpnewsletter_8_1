@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\DTO\Update\CategoryUpdateData;
 use App\DTO\Update\MacrosUpdateData;
+use App\DTO\Update\ProjectUpdateData;
 use App\DTO\Update\ReadySentReadData;
 use App\DTO\Update\ScheduleUpdateData;
 use App\DTO\Update\SettingsUpdateData;
@@ -13,6 +14,7 @@ use App\DTO\Update\TemplatesUpdateData;
 use App\DTO\Update\UserUpdateData;
 use App\Repositories\CategoryRepository;
 use App\Repositories\MacrosRepository;
+use App\Repositories\ProjectRepository;
 use App\Repositories\ReadySentRepository;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\SettingsRepository;
@@ -45,6 +47,7 @@ class RepositoryUpdateDataTest extends TestCase
         return [
             [CategoryRepository::class, 'update', 1, CategoryUpdateData::class],
             [MacrosRepository::class, 'update', 1, MacrosUpdateData::class],
+            [ProjectRepository::class, 'update', 1, ProjectUpdateData::class],
             [ScheduleRepository::class, 'update', 1, ScheduleUpdateData::class],
             [SettingsRepository::class, 'setSettings', 0, SettingsUpdateData::class],
             [SmtpRepository::class, 'update', 1, SmtpUpdateData::class],
@@ -120,8 +123,8 @@ class RepositoryUpdateDataTest extends TestCase
         );
 
         $this->assertSame(
-            ['name' => 'Template', 'body' => '<p>Body</p>', 'prior' => 1],
-            (new TemplatesUpdateData('Template', '<p>Body</p>', 1))->toArray(),
+            ['name' => 'Template', 'body' => '<p>Body</p>', 'prior' => 1, 'project_id' => 7],
+            (new TemplatesUpdateData('Template', '<p>Body</p>', 1, 7))->toArray(),
         );
 
         $this->assertSame(

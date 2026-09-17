@@ -8,6 +8,8 @@ use Illuminate\Http\UploadedFile;
 
 class ImportRequest extends FormRequest
 {
+    use ProjectRules;
+
     private const ALLOWED_EXTENSIONS = ['csv', 'xlsx', 'xls', 'ods', 'txt'];
     private const MAX_IMPORT_FILE_SIZE_KB = 262144;
 
@@ -16,7 +18,7 @@ class ImportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     /**
@@ -26,7 +28,7 @@ class ImportRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        return $this->projectRules() + [
             'import' => [
                 'bail',
                 'required',

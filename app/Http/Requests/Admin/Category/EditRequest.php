@@ -4,6 +4,8 @@ namespace App\Http\Requests\Admin\Category;
 
 use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Models\User;
 
 class EditRequest extends FormRequest
 {
@@ -12,7 +14,7 @@ class EditRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->role === User::ROLE_ADMIN;
     }
 
     /**
@@ -22,7 +24,10 @@ class EditRequest extends FormRequest
      */
     public function rules(): array
     {
+        $projectId = Category::query()->find((int) $this->input('id'))?->project_id;
+
         return [
+            'project_id' => [$projectId === null ? 'nullable' : 'required', 'integer', Rule::in([$projectId])],
             'id' => [
                 'required',
                 'integer',

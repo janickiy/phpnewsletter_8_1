@@ -24,7 +24,7 @@
                             {{ __('frontend.str.mailing_report') }}
                         </h3>
 
-                        @if(PermissionsHelper::has_permission('admin'))
+                        @if(auth()->user()->canManageProjects())
                             <div class="card-tools">
                                 <button id="clearLogButton"
                                         type="button"
@@ -223,7 +223,8 @@
 
                 $.ajax({
                     url: "{{ route('admin.log.clear') }}",
-                    type: 'GET',
+                    type: 'POST',
+                    headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                     dataType: 'json',
                     success: function (response) {
                         Swal.fire({

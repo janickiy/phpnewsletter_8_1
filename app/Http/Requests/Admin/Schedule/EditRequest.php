@@ -6,6 +6,7 @@ namespace App\Http\Requests\Admin\Schedule;
 use App\Models\Category;
 use App\Models\Schedule;
 use App\Models\Templates;
+use App\Services\ProjectAccess;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,7 @@ class EditRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return ProjectAccess::scope(Schedule::query(), 'manage')->whereKey($this->integer('id'))->exists();
     }
 
     /**
@@ -62,7 +63,7 @@ class EditRequest extends FormRequest
             'template_id' => [
                 'required',
                 'integer',
-                Rule::exists(Templates::getTableName(), 'id'),
+                Rule::in(ProjectAccess::scope(Templates::query(), 'manage')->pluck('id')->all()),
             ],
 
             'categoryId' => [
@@ -74,7 +75,7 @@ class EditRequest extends FormRequest
             'categoryId.*' => [
                 'required',
                 'integer',
-                Rule::exists(Category::getTableName(), 'id'),
+                Rule::exists(Category::getTableName(), 'id')->where('project_id', ProjectAccess::scope(Templates::query(), 'manage')->whereKey($this->integer('template_id'))->value('project_id') ?? 0),
             ],
 
             'event_start' => [

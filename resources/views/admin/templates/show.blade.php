@@ -37,6 +37,7 @@
                                     <i class="fa-solid fa-envelope me-2" aria-hidden="true"></i>
                                     {{ $template->name }}
                                 </h5>
+                                <p class="mb-0">{{ __('frontend.str.projects.project') }}: {{ $template->project->name }}</p>
                                 <h6 class="mt-2 mb-0">
                                     {{ __('frontend.str.importance') }}: {{ $template->getPrior() }}
                                     <span class="text-body-secondary float-sm-end">
@@ -46,7 +47,9 @@
                             </div>
 
                             <div class="p-3 template-preview-body">
-                                {!! $template->body !!}
+                                <iframe class="w-100 border-0" style="min-height: 32rem" title="{{ $template->name }}"
+                                        sandbox="" credentialless referrerpolicy="no-referrer"
+                                        srcdoc="{{ $template->body }}"></iframe>
                             </div>
                         </div>
 
@@ -64,10 +67,10 @@
                                                 <i class="far fa-file"></i>
                                             </span>
                                             <div class="d-inline-block align-middle mw-100">
-                                                <span class="d-block text-truncate"
-                                                      title="{{ $attach->file_name }}">
-                                                    <i class="fas fa-paperclip me-1"></i>{{ $attach->file_name }}
-                                                </span>
+                                                <a class="d-block text-truncate" href="{{ route('admin.templates.attachment', ['id' => $attach->id]) }}"
+                                                   title="{{ $attach->name }}">
+                                                    <i class="fas fa-paperclip me-1"></i>{{ $attach->name }}
+                                                </a>
                                             </div>
                                         </li>
                                     @endforeach

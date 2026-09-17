@@ -8,6 +8,7 @@ use App\DTO\Update\UserUpdateData;
 use App\Http\Requests\Admin\Users\StoreRequest;
 use App\Http\Requests\Admin\Users\UpdateRequest;
 use App\Models\User;
+use App\Models\Project;
 use App\Repositories\UserRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -143,6 +144,7 @@ class UsersController extends Controller
     public function destroy(int $id): void
     {
         if ($id !== (int) Auth::id()) {
+            abort_if(Project::query()->where('owner_id', $id)->exists(), 422, __('frontend.str.projects.owner_has_projects'));
             $this->userRepository->delete($id);
         }
     }

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin\Templates;
 
 use App\Models\Templates;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Services\ProjectAccess;
 use Illuminate\Validation\Rule;
 
 class DeleteRequest extends FormRequest
@@ -32,7 +33,7 @@ class DeleteRequest extends FormRequest
             'templateId.*' => [
                 'required',
                 'integer',
-                Rule::exists(Templates::getTableName(), 'id'),
+                Rule::in(ProjectAccess::scope(Templates::query(), 'manage')->pluck('id')->all()),
             ],
             'action' => [
                 'required',

@@ -8,6 +8,8 @@ use App\DTO\Update\CategoryUpdateData;
 use App\Http\Requests\Admin\Category\EditRequest;
 use App\Http\Requests\Admin\Category\StoreRequest;
 use App\Repositories\CategoryRepository;
+use App\Models\Category;
+use App\Services\ProjectAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -42,6 +44,7 @@ class CategoryController extends Controller
     public function create(): View
     {
         return view('admin.category.create_edit', [
+            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
             'infoAlert' => __('frontend.hint.category_create'),
             'title' => __('frontend.title.category_create'),
         ]);
@@ -61,6 +64,7 @@ class CategoryController extends Controller
             $this->categoryRepository->add(
                 new CategoryCreateData(
                     name: $data['name'],
+                    projectId: (int) $data['project_id'],
                 )
             );
         } catch (\Throwable $e) {
@@ -83,12 +87,13 @@ class CategoryController extends Controller
      */
     public function edit(int $id): View
     {
-        $row = $this->categoryRepository->find($id);
-
-        abort_if(!$row, 404);
+        // Category management is administrator-only and includes retained categories
+        // whose project has been deleted.
+        $row = Category::query()->findOrFail($id);
 
         return view('admin.category.create_edit', [
             'row' => $row,
+            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
             'infoAlert' => __('frontend.hint.category_create'),
             'title' => __('frontend.title.category_edit'),
         ]);
@@ -131,6 +136,7 @@ class CategoryController extends Controller
      */
     public function destroy(int $id): RedirectResponse
     {
+        Category::query()->findOrFail($id);
         try {
             $this->categoryRepository->delete($id);
         } catch (\Throwable $e) {

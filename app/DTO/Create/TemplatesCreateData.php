@@ -11,6 +11,7 @@ class TemplatesCreateData
         public readonly string $name,
         public readonly string $body,
         public readonly int $prior,
+        public readonly int $projectId,
     ) {
     }
 
@@ -23,6 +24,7 @@ class TemplatesCreateData
             'name' => $this->name,
             'body' => $this->body,
             'prior' => $this->prior,
+            'project_id' => $this->projectId,
         ];
     }
 }

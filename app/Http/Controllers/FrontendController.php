@@ -9,6 +9,9 @@ use App\Helpers\SettingsHelper;
 use App\Helpers\StringHelper;
 use App\Http\Requests\Frontend\AddSubRequest;
 use App\Models\Category;
+use App\Models\Project;
+use App\Models\Templates;
+use Illuminate\Http\Request;
 use App\Models\Subscribers;
 use App\Repositories\ReadySentRepository;
 use App\Repositories\RedirectRepository;
@@ -49,6 +52,9 @@ class FrontendController extends Controller
      */
     public function pic(int $subscriber, int $template): Response
     {
+        $recipient = Subscribers::query()->findOrFail($subscriber);
+        $templateModel = Templates::query()->findOrFail($template);
+        abort_unless($recipient->projects()->whereKey($templateModel->project_id)->where('status', 1)->exists(), 404);
         $this->readySentRepository->markAsRead(
             new ReadySentReadData(
                 subscriberId: $subscriber,
@@ -76,20 +82,32 @@ class FrontendController extends Controller
      * @param int $subscriber
      * @return RedirectResponse
      */
-    public function redirectLog(string $ref, int $subscriber): RedirectResponse
+    public function redirectLog(Request $request, string $ref, int $subscriber): RedirectResponse
     {
         abort_if($ref === '', 404);
 
-        $url = base64_decode($ref, true) ?: '';
+        $url = base64_decode(strtr($ref, '-_', '+/'), true) ?: '';
         abort_unless($this->isRedirectUrlAllowed($url), 404);
 
-        $subscriberModel = Subscribers::query()->find($subscriber);
+        $subscriberModel = Subscribers::query()->findOrFail($subscriber);
+        $projects = $subscriberModel->projects();
+
+        if ($request->has('project_id')) {
+            $projectId = filter_var($request->query('project_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            abort_if($projectId === false, 404);
+            $project = $projects->whereKey($projectId)->where('status', 1)->firstOrFail();
+        } else {
+            $memberships = $projects->limit(2)->get();
+            abort_unless($memberships->count() === 1 && (bool) $memberships->first()->status, 404);
+            $project = $memberships->first();
+        }
 
         $this->redirectRepository->add(
             new RedirectCreateData(
                 url: $url,
                 time: now(),
-                email: $subscriberModel->email ?? '',
+                email: $subscriberModel->email,
+                projectId: $project->id,
             )
         );
 
@@ -105,7 +123,7 @@ class FrontendController extends Controller
      */
     public function unsubscribe(int $subscriber, string $token): View
     {
-        $subscriberModel = $this->subscriberRepository->find($subscriber);
+        $subscriberModel = Subscribers::query()->find($subscriber);
 
         abort_if(!$subscriberModel || $subscriberModel->token !== $token, 404);
 
@@ -127,7 +145,7 @@ class FrontendController extends Controller
      */
     public function subscribe(int $subscriber, string $token): View
     {
-        $subscriberModel = $this->subscriberRepository->find($subscriber);
+        $subscriberModel = Subscribers::query()->find($subscriber);
 
         abort_if(!$subscriberModel || $subscriberModel->token !== $token, 404);
 
@@ -142,10 +160,12 @@ class FrontendController extends Controller
      *
      * @return View
      */
-    public function form(): View
+    public function form(Request $request): View
     {
+        $project = Project::query()->where('status', 1)->findOrFail((int) $request->input('project_id'));
         return view('frontend.subform', [
-            'category' => Category::query()->orderBy('name')->get(),
+            'project' => $project,
+            'category' => Category::query()->where('project_id', $project->id)->orderBy('name')->get(),
             'title' => 'Subform',
         ]);
     }
@@ -165,6 +185,7 @@ class FrontendController extends Controller
         $subscriber = $this->subscriberRepository->createFrontendSubscriber(
             new SubscriberCreateData(
                 email: $validated['email'],
+                projectIds: [(int) $validated['project_id']],
                 name: $validated['name'] ?? '',
                 active: $this->requiresConfirmation($settings) ? 0 : 1,
                 token: StringHelper::token(),
@@ -174,7 +195,9 @@ class FrontendController extends Controller
         );
 
         try {
-            $this->sendMailService->sendFrontendSubscriberEmails($subscriber);
+            if ($subscriber->wasRecentlyCreated) {
+                $this->sendMailService->sendFrontendSubscriberEmails($subscriber);
+            }
         } catch (\Throwable $exception) {
             Log::warning('Failed to send frontend subscriber email.', [
                 'subscriber_id' => $subscriber->id ?? null,
@@ -193,10 +216,13 @@ class FrontendController extends Controller
      *
      * @return JsonResponse
      */
-    public function getCategories(): JsonResponse
+    public function getCategories(Request $request): JsonResponse
     {
+        $project = Project::query()->where('status', 1)->findOrFail((int) $request->input('project_id'));
         return response()->json([
             'items' => Category::query()
+                ->where('project_id', $project->id)
+                ->select('id', 'name')
                 ->orderBy('name')
                 ->get(),
         ]);

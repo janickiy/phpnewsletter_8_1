@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Attach;
+use App\Services\ProjectAccess;
 
 class AttachRepository extends BaseRepository
 {
@@ -28,6 +29,7 @@ class AttachRepository extends BaseRepository
             return false;
         }
 
+        ProjectAccess::authorizeProject((int) $model->template?->project_id, 'manage');
         $model->remove();
 
         return true;

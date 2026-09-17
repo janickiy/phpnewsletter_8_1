@@ -16,7 +16,8 @@ class FakeSubscribersSeeder extends Seeder
      */
     public function run(): void
     {
-        $categoryIds = DB::table('categories')->pluck('id')->all();
+        $projectId = DB::table('categories')->orderBy('project_id')->value('project_id');
+        $categoryIds = DB::table('categories')->where('project_id', $projectId)->pluck('id')->all();
 
         if (empty($categoryIds)) {
             $this->command?->warn('Категории не найдены. Сначала заполните таблицу categories.');
@@ -38,7 +39,7 @@ class FakeSubscribersSeeder extends Seeder
             ];
 
             if (count($subscribersBatch) === self::INSERT_CHUNK_SIZE || $i === self::SUBSCRIBERS_COUNT) {
-                $this->insertSubscribersWithSubscriptions($subscribersBatch, $categoryIds);
+                $this->insertSubscribersWithSubscriptions($subscribersBatch, $categoryIds, (int) $projectId);
                 $subscribersBatch = [];
             }
         }
@@ -50,10 +51,10 @@ class FakeSubscribersSeeder extends Seeder
      * @param array<int, array<string, mixed>> $subscribersBatch
      * @param array<int, int> $categoryIds
      */
-    private function insertSubscribersWithSubscriptions(array $subscribersBatch, array $categoryIds): void
+    private function insertSubscribersWithSubscriptions(array $subscribersBatch, array $categoryIds, int $projectId): void
     {
-        DB::transaction(function () use ($subscribersBatch, $categoryIds) {
-            DB::table('subscribers')->insert($subscribersBatch);
+        DB::transaction(function () use ($subscribersBatch, $categoryIds, $projectId) {
+            DB::table('subscribers')->insertOrIgnore($subscribersBatch);
 
             $emails = array_column($subscribersBatch, 'email');
 
@@ -64,6 +65,8 @@ class FakeSubscribersSeeder extends Seeder
                 ->keyBy('email');
 
             $subscriptionsBatch = [];
+            $membershipsBatch = [];
+            $now = now();
 
             foreach ($subscribersBatch as $subscriberData) {
                 $subscriber = $insertedSubscribers->get($subscriberData['email']);
@@ -71,6 +74,13 @@ class FakeSubscribersSeeder extends Seeder
                 if (!$subscriber) {
                     continue;
                 }
+
+                $membershipsBatch[] = [
+                    'project_id' => $projectId,
+                    'subscriber_id' => $subscriber->id,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
 
                 $randomCategoryIds = collect($categoryIds)
                     ->shuffle()
@@ -85,8 +95,12 @@ class FakeSubscribersSeeder extends Seeder
                 }
             }
 
+            if (!empty($membershipsBatch)) {
+                DB::table('project_subscriber')->insertOrIgnore($membershipsBatch);
+            }
+
             if (!empty($subscriptionsBatch)) {
-                DB::table('subscriptions')->insert($subscriptionsBatch);
+                DB::table('subscriptions')->insertOrIgnore($subscriptionsBatch);
             }
         });
     }

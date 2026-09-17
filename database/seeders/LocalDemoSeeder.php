@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Macros;
+use App\Models\Project;
 use App\Models\Schedule;
 use App\Models\Smtp;
 use App\Models\Subscribers;
@@ -21,6 +22,8 @@ class LocalDemoSeeder extends Seeder
     private const ADMIN_LOGIN = 'admin';
     private const ADMIN_PASSWORD = '1234567';
 
+    private Project $project;
+
     /**
      * Fill the local installation with realistic demo data without resetting it.
      */
@@ -29,7 +32,7 @@ class LocalDemoSeeder extends Seeder
         $this->call(SettingsSeeder::class);
 
         DB::transaction(function () {
-            $this->seedAdmin();
+            $this->project = DefaultProjectSeeder::forAdministrator($this->seedAdmin());
             $categories = $this->seedCategories();
             $templates = $this->seedTemplates();
             $subscribers = $this->seedSubscribers($categories);
@@ -48,9 +51,9 @@ class LocalDemoSeeder extends Seeder
         ));
     }
 
-    private function seedAdmin(): void
+    private function seedAdmin(): User
     {
-        User::query()->updateOrCreate(
+        return User::query()->updateOrCreate(
             ['login' => self::ADMIN_LOGIN],
             [
                 'name' => 'Local Administrator',
@@ -93,17 +96,17 @@ class LocalDemoSeeder extends Seeder
 
         $names = array_column($categories, 'name');
 
-        return Category::query()->whereIn('name', $names)->orderBy('id')->get();
+        return Category::query()->where('project_id', $this->project->id)->whereIn('name', $names)->orderBy('id')->get();
     }
 
     private function syncDemoCategory(string $name, array $legacyNames): Category
     {
         $names = array_values(array_unique(array_merge([$name], $legacyNames)));
-        $existing = Category::query()->whereIn('name', $names)->orderBy('id')->get();
+        $existing = Category::query()->where('project_id', $this->project->id)->whereIn('name', $names)->orderBy('id')->get();
         $target = $existing->firstWhere('name', $name) ?? $existing->first();
 
         if (!$target) {
-            return Category::query()->create(['name' => $name]);
+            return Category::query()->create(['project_id' => $this->project->id, 'name' => $name]);
         }
 
         $target->forceFill(['name' => $name])->save();
@@ -169,6 +172,7 @@ class LocalDemoSeeder extends Seeder
         }
 
         return Templates::query()
+            ->where('project_id', $this->project->id)
             ->whereIn('name', array_column($templates, 'name'))
             ->orderBy('id')
             ->get();
@@ -177,9 +181,10 @@ class LocalDemoSeeder extends Seeder
     private function syncDemoTemplate(array $template): Templates
     {
         $names = array_values(array_unique(array_merge([$template['name']], $template['legacy_names'] ?? [])));
-        $existing = Templates::query()->whereIn('name', $names)->orderBy('id')->get();
+        $existing = Templates::query()->where('project_id', $this->project->id)->whereIn('name', $names)->orderBy('id')->get();
         $target = $existing->firstWhere('name', $template['name']) ?? $existing->first();
         $data = [
+            'project_id' => $this->project->id,
             'name' => $template['name'],
             'body' => $template['body'],
             'prior' => $template['prior'],
@@ -227,23 +232,17 @@ class LocalDemoSeeder extends Seeder
             $emails[] = sprintf('demo.subscriber%03d@phpnewsletter.test', $i);
         }
 
-        $existingSubscribers = Subscribers::query()
-            ->whereIn('email', $emails)
-            ->get()
-            ->keyBy('email');
-
         foreach ($emails as $index => $email) {
-            $subscriber = $existingSubscribers->get($email);
             $createdAt = $now->copy()->subDays(random_int(1, 75))->subMinutes(random_int(0, 720));
 
-            Subscribers::query()->updateOrCreate(
+            Subscribers::query()->firstOrCreate(
                 ['email' => $email],
                 [
                     'name' => $faker->name(),
                     'active' => $index % 11 === 0 ? 0 : 1,
-                    'token' => $subscriber?->token ?: Str::random(32),
+                    'token' => Str::random(32),
                     'timeSent' => $index % 5 === 0 ? $createdAt->copy()->addDays(random_int(1, 8)) : null,
-                    'created_at' => $subscriber?->created_at ?: $createdAt,
+                    'created_at' => $createdAt,
                     'updated_at' => $now,
                 ]
             );
@@ -251,7 +250,17 @@ class LocalDemoSeeder extends Seeder
 
         $subscribers = Subscribers::query()->whereIn('email', $emails)->orderBy('id')->get();
 
-        DB::table('subscriptions')->whereIn('subscriber_id', $subscribers->pluck('id'))->delete();
+        DB::table('project_subscriber')->insertOrIgnore($subscribers->map(fn ($subscriber) => [
+            'project_id' => $this->project->id,
+            'subscriber_id' => $subscriber->id,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all());
+
+        DB::table('subscriptions')
+            ->whereIn('subscriber_id', $subscribers->pluck('id'))
+            ->whereIn('category_id', Category::query()->where('project_id', $this->project->id)->select('id'))
+            ->delete();
 
         $subscriptions = [];
         $categoryIds = $categories->pluck('id')->values();
@@ -350,12 +359,14 @@ class LocalDemoSeeder extends Seeder
             ->flatMap(fn (array $row) => $row['legacy_event_names'] ?? [])
             ->all();
         $demoEventNames = array_values(array_unique(array_merge($eventNames, $legacyEventNames)));
-        $oldScheduleIds = Schedule::query()->whereIn('event_name', $demoEventNames)->pluck('id');
+        $oldScheduleIds = Schedule::query()->where('project_id', $this->project->id)->whereIn('event_name', $demoEventNames)->pluck('id');
         $oldLogIds = DB::table('ready_sent')->whereIn('schedule_id', $oldScheduleIds)->pluck('log_id')->filter()->unique();
 
         DB::table('ready_sent')->whereIn('schedule_id', $oldScheduleIds)->delete();
         DB::table('schedule_category')->whereIn('schedule_id', $oldScheduleIds)->delete();
-        DB::table('logs')->whereIn('id', $oldLogIds)->delete();
+        DB::table('logs')->whereIn('id', $oldLogIds)
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('ready_sent')->whereColumn('ready_sent.log_id', 'logs.id'))
+            ->delete();
         Schedule::query()->whereIn('id', $oldScheduleIds)->delete();
 
         $templateList = $templates->values();
@@ -367,6 +378,7 @@ class LocalDemoSeeder extends Seeder
             $end = $start->copy()->addMinutes(45);
 
             $schedule = Schedule::query()->create([
+                'project_id' => $this->project->id,
                 'event_name' => $row['event_name'],
                 'event_start' => $start,
                 'event_end' => $end,
@@ -409,6 +421,7 @@ class LocalDemoSeeder extends Seeder
             $createdAt = $schedule->event_start->copy()->addMinutes($index);
 
             $rows[] = [
+                'project_id' => $this->project->id,
                 'subscriber_id' => $subscriber->id,
                 'email' => $subscriber->email,
                 'template_id' => $template->id,
@@ -439,13 +452,14 @@ class LocalDemoSeeder extends Seeder
             'https://example.test/promo/summer',
         ];
 
-        DB::table('redirect')->whereIn('url', $urls)->delete();
+        DB::table('redirect')->where('project_id', $this->project->id)->whereIn('url', $urls)->delete();
 
         $rows = [];
         $now = now();
 
         foreach ($subscribers->take(70)->values() as $index => $subscriber) {
             $rows[] = [
+                'project_id' => $this->project->id,
                 'url' => $urls[$index % count($urls)],
                 'email' => $subscriber->email,
                 'created_at' => $now->copy()->subHours(random_int(1, 160)),

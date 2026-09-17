@@ -97,6 +97,7 @@ class SendEmails extends Command implements Isolatable
                     template: $row->template->name,
                     errorMsg: $result['error'] ?? null,
                     readMail: null,
+                    projectId: (int) $row->project_id,
                 ));
 
                 if ($result['result'] === true) {
@@ -156,7 +157,7 @@ class SendEmails extends Command implements Isolatable
         $sendEmail->name = $subscriber->name;
         $sendEmail->templateId = $schedule->template->id;
 
-        return $sendEmail->sendEmail();
+        return $sendEmail->sendEmail($schedule->template->id);
     }
 
     /**

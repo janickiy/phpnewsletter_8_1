@@ -8,6 +8,9 @@ use App\DTO\Update\ScheduleUpdateData;
 use App\Http\Requests\Admin\Schedule\EditRequest;
 use App\Http\Requests\Admin\Schedule\StoreRequest;
 use App\Models\Schedule;
+use App\Models\Templates;
+use App\Models\Category;
+use App\Services\ProjectAccess;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\TemplateRepository;
@@ -37,7 +40,7 @@ class ScheduleController extends Controller
     public function index(): View
     {
         return view('admin.schedule.index', [
-            'schedule' => Schedule::query()->get(),
+            'schedule' => ProjectAccess::scope(Schedule::query(), 'manage')->get(),
             'infoAlert' => __('frontend.hint.schedule_index'),
             'title' => __('frontend.title.schedule_index'),
         ]);
@@ -64,10 +67,18 @@ class ScheduleController extends Controller
      */
     public function calendarEvents(Request $request): JsonResponse
     {
-        $event = Schedule::query()->find($request->id);
+        $event = ProjectAccess::scope(Schedule::query(), 'manage')->find($request->integer('id'));
 
         if (!$event) {
             return response()->json(false, 404);
+        }
+
+        if ($request->type === 'edit') {
+            $request->validate([
+                'event_name' => ['required', 'string', 'max:255'],
+                'event_start' => ['required', 'date'],
+                'event_end' => ['required', 'date', 'after:event_start'],
+            ]);
         }
 
         return match ($request->type) {
@@ -78,7 +89,7 @@ class ScheduleController extends Controller
                     'event_end' => $request->event_end,
                 ])
             ),
-            'delete' => response()->json($event->delete()),
+            'delete' => response()->json($this->scheduleRepository->remove((int) $event->id)),
             default => response()->json(false, 400),
         };
     }
@@ -92,7 +103,7 @@ class ScheduleController extends Controller
     {
         return view('admin.schedule.create_edit', [
             'options' => $this->templateRepository->getOption(),
-            'category_options' => $this->categoryRepository->getOption(),
+            ...$this->categoryOptions(),
             'infoAlert' => __('frontend.hint.schedule_create'),
             'title' => __('frontend.title.schedule_index'),
         ]);
@@ -144,7 +155,7 @@ class ScheduleController extends Controller
         return view('admin.schedule.create_edit', [
             'categoryId' => $row->categories?->pluck('id')->toArray() ?? [],
             'options' => $this->templateRepository->getOption(),
-            'category_options' => $this->categoryRepository->getOption(),
+            ...$this->categoryOptions(),
             'row' => $row,
             'infoAlert' => __('frontend.hint.schedule_edit'),
             'date_interval' => date('d.m.Y H:i', strtotime($row->event_start)) . ' - ' . date('d.m.Y H:i', strtotime($row->event_end)),
@@ -184,14 +195,28 @@ class ScheduleController extends Controller
         return to_route('admin.schedule.index')->with('success', __('message.data_updated'));
     }
 
+    private function categoryOptions(): array
+    {
+        $categories = ProjectAccess::scope(Category::query(), 'manage')->with('project')->orderBy('name')->get();
+
+        return [
+            'category_options' => $categories->mapWithKeys(fn ($category) => [$category->id => $category->project->name . ' — ' . $category->name])->all(),
+            'categoryProjects' => $categories->pluck('project_id', 'id'),
+            'templateProjects' => ProjectAccess::scope(Templates::query(), 'manage')->pluck('project_id', 'id'),
+        ];
+    }
+
+
     /**
      * Delete a scheduled mailing for AJAX-driven calendar actions.
      *
      * @param int $id
      * @return JsonResponse
+     * @throws \Throwable
      */
     public function destroy(int $id): JsonResponse
     {
+        abort_unless($this->scheduleRepository->find($id), 404);
         $deleted = $this->scheduleRepository->remove($id);
 
         if (!$deleted) {

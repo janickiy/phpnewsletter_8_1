@@ -18,15 +18,16 @@ class TrackingPixelTest extends TestCase
 
     public function test_mark_as_read_updates_all_matching_deliveries_for_subscriber_and_template(): void
     {
-        $subscriber = Subscribers::query()->create([
+        $subscriber = $this->subscriberFixture([
             'name' => 'Reader',
             'email' => 'reader@example.com',
             'active' => 1,
             'token' => str_repeat('a', 32),
             'timeSent' => now(),
-        ]);
+        ], [$this->testProjectId()]);
 
         $template = Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'April newsletter',
             'body' => '<p>Hello</p>',
             'prior' => 0,
@@ -35,6 +36,7 @@ class TrackingPixelTest extends TestCase
         $firstLog = Logs::query()->create(['time' => now()]);
         $secondLog = Logs::query()->create(['time' => now()->addMinute()]);
         $schedule = Schedule::query()->create([
+            'project_id' => $this->testProjectId(),
             'event_name' => 'April send',
             'event_start' => now()->subMinute(),
             'event_end' => now()->addMinute(),
@@ -42,6 +44,7 @@ class TrackingPixelTest extends TestCase
         ]);
 
         $firstDelivery = ReadySent::query()->create([
+            'project_id' => $this->testProjectId(),
             'subscriber_id' => $subscriber->id,
             'email' => $subscriber->email,
             'template_id' => $template->id,
@@ -54,6 +57,7 @@ class TrackingPixelTest extends TestCase
         ]);
 
         $secondDelivery = ReadySent::query()->create([
+            'project_id' => $this->testProjectId(),
             'subscriber_id' => $subscriber->id,
             'email' => $subscriber->email,
             'template_id' => $template->id,

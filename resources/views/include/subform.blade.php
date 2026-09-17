@@ -2,6 +2,7 @@
     <div id="resultSub"></div>
 
     <form method="POST" action="#" accept-charset="UTF-8" id="addsub" autocomplete="off">
+        <input type="hidden" name="project_id" value="{{ $project?->id }}">
         <div class="mb-3">
             <label for="name" class="form-label">{{ trans('frontend.str.name') }}</label>
             <input class="form-control" autocomplete="off" name="name" type="text" id="name">
@@ -14,7 +15,7 @@
             <div id="error-email" class="text-danger"></div>
         </div>
 
-        <button id="sub" class="btn btn-primary" type="button">{{ trans('frontend.str.subscribe') }}</button>
+        <button @disabled(!$project) id="sub" class="btn btn-primary" type="button">{{ trans('frontend.str.subscribe') }}</button>
     </form>
 
 </div>

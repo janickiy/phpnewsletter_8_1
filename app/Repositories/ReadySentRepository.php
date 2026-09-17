@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\DTO\Create\ReadySentCreateData;
 use App\DTO\Update\ReadySentReadData;
 use App\Models\ReadySent;
+use App\Services\ProjectAccess;
 
 class ReadySentRepository extends BaseRepository
 {
@@ -25,6 +26,7 @@ class ReadySentRepository extends BaseRepository
     public function add(ReadySentCreateData $data): ReadySent
     {
         return ReadySent::query()->create([
+            'project_id' => $data->projectId,
             'subscriber_id' => $data->subscriberId,
             'template_id' => $data->templateId,
             'success' => $data->success,
@@ -62,7 +64,7 @@ class ReadySentRepository extends BaseRepository
      */
     public function countStatus(int $logId, int $success): int
     {
-        return $this->model->where('log_id', $logId)->where('success', $success)->count();
+        return ProjectAccess::scope(ReadySent::query(), 'manage')->where('log_id', $logId)->where('success', $success)->count();
     }
 
     /**
@@ -71,9 +73,10 @@ class ReadySentRepository extends BaseRepository
      * @param int $limit
      * @return array|false[]
      */
-    public function logOnline(int $limit = 5): array
+    public function logOnline(int $limit = 5, ?int $logId = null): array
     {
-        $readySent = $this->model
+        $readySent = ProjectAccess::scope(ReadySent::query(), 'manage')
+            ->when($logId, fn ($query) => $query->where('log_id', $logId))
             ->orderBy('id', 'desc')
             ->where('log_id', '>', 0)
             ->limit($limit)

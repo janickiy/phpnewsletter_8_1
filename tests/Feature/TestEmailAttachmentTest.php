@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Helpers\SendEmailHelper;
 use App\Models\Attach;
+use App\Models\User;
 use App\Models\Templates;
 use App\Repositories\ProcessRepository;
 use App\Repositories\ReadySentRepository;
@@ -21,7 +22,10 @@ class TestEmailAttachmentTest extends TestCase
 
     public function test_existing_template_attachments_are_passed_to_test_email(): void
     {
+        $this->testProjectId();
+        $this->actingAs(User::query()->where('role', User::ROLE_ADMIN)->firstOrFail());
         $template = Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'Template with attachment',
             'body' => '<p>Test body</p>',
             'prior' => 0,
@@ -45,6 +49,7 @@ class TestEmailAttachmentTest extends TestCase
 
         $result = $service->sendTest(Request::create('/ajax', 'POST', [
             'id' => $template->id,
+            'project_id' => $template->project_id,
             'name' => $template->name,
             'body' => $template->body,
             'prior' => $template->prior,

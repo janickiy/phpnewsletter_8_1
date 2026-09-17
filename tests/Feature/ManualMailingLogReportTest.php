@@ -24,6 +24,7 @@ class ManualMailingLogReportTest extends TestCase
             'password' => 'password',
         ]);
         $template = Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'Manual report template',
             'body' => '<p>Manual report body</p>',
             'prior' => 0,
@@ -91,6 +92,7 @@ class ManualMailingLogReportTest extends TestCase
     public function test_deleting_a_log_preserves_delivery_history(): void
     {
         $template = Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'Preserved delivery template',
             'body' => '<p>Delivery history</p>',
             'prior' => 0,
@@ -114,12 +116,12 @@ class ManualMailingLogReportTest extends TestCase
 
     private function createSubscriber(string $email): Subscribers
     {
-        return Subscribers::query()->create([
+        return $this->subscriberFixture([
             'name' => $email,
             'email' => $email,
             'active' => 1,
             'token' => md5($email),
-        ]);
+        ], [$this->testProjectId()]);
     }
 
     private function createDelivery(
@@ -130,6 +132,7 @@ class ManualMailingLogReportTest extends TestCase
         ?int $readMail
     ): ReadySent {
         return ReadySent::query()->create([
+            'project_id' => $this->testProjectId(),
             'subscriber_id' => $subscriber->id,
             'email' => $subscriber->email,
             'template_id' => $template->id,

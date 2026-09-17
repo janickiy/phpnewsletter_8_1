@@ -11,6 +11,7 @@ final class TemplatesUpdateData
         public readonly string $name,
         public readonly string $body,
         public readonly int $prior,
+        public readonly int $projectId,
     ) {
     }
 
@@ -23,6 +24,7 @@ final class TemplatesUpdateData
             'name' => $this->name,
             'body' => $this->body,
             'prior' => $this->prior,
+            'project_id' => $this->projectId,
         ];
     }
 }

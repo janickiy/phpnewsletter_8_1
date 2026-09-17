@@ -144,14 +144,14 @@ class SettingsSmtpUserFormsTest extends TestCase
             '_old_input' => [
                 'name' => '"><script id="injected">bad</script>',
                 'description' => '</textarea><script id="injected">bad</script>',
-                'role' => User::ROLE_EDITOR,
+                'role' => User::ROLE_PROJECT_ADMIN,
                 'password' => 'never-render-this-secret',
                 'password_again' => 'never-render-this-secret',
             ],
         ]);
 
         $this->assertSame(route('admin.users.store'), $xpath->evaluate('string(//form/@action)'));
-        $this->assertSame(User::ROLE_EDITOR, $xpath->evaluate('string(//select[@name="role"]/option[@selected]/@value)'));
+        $this->assertSame(User::ROLE_PROJECT_ADMIN, $xpath->evaluate('string(//select[@name="role"]/option[@selected]/@value)'));
         $this->assertSame('"><script id="injected">bad</script>', $xpath->evaluate('string(//input[@name="name"]/@value)'));
         $this->assertSame('</textarea><script id="injected">bad</script>', $xpath->evaluate('string(//textarea[@name="description"])'));
         $this->assertSame(0, $xpath->query('//*[@id="injected"]')->length);

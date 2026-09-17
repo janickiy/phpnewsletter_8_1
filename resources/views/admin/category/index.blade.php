@@ -32,6 +32,7 @@
                             <thead>
                             <tr>
                                 <th>{{ __('frontend.str.name') }}</th>
+                                <th>{{ __('frontend.str.projects.project') }}</th>
                                 <th>{{ __('frontend.str.subscribers_number') }}</th>
                                 <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
                             </tr>
@@ -95,7 +96,8 @@
                 },
                 columnDefs: [{targets: -1, className: 'text-end'}],
                 'columns': [
-                    {data: 'name', name: 'name'},
+                    {data: 'name', name: 'categories.name'},
+                    {data: 'project', name: 'projects.name'},
                     {data: 'subcount', name: 'subcount', searchable: false},
                     {data: 'actions', name: 'actions', orderable: false, searchable: false}
                 ]

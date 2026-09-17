@@ -2,19 +2,21 @@
 
 namespace App\Http\Requests\Admin\Subscribers;
 
-use App\Models\Category;
 use App\Models\Subscribers;
+use App\Services\ProjectAccess;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class EditRequest extends FormRequest
 {
+    use ProjectRules;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return ProjectAccess::subscribers(Subscribers::query(), $this->user())->whereKey((int) $this->input('id'))->exists();
     }
 
     /**
@@ -24,7 +26,7 @@ class EditRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        return $this->projectRules(false) + [
             'id' => [
                 'required',
                 'integer',
@@ -39,16 +41,7 @@ class EditRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique(Subscribers::getTableName(), 'email')->ignore($this->id),
-            ],
-            'categoryId' => [
-                'nullable',
-                'array',
-            ],
-            'categoryId.*' => [
-                'required',
-                'integer',
-                Rule::exists(Category::getTableName(), 'id'),
+                Rule::unique(Subscribers::getTableName(), 'email')->ignore((int) $this->input('id')),
             ],
         ];
     }

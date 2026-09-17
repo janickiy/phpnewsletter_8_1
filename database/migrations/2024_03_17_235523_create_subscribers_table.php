@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('subscribers', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name', 100)->nullable();
-            $table->string('email')->unique();
+            $table->string('email');
+            $table->unique('email');
             $table->tinyInteger('active')->default(1);
             $table->string('token', 32);
             $table->timestamp('timeSent')->nullable();

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{
     AuthController,
+    AttachmentController,
     CategoryController,
     DataTableController,
     DashboardController,
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\{
     MacrosController,
     UsersController,
     UpdateController,
+    ProjectController,
 };
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\InstallController;
@@ -45,9 +47,10 @@ Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('login', [AuthController::class, 'login'])->name('login.submit');
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard.index');
-Route::get('templates', [TemplatesController::class, 'index'])->name('admin.templates.index');
+Route::get('templates', [TemplatesController::class, 'index'])->name('admin.templates.index')->middleware('project-manager');
 
-Route::group(['prefix' => 'template'], function () {
+Route::group(['prefix' => 'template', 'middleware' => 'project-manager'], function () {
+    Route::get('attachment/{id}', [AttachmentController::class, 'download'])->name('admin.templates.attachment')->whereNumber('id');
     Route::get('create', [TemplatesController::class, 'create'])->name('admin.templates.create');
     Route::post('store', [TemplatesController::class, 'store'])->name('admin.templates.store');
     Route::get('show/{id}', [TemplatesController::class, 'show'])->name('admin.templates.show')->where('id', '[0-9]+');
@@ -57,8 +60,8 @@ Route::group(['prefix' => 'template'], function () {
     Route::post('status', [TemplatesController::class, 'delete'])->name('admin.templates.status');
 });
 
-Route::middleware(['permission:admin|moderator'])->group(function () {
-    Route::group(['prefix' => 'category'], function () {
+Route::middleware(['permission:admin|project_admin|moderator'])->group(function () {
+    Route::group(['prefix' => 'category', 'middleware' => 'permission:admin'], function () {
         Route::get('', [CategoryController::class, 'index'])->name('admin.category.index');
         Route::get('create', [CategoryController::class, 'create'])->name('admin.category.create');
         Route::post('store', [CategoryController::class, 'store'])->name('admin.category.store');
@@ -78,11 +81,11 @@ Route::middleware(['permission:admin|moderator'])->group(function () {
         Route::post('import-subscribers', [SubscribersController::class, 'importSubscribers'])->name('admin.subscribers.import_subscribers');
         Route::get('export', [SubscribersController::class, 'export'])->name('admin.subscribers.export');
         Route::post('export-subscribers', [SubscribersController::class, 'exportSubscribers'])->name('admin.subscribers.export_subscribers');
-        Route::get('remove-all', [SubscribersController::class, 'removeAll'])->name('admin.subscribers.remove_all');
+        Route::post('remove-all', [SubscribersController::class, 'removeAll'])->name('admin.subscribers.remove_all');
         Route::post('status', [SubscribersController::class, 'status'])->name('admin.subscribers.status');
     });
 
-    Route::group(['prefix' => 'macros'], function () {
+    Route::group(['prefix' => 'macros', 'middleware' => 'permission:admin'], function () {
         Route::get('', [MacrosController::class, 'index'])->name('admin.macros.index');
         Route::get('create', [MacrosController::class, 'create'])->name('admin.macros.create');
         Route::post('store', [MacrosController::class, 'store'])->name('admin.macros.store');
@@ -92,7 +95,7 @@ Route::middleware(['permission:admin|moderator'])->group(function () {
     });
 });
 
-Route::group(['prefix' => 'schedule'], function () {
+Route::group(['prefix' => 'schedule', 'middleware' => 'project-manager'], function () {
     Route::get('', [ScheduleController::class, 'index'])->name('admin.schedule.index');
     Route::post('calendar-crud-ajax', [ScheduleController::class, 'calendarEvents'])->name('admin.schedule.calendarEvents');
     Route::get('calendar-event', [ScheduleController::class, 'list'])->name('admin.schedule.list');
@@ -105,14 +108,14 @@ Route::group(['prefix' => 'schedule'], function () {
 
 Route::group(['prefix' => 'log'], function () {
     Route::get('', [LogController::class, 'index'])->name('admin.log.index');
-    Route::get('clear', [LogController::class, 'clear'])->name('admin.log.clear');
+    Route::post('clear', [LogController::class, 'clear'])->name('admin.log.clear');
     Route::get('download/{id}', [LogController::class, 'download'])->name('admin.log.report')->where('id', '[0-9]+');
     Route::get('info/{id}', [LogController::class, 'info'])->name('admin.log.info')->where('id', '[0-9]+');
 });
 
 Route::group(['prefix' => 'redirect'], function () {
     Route::get('', [RedirectController::class, 'index'])->name('admin.redirect.index');
-    Route::get('clear', [RedirectController::class, 'clear'])->name('admin.redirect.clear');
+    Route::post('clear', [RedirectController::class, 'clear'])->name('admin.redirect.clear');
     Route::get('download/{url}', [RedirectController::class, 'download'])->name('admin.redirect.report');
     Route::get('info/{url}', [RedirectController::class, 'info'])->name('admin.redirect.info');
 });
@@ -148,6 +151,15 @@ Route::middleware(['permission:admin'])->group(function () {
     });
 });
 
+Route::middleware('project-manager')->prefix('projects')->group(function () {
+    Route::get('', [ProjectController::class, 'index'])->name('admin.projects.index');
+    Route::get('create', [ProjectController::class, 'create'])->name('admin.projects.create');
+    Route::post('store', [ProjectController::class, 'store'])->name('admin.projects.store');
+    Route::get('edit/{id}', [ProjectController::class, 'edit'])->whereNumber('id')->name('admin.projects.edit');
+    Route::put('update', [ProjectController::class, 'update'])->name('admin.projects.update');
+    Route::delete('destroy/{id}', [ProjectController::class, 'destroy'])->whereNumber('id')->name('admin.projects.destroy');
+});
+
 Route::get('faq', [PagesController::class, 'faq'])->name('admin.faq');
 
 Route::group(['prefix' => 'pages'], function () {
@@ -158,16 +170,17 @@ Route::group(['prefix' => 'pages'], function () {
 });
 
 Route::group(['prefix' => 'datatable'], function () {
-    Route::any('templates', [DataTableController::class, 'getTemplates'])->name('admin.datatable.templates');
-    Route::any('category', [DataTableController::class, 'getCategory'])->name('admin.datatable.category')->middleware(['permission:admin|moderator']);
+    Route::any('projects', [DataTableController::class, 'getProjects'])->name('admin.datatable.projects')->middleware('project-manager');
+    Route::any('templates', [DataTableController::class, 'getTemplates'])->name('admin.datatable.templates')->middleware('project-manager');
+    Route::any('category', [DataTableController::class, 'getCategory'])->name('admin.datatable.category')->middleware('permission:admin');
     Route::any('smtp', [DataTableController::class, 'getSmtp'])->name('admin.datatable.smtp')->middleware(['permission:admin']);
-    Route::any('subscribers', [DataTableController::class, 'getSubscribers'])->name('admin.datatable.subscribers')->middleware(['permission:admin|moderator']);
+    Route::any('subscribers', [DataTableController::class, 'getSubscribers'])->name('admin.datatable.subscribers')->middleware(['permission:admin|project_admin|moderator']);
     Route::any('users', [DataTableController::class, 'getUsers'])->name('admin.datatable.users')->middleware(['permission:admin']);
     Route::any('logs', [DataTableController::class, 'getLogs'])->name('admin.datatable.logs');
     Route::any('info-log/{id?}', [DataTableController::class, 'getInfoLog'])->name('admin.datatable.info_log')->where('id', '[0-9]+');
     Route::any('redirect-log', [DataTableController::class, 'getRedirectLogs'])->name('admin.datatable.redirect');
     Route::any('info-redirect-log/{url}', [DataTableController::class, 'getInfoRedirectLog'])->name('admin.datatable.info_redirect');
-    Route::any('macros', [DataTableController::class, 'getMacros'])->name('admin.datatable.macros');
+    Route::any('macros', [DataTableController::class, 'getMacros'])->name('admin.datatable.macros')->middleware('permission:admin');
 });
 
 Route::group(['prefix' => 'install'], function () {

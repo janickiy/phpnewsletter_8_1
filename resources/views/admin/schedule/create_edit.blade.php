@@ -22,7 +22,7 @@
                 <div class="card card-outline card-primary">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-calendar-days' }} me-2" aria-hidden="true"></i>
+                            <i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-plus' }} me-2" aria-hidden="true"></i>
                             {{ $title }}
                         </h3>
                     </div>
@@ -47,7 +47,7 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="template_id" class="form-label">{{ __('frontend.form.template') }}</label>
+                                    <label for="template_id" class="form-label">{{ __('frontend.form.template') }}*</label>
                                     <select name="template_id" id="template_id" class="form-select @error('template_id') is-invalid @enderror">
                                         <option value="" @selected((string) old('template_id', $row->template_id ?? '') === '')>{{ __('frontend.form.select') }}</option>
                                         @foreach($options as $value => $label)
@@ -79,7 +79,7 @@
                                     @endphp
                                     <select name="categoryId[]" id="categoryId" multiple class="form-select @error('categoryId') is-invalid @enderror">
                                         @foreach($category_options as $categoryValue => $categoryLabel)
-                                            <option value="{{ $categoryValue }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>
+                                            <option value="{{ $categoryValue }}" data-project="{{ $categoryProjects[$categoryValue] }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>
                                                 {{ $categoryLabel }}
                                             </option>
                                         @endforeach
@@ -140,6 +140,20 @@
 
     <script>
         $(function () {
+
+            const templateProjects = @json($templateProjects);
+
+            function filterCategories() {
+                const projectId = String(templateProjects[$('#template_id').val()] || '');
+                $('#categoryId option').each(function () {
+                    const available = projectId !== '' && String($(this).data('project')) === projectId;
+                    $(this).prop('hidden', !available).prop('disabled', !available);
+                    if (!available) $(this).prop('selected', false);
+                });
+            }
+
+            $('#template_id').on('change', filterCategories);
+            filterCategories();
 
             let locale = @json($momentLocale);
 

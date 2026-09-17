@@ -61,7 +61,7 @@
                     <div class="card card-outline card-primary">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fa-solid {{ isset($template) ? 'fa-pen-to-square' : 'fa-envelope-open-text' }} me-2" aria-hidden="true"></i>
+                                <i class="fa-solid {{ isset($template) ? 'fa-pen-to-square' : 'fa-plus' }} me-2" aria-hidden="true"></i>
                                 {{ $title }}
                             </h3>
                         </div>
@@ -69,6 +69,20 @@
                         <div class="card-body">
 
                             <p class="text-body-secondary small mb-3">*-{{ __('frontend.form.required_fields') }}</p>
+
+                            <div class="mb-3">
+                                <label for="project_id" class="form-label">{{ __('frontend.str.projects.project') }}*</label>
+                                <select name="project_id" id="project_id" class="form-select @error('project_id') is-invalid @enderror" required @disabled(isset($template))>
+                                    <option value="">{{ __('frontend.form.select') }}</option>
+                                    @foreach($projects as $project)
+                                        <option value="{{ $project->id }}" @selected((string) old('project_id', $template->project_id ?? '') === (string) $project->id)>{{ $project->name }}</option>
+                                    @endforeach
+                                </select>
+                                @if(isset($template))
+                                    <input type="hidden" name="project_id" value="{{ $template->project_id }}">
+                                @endif
+                                @error('project_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
 
                             <div class="mb-3">
 
@@ -206,6 +220,7 @@
 
 @section('js')
 
+    <script src="{{ asset('/plugins/dompurify/purify.min.js') }}"></script>
     <!-- Summernote -->
     <script src="{{ asset('/plugins/summernote/summernote-bs5.min.js') }}"></script>
 
@@ -218,15 +233,43 @@
     <!-- Page specific script -->
     <script>
         $(function () {
-            // Summernote
-            $('#body').summernote({
+            const cleanTemplateHtml = (html) => DOMPurify.sanitize(html, {
+                USE_PROFILES: {html: true},
+                FORBID_TAGS: ['style', 'form', 'input', 'button', 'select', 'textarea'],
+                SANITIZE_NAMED_PROPS: true,
+            });
+            const SafeCodeview = class extends $.summernote.options.modules.codeview {
+                purify(html) { return cleanTemplateHtml(html); }
+            };
+            const SafeEditor = class extends $.summernote.options.modules.editor {
+                constructor(context) {
+                    super(context);
+                    const pasteHTML = this.pasteHTML;
+                    this.pasteHTML = (html) => pasteHTML.call(this, cleanTemplateHtml(html));
+                }
+            };
+
+            // Sanitize before Summernote places stored HTML into the administration page.
+            $('#body').val(cleanTemplateHtml($('#body').val())).summernote({
+                modules: {...$.summernote.options.modules, codeview: SafeCodeview, editor: SafeEditor},
+                disableDragAndDrop: true,
+                callbacks: {
+                    onPaste: function (event) {
+                        const clipboard = (event.originalEvent || event).clipboardData;
+                        const html = clipboard && clipboard.getData('text/html');
+                        if (html) {
+                            event.preventDefault();
+                            $('#body').summernote('pasteHTML', cleanTemplateHtml(html));
+                        }
+                    },
+                },
                 height: 60,
                 minHeight: 60,
                 codemirror: {theme: 'monokai'},
             });
 
             $('#tmplForm').on('submit', function () {
-                $('#body').val($('#body').summernote('code'));
+                $('#body').val(cleanTemplateHtml($('#body').summernote('code')));
             });
 
             function updateAttachmentEmptyState() {
@@ -266,7 +309,7 @@
             });
 
             $(document).on("click", "#send_test", function () {
-                let bodyContent = $('#body').summernote('code');
+                let bodyContent = cleanTemplateHtml($('#body').summernote('code'));
                 let arr = $("#tmplForm").serializeArray();
                 let aParams = [];
                 let sParam;

@@ -23,7 +23,7 @@
                 <!-- general form elements -->
                 <div class="card card-outline card-primary">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-user-group' }} me-2" aria-hidden="true"></i>{{ $title }}</h3>
+                        <h3 class="card-title"><i class="fa-solid {{ isset($row) ? 'fa-pen-to-square' : 'fa-plus' }} me-2" aria-hidden="true"></i>{{ $title }}</h3>
                     </div>
 
                     <!-- form start -->
@@ -37,6 +37,10 @@
                     <div class="card-body">
 
                         <p>*-{{ __('frontend.form.required_fields') }}</p>
+
+                        @include('admin.subscribers.project_field')
+
+                        <p class="text-muted small">{{ __('frontend.str.projects.subscriber_shared_status') }}</p>
 
                         <div class="mb-3">
                             <label for="name" class="form-label">{{ __('frontend.form.name') }}</label>
@@ -76,8 +80,8 @@
                                 @endforeach
                             </select>
 
-                            @if ($errors->has('categoryId'))
-                                <p class="text-danger">{{ $errors->first('categoryId') }}</p>
+                            @if ($errors->has('categoryId') || $errors->has('categoryId.*'))
+                                <p class="text-danger">{{ $errors->first('categoryId') ?: $errors->first('categoryId.*') }}</p>
                             @endif
                         </div>
 
@@ -106,6 +110,7 @@
 @endsection
 
 @section('js')
+    @include('admin.subscribers.project_categories_js')
 
 
 @endsection

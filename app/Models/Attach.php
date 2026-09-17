@@ -12,7 +12,7 @@ class Attach extends Model
 {
     use StaticTableName;
 
-    public const DIRECTORY = 'public/attach';
+    public const DIRECTORY = 'private/attachments';
 
     protected $table = 'attach';
 
@@ -44,8 +44,8 @@ class Attach extends Model
      */
     public function scopeRemove(): void
     {
-        if (Storage::exists(Attach::DIRECTORY . '/' . $this->file_name)) {
-            Storage::delete(Attach::DIRECTORY . '/' . $this->file_name);
+        if (Storage::disk('local')->exists(Attach::DIRECTORY . '/' . $this->file_name)) {
+            Storage::disk('local')->delete(Attach::DIRECTORY . '/' . $this->file_name);
         }
 
         $this->delete();

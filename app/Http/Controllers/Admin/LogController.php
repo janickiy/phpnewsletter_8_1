@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\ReadySent;
 use App\Models\Logs;
 use App\Services\DownloadService;
+use App\Services\ProjectAccess;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
@@ -23,6 +24,8 @@ class LogController extends Controller
 
     /**
      * Show the mailing log overview page.
+     *
+     * @return View
      */
     public function index(): View
     {
@@ -40,6 +43,7 @@ class LogController extends Controller
      */
     public function info(int $id): View
     {
+        abort_unless(ProjectAccess::scope(ReadySent::query())->where('log_id', $id)->exists(), 404);
         return view('admin.log.info', [
             'id' => $id,
             'infoAlert' => __('frontend.hint.log_info'),
@@ -65,10 +69,14 @@ class LogController extends Controller
      */
     public function clear(): JsonResponse
     {
+        abort_unless(auth()->user()->canManageProjects(), 403);
         try {
             DB::transaction(function (): void {
-                ReadySent::query()->delete();
-                Logs::query()->delete();
+                $logIds = ProjectAccess::scope(ReadySent::query(), 'manage')->whereNotNull('log_id')->distinct()->pluck('log_id');
+                ProjectAccess::scope(ReadySent::query(), 'manage')->delete();
+                Logs::query()->whereIn('id', $logIds)
+                    ->whereNotIn('id', ReadySent::query()->whereNotNull('log_id')->select('log_id'))
+                    ->delete();
             });
 
             return response()->json([

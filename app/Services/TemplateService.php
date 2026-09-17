@@ -38,7 +38,7 @@ class TemplateService
                 $file->getClientOriginalExtension()
             );
 
-            $stored = Storage::putFileAs(
+            $stored = Storage::disk('local')->putFileAs(
                 Attach::DIRECTORY,
                 $file,
                 $filename

@@ -3,7 +3,7 @@
 namespace App\Helpers;
 
 use PHPMailer\PHPMailer;
-use App\Models\{Attach, Smtp, CustomHeaders};
+use App\Models\{Attach, Smtp, CustomHeaders, Templates};
 use Illuminate\Support\Facades\Storage;
 use URL;
 
@@ -182,8 +182,21 @@ class SendEmailHelper
         $msg = $body;
         $url_info = parse_url(SettingsHelper::getInstance()->getValueForKey('URL'));
 
-        $msg = preg_replace_callback("/%REFERRAL\:(.+)%/isU", function ($matches) {
-            return "%URL_PATH%/referral/" . base64_encode($matches[1]) . "/%USERID%";
+        $referralProjectId = preg_match('/%REFERRAL:/i', $msg) === 1 && $templateId > 0
+            ? Templates::query()->whereKey($templateId)->value('project_id')
+            : null;
+
+        $msg = preg_replace_callback("/%REFERRAL\:(.+)%/isU", function ($matches) use ($subscriberId, $referralProjectId) {
+            $parameters = [
+                'ref' => rtrim(strtr(base64_encode($matches[1]), '+/', '-_'), '='),
+                'subscriber' => $subscriberId,
+            ];
+
+            if ($referralProjectId !== null) {
+                $parameters['project_id'] = $referralProjectId;
+            }
+
+            return URL::route('frontend.referral', $parameters);
         }, $msg);
 
         $msg = str_replace('%NAME%', $name, $msg);
@@ -197,7 +210,7 @@ class SendEmailHelper
             foreach (Attach::where('template_id', $attach)->get() ?? [] as $f) {
                 $path = Attach::DIRECTORY . '/' . $f->file_name;
 
-                if (Storage::exists($path)) {
+                if (Storage::disk('local')->exists($path)) {
                     $storagePath = Storage::disk('local')->path($path);
 
                     $ext = pathinfo($f->file_name, PATHINFO_EXTENSION);

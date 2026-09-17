@@ -24,7 +24,7 @@
                             {{ __('frontend.str.redirect') }}
                         </h3>
 
-                        @if(PermissionsHelper::has_permission('admin'))
+                        @if(auth()->user()->canManageProjects())
                             <div class="card-tools">
                                 <button id="clearRedirectButton"
                                         type="button"
@@ -151,7 +151,8 @@
 
                 $.ajax({
                     url: "{{ route('admin.redirect.clear') }}",
-                    type: 'GET',
+                    type: 'POST',
+                    headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                     dataType: 'json',
                     success: function (response) {
                         Swal.fire({

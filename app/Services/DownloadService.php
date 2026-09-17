@@ -35,7 +35,7 @@ class DownloadService
      */
     public function log(int $id): Response|StreamedResponse
     {
-        $rowsExist = ReadySent::query()
+        $rowsExist = ProjectAccess::scope(ReadySent::query(), 'view', 'ready_sent.project_id')
             ->where('log_id', $id)
             ->exists();
 
@@ -56,7 +56,7 @@ class DownloadService
     public function redirect(string $url): StreamedResponse
     {
         $decodedUrl = $this->decodeRouteBase64($url);
-        $rowsExist = Redirect::query()
+        $rowsExist = ProjectAccess::scope(Redirect::query(), 'view', 'redirect.project_id')
             ->where('url', $decodedUrl)
             ->exists();
 
@@ -75,6 +75,15 @@ class DownloadService
      */
     public function exportSubscribers(Request $request): Response|StreamedResponse
     {
+        $projectIds = array_values(array_unique(array_map('intval', (array) $request->input('project_ids', []))));
+        abort_if($projectIds === [] && !auth()->user()?->isAdmin(), 403);
+
+        foreach ($projectIds as $projectId) {
+            ProjectAccess::authorizeProject($projectId);
+        }
+
+        $categoryIds = (array) ($request->categoryId ?? []);
+        abort_unless(DB::table('categories')->whereIn('project_id', $projectIds)->whereIn('id', $categoryIds)->count() === count(array_unique($categoryIds)), 422);
         $this->disableExecutionLimit();
 
         if ($request->export_type === 'excel') {
@@ -83,13 +92,13 @@ class DownloadService
             if ($request->compress === 'zip') {
                 return $this->zipFileResponse(
                     $filename,
-                    fn (): string => $this->buildSubscribersXlsxFile($request->categoryId)
+                    fn (): string => $this->buildSubscribersXlsxFile($categoryIds, $projectIds)
                 );
             }
 
             return $this->streamXlsxFile(
                 $filename,
-                fn (): string => $this->buildSubscribersXlsxFile($request->categoryId)
+                fn (): string => $this->buildSubscribersXlsxFile($categoryIds, $projectIds)
             );
         }
 
@@ -99,11 +108,11 @@ class DownloadService
             if ($request->compress === 'zip') {
                 return $this->zipFileResponse(
                     $filename,
-                    fn (): string => $this->buildSubscribersTextFile($request->categoryId)
+                    fn (): string => $this->buildSubscribersTextFile($categoryIds, $projectIds)
                 );
             }
 
-            return $this->streamSubscribersTextFile($filename, $request->categoryId);
+            return $this->streamSubscribersTextFile($filename, $categoryIds, $projectIds);
         }
 
         throw new InvalidArgumentException('Invalid export type');
@@ -117,21 +126,21 @@ class DownloadService
      */
     private function buildLogStats(int $logId): array
     {
-        $total = ReadySent::query()
+        $total = ProjectAccess::scope(ReadySent::query(), 'view', 'ready_sent.project_id')
             ->where('log_id', $logId)
             ->count();
 
-        $failedCount = ReadySent::query()
+        $failedCount = ProjectAccess::scope(ReadySent::query(), 'view', 'ready_sent.project_id')
             ->where('log_id', $logId)
             ->where('success', 0)
             ->count();
 
-        $readCount = ReadySent::query()
+        $readCount = ProjectAccess::scope(ReadySent::query(), 'view', 'ready_sent.project_id')
             ->where('log_id', $logId)
             ->where('readMail', 1)
             ->count();
 
-        $timeInfo = ReadySent::query()
+        $timeInfo = ProjectAccess::scope(ReadySent::query(), 'view', 'ready_sent.project_id')
             ->selectRaw('sec_to_time(UNIX_TIMESTAMP(max(created_at)) - UNIX_TIMESTAMP(min(created_at))) as totaltime')
             ->where('log_id', $logId)
             ->first();
@@ -224,11 +233,11 @@ class DownloadService
      * @param array|null $categoryIds
      * @return string
      */
-    private function buildSubscribersXlsxFile(?array $categoryIds): string
+    private function buildSubscribersXlsxFile(?array $categoryIds, array $projectIds): string
     {
         return $this->buildXlsxFile(
-            function ($sheet) use ($categoryIds): void {
-                $this->writeSubscribersWorksheet($sheet, $categoryIds);
+            function ($sheet) use ($categoryIds, $projectIds): void {
+                $this->writeSubscribersWorksheet($sheet, $categoryIds, $projectIds);
             },
             'Subscribers'
         );
@@ -322,7 +331,7 @@ class DownloadService
 
         $rowIndex = 2;
 
-        ReadySent::query()
+        ProjectAccess::scope(ReadySent::query(), 'view', 'ready_sent.project_id')
             ->select(['id', 'template', 'email', 'created_at', 'success', 'readMail', 'errorMsg'])
             ->where('log_id', $logId)
             ->orderBy('id')
@@ -367,7 +376,7 @@ class DownloadService
      */
     private function writeRedirectWorksheet($sheet, string $url): void
     {
-        $total = Redirect::query()
+        $total = ProjectAccess::scope(Redirect::query(), 'view', 'redirect.project_id')
             ->where('url', $url)
             ->count();
 
@@ -384,7 +393,7 @@ class DownloadService
 
         $rowIndex = 1;
 
-        Redirect::query()
+        ProjectAccess::scope(Redirect::query(), 'view', 'redirect.project_id')
             ->select(['id', 'email', 'created_at'])
             ->where('url', $url)
             ->orderBy('id')
@@ -410,11 +419,11 @@ class DownloadService
      * @param array|null $categoryIds
      * @return void
      */
-    private function writeSubscribersWorksheet($sheet, ?array $categoryIds): void
+    private function writeSubscribersWorksheet($sheet, ?array $categoryIds, array $projectIds): void
     {
         $this->disableExecutionLimit();
 
-        $query = $this->getSubscribersQuery($categoryIds);
+        $query = $this->getSubscribersQuery($categoryIds, $projectIds);
         $total = (clone $query)->count();
 
         fwrite($sheet, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
@@ -858,16 +867,16 @@ class DownloadService
      * @param array|null $ids
      * @return StreamedResponse
      */
-    private function streamSubscribersTextFile(string $filename, ?array $ids): StreamedResponse
+    private function streamSubscribersTextFile(string $filename, ?array $ids, array $projectIds): StreamedResponse
     {
-        return response()->streamDownload(function () use ($ids): void {
+        return response()->streamDownload(function () use ($ids, $projectIds): void {
             $handle = fopen('php://output', 'wb');
 
             if ($handle === false) {
                 throw new \RuntimeException('Failed to open output stream.');
             }
 
-            $this->writeSubscribersTextRows($handle, $ids);
+            $this->writeSubscribersTextRows($handle, $ids, $projectIds);
         }, $filename, [
             'Content-Type' => StringHelper::getMimeType(self::TXT_EXT),
         ]);
@@ -879,7 +888,7 @@ class DownloadService
      * @param array|null $ids
      * @return string
      */
-    private function buildSubscribersTextFile(?array $ids): string
+    private function buildSubscribersTextFile(?array $ids, array $projectIds): string
     {
         $tmpFile = tempnam(sys_get_temp_dir(), 'subscribers_txt_');
 
@@ -895,7 +904,7 @@ class DownloadService
         }
 
         try {
-            $this->writeSubscribersTextRows($handle, $ids);
+            $this->writeSubscribersTextRows($handle, $ids, $projectIds);
         } catch (\Throwable $e) {
             fclose($handle);
             @unlink($tmpFile);
@@ -915,9 +924,9 @@ class DownloadService
      * @param array|null $ids
      * @return void
      */
-    private function writeSubscribersTextRows($handle, ?array $ids): void
+    private function writeSubscribersTextRows($handle, ?array $ids, array $projectIds): void
     {
-        $this->getSubscribersQuery($ids)
+        $this->getSubscribersQuery($ids, $projectIds)
             ->chunkById(self::EXPORT_CHUNK_SIZE, function (Collection $subscribers) use ($handle): void {
                 foreach ($subscribers as $subscriber) {
                     fwrite($handle, $this->formatSubscriberTextLine($subscriber));
@@ -1083,9 +1092,9 @@ class DownloadService
      * @param array|null $ids
      * @return Collection
      */
-    private function getSubscribersList(?array $ids): Collection
+    private function getSubscribersList(?array $ids, array $projectIds): Collection
     {
-        return $this->getSubscribersQuery($ids)->get();
+        return $this->getSubscribersQuery($ids, $projectIds)->get();
     }
 
     /**
@@ -1094,18 +1103,33 @@ class DownloadService
      * @param array|null $ids
      * @return QueryBuilder
      */
-    private function getSubscribersQuery(?array $ids): QueryBuilder
+    private function getSubscribersQuery(?array $ids, array $projectIds): QueryBuilder
     {
-        $query = DB::table('subscribers')
+        $query = ProjectAccess::subscribers(DB::table('subscribers'))
             ->select('subscribers.id', 'subscribers.name', 'subscribers.email')
             ->where('subscribers.active', 1);
 
+        if ($projectIds === []) {
+            $query->whereNotExists(function (QueryBuilder $subquery): void {
+                $subquery->selectRaw('1')->from('project_subscriber')
+                    ->whereColumn('project_subscriber.subscriber_id', 'subscribers.id');
+            });
+        } else {
+            $query->whereExists(function (QueryBuilder $subquery) use ($projectIds): void {
+                $subquery->selectRaw('1')->from('project_subscriber')
+                    ->whereColumn('project_subscriber.subscriber_id', 'subscribers.id')
+                    ->whereIn('project_subscriber.project_id', $projectIds);
+            });
+        }
+
         if ($ids) {
-            $query->whereExists(function (QueryBuilder $subquery) use ($ids): void {
+            $query->whereExists(function (QueryBuilder $subquery) use ($ids, $projectIds): void {
                 $subquery
                     ->selectRaw('1')
                     ->from('subscriptions')
+                    ->join('categories', 'categories.id', '=', 'subscriptions.category_id')
                     ->whereColumn('subscriptions.subscriber_id', 'subscribers.id')
+                    ->whereIn('categories.project_id', $projectIds)
                     ->whereIn('subscriptions.category_id', $ids);
             });
         }

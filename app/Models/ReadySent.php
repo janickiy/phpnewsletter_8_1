@@ -12,7 +12,13 @@ class ReadySent extends Model
 
     protected $table = 'ready_sent';
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     protected $fillable = [
+        'project_id',
         'subscriber_id',
         'email',
         'template_id',

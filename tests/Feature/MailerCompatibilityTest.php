@@ -25,6 +25,7 @@ class MailerCompatibilityTest extends TestCase
         config(['filesystems.default' => 'local']);
 
         $template = Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'Attachment compatibility',
             'body' => '<p>Привет, %NAME%!</p>',
             'prior' => 0,
@@ -158,6 +159,7 @@ class MailerCompatibilityTest extends TestCase
         config(['filesystems.default' => 'local']);
 
         $template = Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'Новости 日本 🚀 для %NAME%',
             'body' => '<p>Здравствуйте, %NAME%! Новости 日本 🚀</p>',
             'prior' => 0,

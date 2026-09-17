@@ -20,7 +20,10 @@ return Application::configure(basePath: $_ENV['APP_BASE_PATH'] ?? dirname(__DIR_
 
         // Resolve the preferred language again after web cookies are decrypted.
         $middleware->web(append: [Locale::class, RemoveSubscriber::class]);
-        $middleware->alias(['permission' => CheckPermission::class]);
+        $middleware->alias([
+            'permission' => CheckPermission::class,
+            'project-manager' => \App\Http\Middleware\CheckProjectManager::class,
+        ]);
         $middleware->throttleApi('api');
 
         $middleware->redirectGuestsTo(fn (): string => route('login'));

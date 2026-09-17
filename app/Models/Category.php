@@ -12,7 +12,13 @@ class Category extends Model
 
     protected $table = 'categories';
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     protected $fillable = [
+        'project_id',
         'name',
     ];
 

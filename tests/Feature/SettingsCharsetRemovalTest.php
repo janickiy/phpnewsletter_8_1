@@ -47,6 +47,7 @@ class SettingsCharsetRemovalTest extends TestCase
 
     public function test_database_seeding_works_without_charsets_and_preserves_existing_settings(): void
     {
+        $this->administrator();
         Settings::query()->create(['name' => 'FROM', 'value' => 'Saved sender']);
 
         $this->seed(DatabaseSeeder::class);

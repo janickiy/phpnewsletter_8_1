@@ -31,6 +31,13 @@ class AdminLteTablesTest extends TestCase
 
     public function test_every_table_page_loads_the_available_bootstrap_five_integrations(): void
     {
+        $projectId = $this->testProjectId();
+        $template = Templates::query()->create(['project_id' => $projectId, 'name' => 'Report fixture', 'body' => 'Report', 'prior' => 0]);
+        $subscriber = $this->subscriberFixture(['email' => 'report@example.test', 'active' => 1, 'token' => str_repeat('a', 32)], [$projectId]);
+        $log = \App\Models\Logs::query()->create(['time' => now()]);
+        \App\Models\ReadySent::query()->create(['project_id' => $projectId, 'subscriber_id' => $subscriber->id, 'email' => $subscriber->email, 'template_id' => $template->id, 'template' => $template->name, 'success' => 1, 'log_id' => $log->id]);
+        \App\Models\Redirect::query()->create(['project_id' => $projectId, 'url' => 'https://example.test', 'email' => $subscriber->email]);
+
         $routes = [
             'admin.category.index' => [],
             'admin.macros.index' => [],
@@ -39,7 +46,7 @@ class AdminLteTablesTest extends TestCase
             'admin.subscribers.index' => [],
             'admin.templates.index' => [],
             'admin.log.index' => [],
-            'admin.log.info' => ['id' => 1],
+            'admin.log.info' => ['id' => $log->id],
             'admin.redirect.index' => [],
             'admin.redirect.info' => ['url' => rtrim(strtr(base64_encode('https://example.test'), '+/', '-_'), '=')],
         ];
@@ -83,14 +90,13 @@ class AdminLteTablesTest extends TestCase
 
     public function test_server_side_rows_keep_working_actions_and_bulk_selection_fields(): void
     {
-        $category = Category::query()->create(['name' => 'Readers']);
+        $category = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Readers']);
         $macro = Macros::query()->create(['name' => 'Greeting', 'value' => 'Hello', 'type' => 1]);
-        $template = Templates::query()->create(['name' => 'Newsletter', 'body' => '<p>Hello</p>', 'prior' => 0]);
-        $subscriber = Subscribers::query()->create([
-            'email' => 'reader@example.test',
+        $template = Templates::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Newsletter', 'body' => '<p>Hello</p>', 'prior' => 0]);
+        $subscriber = $this->subscriberFixture(['email' => 'reader@example.test',
             'active' => 1,
             'token' => md5('reader@example.test'),
-        ]);
+        ], [$this->testProjectId()]);
         $smtp = Smtp::query()->create([
             'host' => 'mailpit',
             'username' => 'sender',

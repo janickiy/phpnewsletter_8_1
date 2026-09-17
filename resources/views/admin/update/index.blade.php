@@ -2,35 +2,34 @@
 
 @section('title', $title)
 
-@section('css')
-
-
-@endsection
-
 @section('content')
 
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
+                <div class="card card-outline card-primary">
+                    <div class="card-header d-flex align-items-center flex-wrap gap-2">
                         <h3 class="card-title">
                             <i class="fa-solid fa-arrows-rotate me-2" aria-hidden="true"></i>{{ $title }}
                         </h3>
+                        <span class="badge text-bg-light border ms-auto">
+                            {{ __('frontend.str.script_name') }} {{ config('app.version') }}
+                        </span>
                     </div>
                     <div class="card-body">
                         @if (!empty($button_update))
-                            <div id="btn_refresh">
-                                <button type="button" id="start_update" class="btn btn-outline-secondary">
-                                    <i class="fa-solid fa-arrows-rotate"></i> {!! $button_update !!}
+                            <div id="btn_refresh" role="region" aria-label="{{ __('frontend.str.status') }}">
+                                <button type="button" id="start_update" class="btn btn-primary">
+                                    <i class="fa-solid fa-arrows-rotate me-2" aria-hidden="true"></i>{!! $button_update !!}
                                 </button>
                             </div>
                         @endif
 
                         @if (!empty($msg_no_update))
-                            <button type="button" class="btn btn-outline-secondary" disabled>
-                                <i class="fa-solid fa-arrows-rotate"></i> {!! $msg_no_update !!}
-                            </button>
+                            <div class="alert alert-success d-flex align-items-start gap-3 mb-0" role="status">
+                                <i class="fa-solid fa-circle-check mt-1" aria-hidden="true"></i>
+                                <div>{!! $msg_no_update !!}</div>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -67,18 +66,30 @@
         let lastBytesByStep = {};
 
         function renderUpdateProgress() {
-            const $progress = $('<div>', {class: 'progress'}).append(
-	                $('<div>', {
-	                    id: 'progress_bar',
-	                    class: 'progress-bar bg-primary progress-bar-striped',
-	                    role: 'progressbar',
-	                    'aria-valuenow': 1,
-	                    'aria-valuemin': 0,
-	                    'aria-valuemax': 100,
-	                    style: 'width: 1%; min-width: 42px;'
-	                }).text('1%')
-	            );
-            const $status = $('<p>', {class: 'text-muted', id: 'status_process'}).text(startUpdateText);
+            const $progress = $('<div>', {
+                id: 'update_progress',
+                class: 'progress',
+                role: 'progressbar',
+                'aria-label': @json(__('frontend.title.update')),
+                'aria-describedby': 'status_process',
+                'aria-valuenow': 1,
+                'aria-valuemin': 0,
+                'aria-valuemax': 100,
+                style: 'height: 1.5rem;'
+            }).append(
+                $('<div>', {
+                    id: 'progress_bar',
+                    class: 'progress-bar bg-primary progress-bar-striped progress-bar-animated',
+                    style: 'width: 1%; min-width: 42px;'
+                }).text('1%')
+            );
+            const $status = $('<p>', {
+                class: 'text-body-secondary mt-3 mb-0',
+                id: 'status_process',
+                role: 'status',
+                'aria-live': 'polite',
+                'aria-atomic': 'true'
+            }).text(startUpdateText);
 
             $('#btn_refresh').empty().append($progress).append($status);
             updateResetSent = false;
@@ -87,10 +98,14 @@
         }
 
         function renderRetryButton(message) {
-            const $button = $('<button>', {type: 'button', id: 'start_update', class: 'btn btn-outline-secondary'}).append(
-                $('<i>', {class: 'fa-solid fa-arrows-rotate'})
-            ).append(' ' + buttonUpdateLabel);
-            const $status = $('<p>', {class: 'text-muted text-danger', id: 'status_process'}).text(message || failedToUpdateText);
+            const $button = $('<button>', {type: 'button', id: 'start_update', class: 'btn btn-primary'}).append(
+                $('<i>', {class: 'fa-solid fa-arrows-rotate me-2', 'aria-hidden': 'true'})
+            ).append(buttonUpdateLabel);
+            const $status = $('<div>', {
+                class: 'alert alert-danger mt-3 mb-0',
+                id: 'status_process',
+                role: 'alert'
+            }).text(message || failedToUpdateText);
 
             $('#btn_refresh').empty().append($button).append($status);
         }
@@ -139,9 +154,13 @@
                         lastBytesByStep[step.p] = Number(data.bytes_downloaded || 0);
 
                         if (step.final === true) {
-                            $('#progress_bar').delay(3000).fadeOut();
+                            $('#progress_bar').removeClass('progress-bar-animated');
+                            $('#update_progress').delay(3000).fadeOut();
                             setTimeout(function () {
-                                $('#status_process').text(updateCompletedText);
+                                $('#status_process')
+                                    .removeClass('text-body-secondary mt-3')
+                                    .addClass('alert alert-success')
+                                    .text(updateCompletedText);
                             }, 3000);
                             return;
                         }
@@ -206,8 +225,9 @@
 
 	            $('#progress_bar')
 	                .css('width', percent + '%')
-	                .attr('aria-valuenow', percent)
 	                .text(percent + '%');
+
+                $('#update_progress').attr('aria-valuenow', percent);
 	        }
 
 	        function getStepProgress(index, step, data) {

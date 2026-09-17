@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Legacy attachments are private even before their storage migration runs.
+    RewriteRule ^storage/attach(?:/|$) - [F,L,NC]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

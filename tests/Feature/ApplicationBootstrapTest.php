@@ -61,17 +61,17 @@ class ApplicationBootstrapTest extends TestCase
         $this->getJson('/api/user')->assertOk();
     }
 
-    public function test_moderators_can_manage_categories_but_cannot_manage_settings(): void
+    public function test_moderators_cannot_manage_global_categories_or_settings(): void
     {
         $this->actingAs($this->createUser(User::ROLE_MODERATOR));
 
-        $this->get(route('admin.category.index'))->assertOk();
+        $this->get(route('admin.category.index'))->assertForbidden();
         $this->get(route('admin.settings.index'))->assertForbidden();
     }
 
-    public function test_editors_cannot_manage_categories(): void
+    public function test_project_administrators_cannot_manage_global_categories(): void
     {
-        $this->actingAs($this->createUser(User::ROLE_EDITOR))
+        $this->actingAs($this->createUser(User::ROLE_PROJECT_ADMIN))
             ->get(route('admin.category.index'))
             ->assertForbidden();
     }

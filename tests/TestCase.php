@@ -11,6 +11,31 @@ use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
 {
+    /** Create a global subscriber and attach the requested project memberships. */
+    protected function subscriberFixture(array $attributes, array $projectIds = []): \App\Models\Subscribers
+    {
+        $subscriber = \App\Models\Subscribers::query()->create($attributes);
+        $subscriber->projects()->attach($projectIds);
+
+        return $subscriber;
+    }
+
+    protected function testProjectId(): int
+    {
+        $owner = \App\Models\User::query()->where('role', \App\Models\User::ROLE_ADMIN)->first()
+            ?? \App\Models\User::query()->create([
+                'name' => 'Project fixture owner',
+                'login' => 'project-owner-'.\Illuminate\Support\Str::random(12),
+                'role' => \App\Models\User::ROLE_ADMIN,
+                'password' => 'test-password',
+            ]);
+
+        return \App\Models\Project::query()->firstOrCreate(
+            ['name' => 'Test project', 'owner_id' => $owner->id],
+            ['status' => true]
+        )->id;
+    }
+
     public function createApplication(): Application
     {
         $app = require Application::inferBasePath().'/bootstrap/app.php';

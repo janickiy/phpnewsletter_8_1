@@ -25,13 +25,14 @@ class SubscriberService
     {
         $extension = strtolower($request->file('import')->getClientOriginalExtension());
         $file = $request->file('import')->getRealPath();
+        $projectIds = $this->authorizedProjectIds((array) $request->input('project_ids', []));
 
         if ($file === false) {
             return false;
         }
 
         if ($extension === 'xlsx') {
-            return $this->importFromXlsx($file, (array) ($request->categoryId ?? []), $onChunkProcessed);
+            return $this->importFromXlsx($file, (array) ($request->categoryId ?? []), $projectIds, $onChunkProcessed);
         }
 
         $reader = $this->createSpreadsheetReader($extension);
@@ -67,7 +68,7 @@ class SubscriberService
                     ];
                 }
 
-                $count += $this->importSubscriberRows($rows, $categoryIds);
+                $count += $this->importSubscriberRows($rows, $categoryIds, $projectIds);
                 $this->reportImportProgress($onChunkProcessed, $count);
 
                 $spreadsheet->disconnectWorksheets();
@@ -87,7 +88,7 @@ class SubscriberService
      * @param callable|null $onChunkProcessed
      * @return bool|int
      */
-    private function importFromXlsx(string $file, array $categoryIds, ?callable $onChunkProcessed = null): bool|int
+    private function importFromXlsx(string $file, array $categoryIds, array $projectIds, ?callable $onChunkProcessed = null): bool|int
     {
         $zip = new \ZipArchive();
 
@@ -126,7 +127,7 @@ class SubscriberService
                 $rows[] = $row;
 
                 if (count($rows) >= self::SPREADSHEET_CHUNK_SIZE) {
-                    $count += $this->importSubscriberRows($rows, $categoryIds);
+                    $count += $this->importSubscriberRows($rows, $categoryIds, $projectIds);
                     $rows = [];
                     $this->reportImportProgress($onChunkProcessed, $count);
                 }
@@ -137,7 +138,7 @@ class SubscriberService
             $sharedStrings->close();
         }
 
-        $count += $this->importSubscriberRows($rows, $categoryIds);
+        $count += $this->importSubscriberRows($rows, $categoryIds, $projectIds);
         $this->reportImportProgress($onChunkProcessed, $count);
 
         return $count;
@@ -152,6 +153,8 @@ class SubscriberService
      */
     public function importFromText(object $f, ?callable $onChunkProcessed = null): bool|int
     {
+        $projectIds = $this->authorizedProjectIds((array) $f->input('project_ids', []));
+
         if (!($fp = @fopen($f->file('import'), "rb"))) {
             return false;
         }
@@ -183,7 +186,7 @@ class SubscriberService
             ];
 
             if (count($rows) >= self::SPREADSHEET_CHUNK_SIZE) {
-                $count += $this->importSubscriberRows($rows, $categoryIds);
+                $count += $this->importSubscriberRows($rows, $categoryIds, $projectIds);
                 $rows = [];
                 $this->reportImportProgress($onChunkProcessed, $count);
             }
@@ -191,10 +194,27 @@ class SubscriberService
 
         fclose($fp);
 
-        $count += $this->importSubscriberRows($rows, $categoryIds);
+        $count += $this->importSubscriberRows($rows, $categoryIds, $projectIds);
         $this->reportImportProgress($onChunkProcessed, $count);
 
         return $count;
+    }
+
+    /**
+     * Resolve the projects an import may attach, allowing unassigned contacts for administrators.
+     *
+     * @return array<int, int>
+     */
+    private function authorizedProjectIds(array $projectIds): array
+    {
+        $projectIds = array_values(array_unique(array_map('intval', $projectIds)));
+        abort_if($projectIds === [] && !auth()->user()?->isAdmin(), 403);
+
+        foreach ($projectIds as $projectId) {
+            ProjectAccess::authorizeProject($projectId);
+        }
+
+        return $projectIds;
     }
 
     /**
@@ -377,11 +397,13 @@ class SubscriberService
      * @param array $categoryIds
      * @return int
      */
-    private function importSubscriberRows(array $rows, array $categoryIds): int
+    private function importSubscriberRows(array $rows, array $categoryIds, array $projectIds): int
     {
         if ($rows === []) {
             return 0;
         }
+
+        abort_unless(DB::table('categories')->whereIn('project_id', $projectIds)->whereIn('id', $categoryIds)->count() === count(array_unique($categoryIds)), 422);
 
         $normalizedRows = [];
 
@@ -428,28 +450,41 @@ class SubscriberService
             ];
         }
 
-        foreach (array_chunk($newSubscribers, self::DATABASE_CHUNK_SIZE) as $chunk) {
-            DB::table('subscribers')->insertOrIgnore($chunk);
-        }
+        DB::transaction(function () use ($newSubscribers, $emails, $categoryIds, $projectIds, $now): void {
+            foreach (array_chunk($newSubscribers, self::DATABASE_CHUNK_SIZE) as $chunk) {
+                DB::table('subscribers')->insertOrIgnore($chunk);
+            }
 
-        $subscriberIds = DB::table('subscribers')
-            ->whereIn('email', $emails)
-            ->pluck('id')
-            ->all();
+            $subscriberIds = DB::table('subscribers')
+                ->whereIn('email', $emails)
+                ->pluck('id')
+                ->all();
 
-        $this->syncSubscriptions($subscriberIds, $categoryIds);
+            foreach ($projectIds as $projectId) {
+                foreach (array_chunk($subscriberIds, self::DATABASE_CHUNK_SIZE) as $chunk) {
+                    DB::table('project_subscriber')->insertOrIgnore(array_map(fn ($subscriberId) => [
+                        'project_id' => $projectId,
+                        'subscriber_id' => $subscriberId,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ], $chunk));
+                }
+            }
+
+            $this->syncSubscriptions($subscriberIds, $categoryIds, $projectIds);
+        });
 
         return count($normalizedRows);
     }
 
     /**
-     * Replace category memberships for all subscribers processed in the current import chunk.
+     * Replace categories in the selected projects while preserving other memberships.
      *
      * @param array $subscriberIds
      * @param array $categoryIds
      * @return void
      */
-    private function syncSubscriptions(array $subscriberIds, array $categoryIds): void
+    private function syncSubscriptions(array $subscriberIds, array $categoryIds, array $projectIds): void
     {
         $subscriberIds = array_values(array_unique(array_filter($subscriberIds)));
         $categoryIds = array_values(array_unique(array_filter($categoryIds, 'is_numeric')));
@@ -460,6 +495,7 @@ class SubscriberService
 
         DB::table('subscriptions')
             ->whereIn('subscriber_id', $subscriberIds)
+            ->whereIn('category_id', DB::table('categories')->whereIn('project_id', $projectIds)->select('id'))
             ->delete();
 
         if ($categoryIds === []) {

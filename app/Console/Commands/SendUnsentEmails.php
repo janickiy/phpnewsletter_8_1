@@ -138,7 +138,7 @@ class SendUnsentEmails extends Command implements Isolatable
         $sendMail->name = $subscriber->name;
         $sendMail->templateId = $schedule->template->id;
 
-        return $sendMail->sendEmail();
+        return $sendMail->sendEmail($schedule->template->id);
     }
 
     /**

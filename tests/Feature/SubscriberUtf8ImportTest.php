@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Requests\Admin\Subscribers\ImportRequest;
 use App\Models\Category;
+use App\Models\Project;
 use App\Models\Subscribers;
 use App\Models\User;
 use App\Services\SubscriberService;
@@ -20,10 +21,13 @@ class SubscriberUtf8ImportTest extends TestCase
     use RefreshDatabase;
 
     private string $temporaryDirectory;
+    private Project $project;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->actingAs(User::query()->create(['name' => 'Importer', 'login' => 'importer', 'role' => User::ROLE_ADMIN, 'password' => 'password']));
+        $this->project = Project::query()->create(['name' => 'Import project', 'owner_id' => auth()->id(), 'status' => 1]);
 
         $this->temporaryDirectory = storage_path('app/tests/utf8-import-'.bin2hex(random_bytes(8)));
         File::ensureDirectoryExists($this->temporaryDirectory);
@@ -43,7 +47,7 @@ class SubscriberUtf8ImportTest extends TestCase
     #[DataProvider('utf8Files')]
     public function test_utf8_import_preserves_names_and_categories_and_ignores_legacy_charset(string $extension, bool $withBom): void
     {
-        $category = Category::query()->create(['name' => 'Unicode subscribers']);
+        $category = Category::query()->create(['project_id' => $this->project->id, 'name' => 'Unicode subscribers']);
         $names = [
             'anna@example.test' => 'Анна Петрова',
             'yuki@example.test' => '山田 ゆき',
@@ -58,8 +62,8 @@ class SubscriberUtf8ImportTest extends TestCase
         }
 
         $file = $this->uploadedFile($extension, ($withBom ? "\xEF\xBB\xBF" : '').$contents);
-        $input = ['categoryId' => [$category->id], 'charset' => 'Windows-1251'];
-        $validator = Validator::make($input + ['import' => $file], (new ImportRequest)->rules());
+        $input = ['project_ids' => [$this->project->id], 'categoryId' => [$category->id], 'charset' => 'Windows-1251'];
+        $validator = Validator::make($input + ['import' => $file], $this->importRules($input ?? []));
 
         $this->assertTrue($validator->passes(), $validator->errors()->toJson());
         $this->assertArrayNotHasKey('charset', $validator->validated());
@@ -101,7 +105,7 @@ class SubscriberUtf8ImportTest extends TestCase
             'role' => User::ROLE_ADMIN,
             'password' => 'password',
         ]));
-        $category = Category::query()->create(['name' => 'Rejected import']);
+        $category = Category::query()->create(['project_id' => $this->project->id, 'name' => 'Rejected import']);
         $contents = $extension === 'csv'
             ? "Email,Name\nfirst@example.test,First reader\nsecond@example.test,Анна\n"
             : "First reader first@example.test\nАнна second@example.test\n";
@@ -119,6 +123,7 @@ class SubscriberUtf8ImportTest extends TestCase
 
         $this->from(route('admin.subscribers.import'))
             ->post(route('admin.subscribers.import_subscribers'), [
+                'project_ids' => [$this->project->id],
                 'import' => $this->uploadedFile($extension, $contents),
                 'categoryId' => [$category->id],
                 'charset' => $encoding,
@@ -151,20 +156,27 @@ class SubscriberUtf8ImportTest extends TestCase
         foreach ([65533, 65534, 65535] as $prefixLength) {
             $contents = str_repeat(' ', $prefixLength)."🌍 reader@example.test\n";
             $validator = Validator::make(
-                ['import' => $this->uploadedFile('txt', $contents)],
-                (new ImportRequest)->rules()
+                ['project_ids' => [$this->project->id], 'import' => $this->uploadedFile('txt', $contents)],
+                $this->importRules($input ?? [])
             );
 
             $this->assertTrue($validator->passes(), $validator->errors()->toJson());
 
             $validator = Validator::make(
-                ['import' => $this->uploadedFile('txt', $contents."\xFF")],
-                (new ImportRequest)->rules()
+                ['project_ids' => [$this->project->id], 'import' => $this->uploadedFile('txt', $contents."\xFF")],
+                $this->importRules($input ?? [])
             );
 
             $this->assertTrue($validator->fails());
             $this->assertTrue($validator->errors()->has('import'));
         }
+    }
+
+    private function importRules(array $input = []): array
+    {
+        $request = ImportRequest::create('/import', 'POST', ['project_ids' => [$this->project->id]] + $input);
+        $request->setUserResolver(fn () => auth()->user());
+        return $request->rules();
     }
 
     private function uploadedFile(string $extension, string $contents): UploadedFile

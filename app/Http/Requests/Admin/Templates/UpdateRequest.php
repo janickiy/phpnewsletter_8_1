@@ -4,6 +4,8 @@ namespace App\Http\Requests\Admin\Templates;
 
 use App\Models\Templates;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Services\ProjectAccess;
+use Illuminate\Validation\Rule;
 
 
 class UpdateRequest extends FormRequest
@@ -13,7 +15,7 @@ class UpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return ProjectAccess::scope(Templates::query(), 'manage')->whereKey($this->integer('id'))->exists();
     }
 
     /**
@@ -24,6 +26,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'project_id' => ['required', 'integer', Rule::in(ProjectAccess::projects('manage')->pluck('id')->all()), Rule::in([Templates::query()->find($this->integer('id'))?->project_id])],
             'id' => [
                 'required',
                 'integer',

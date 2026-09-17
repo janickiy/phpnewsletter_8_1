@@ -2,19 +2,18 @@
 
 namespace App\Http\Requests\Admin\Subscribers;
 
-use App\Models\Category;
-use App\Models\Subscribers;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
+    use ProjectRules;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     /**
@@ -24,7 +23,7 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        return $this->projectRules() + [
             'name' => [
                 'nullable',
                 'string',
@@ -34,16 +33,6 @@ class StoreRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique(Subscribers::getTableName(), 'email'),
-            ],
-            'categoryId' => [
-                'nullable',
-                'array',
-            ],
-            'categoryId.*' => [
-                'required',
-                'integer',
-                Rule::exists(Category::getTableName(), 'id'),
             ],
         ];
     }

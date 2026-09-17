@@ -13,7 +13,13 @@ class Templates extends Model
 
     protected $table = 'templates';
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     protected $fillable = [
+        'project_id',
         'name',
         'body',
         'prior'

@@ -34,7 +34,8 @@ class MailingOrderTest extends TestCase
         $this->actingAs($admin);
 
         $template = $this->template();
-        $category = Category::query()->create(['name' => 'Mailing order category']);
+        $category = Category::query()->create([
+            'project_id' => $this->testProjectId(),'name' => 'Mailing order category']);
         $log = Logs::query()->create(['time' => now()]);
 
         $this->mock(SubscriberRepository::class, function (MockInterface $mock) use ($log, $template, $category) {
@@ -64,6 +65,7 @@ class MailingOrderTest extends TestCase
         $this->configureMailing($legacyEnabled);
 
         $schedule = Schedule::query()->create([
+            'project_id' => $this->testProjectId(),
             'event_name' => 'Mailing order schedule',
             'event_start' => now()->subHour(),
             'event_end' => now()->addHour(),
@@ -122,6 +124,7 @@ class MailingOrderTest extends TestCase
     private function template(): Templates
     {
         return Templates::query()->create([
+            'project_id' => $this->testProjectId(),
             'name' => 'Mailing order template',
             'body' => '<p>Mailing order test</p>',
             'prior' => 0,

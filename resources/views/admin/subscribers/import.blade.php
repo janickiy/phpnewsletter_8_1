@@ -34,6 +34,8 @@
 
                         <p>*-{{ __('frontend.form.required_fields') }}</p>
 
+                        @include('admin.subscribers.project_field')
+
                         <div class="mb-3">
 
                             <label for="import" class="form-label">{{ __('frontend.form.attach_files') }}*</label>
@@ -59,14 +61,13 @@
                                 $selectedCategoryIds = array_map('strval', (array) old('categoryId', []));
                             @endphp
                             <select name="categoryId[]" id="categoryId" multiple class="form-select">
-                                <option value="">{{ __('frontend.form.select_category') }}</option>
                                 @foreach($category_options as $categoryValue => $categoryLabel)
                                     <option value="{{ $categoryValue }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>{{ $categoryLabel }}</option>
                                 @endforeach
                             </select>
 
-                            @if ($errors->has('categoryId'))
-                                <p class="text-danger">{{ $errors->first('categoryId') }}</p>
+                            @if ($errors->has('categoryId') || $errors->has('categoryId.*'))
+                                <p class="text-danger">{{ $errors->first('categoryId') ?: $errors->first('categoryId.*') }}</p>
                             @endif
 
                         </div>
@@ -92,4 +93,8 @@
         </div>
     </div>
 
+@endsection
+
+@section('js')
+    @include('admin.subscribers.project_categories_js')
 @endsection

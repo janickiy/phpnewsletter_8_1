@@ -6,6 +6,9 @@ use App\Helpers\UpdateHelper;
 use App\Models\Category;
 use App\Models\Logs;
 use App\Models\User;
+use App\Models\Templates;
+use App\Services\ProjectAccess;
+use Illuminate\Validation\ValidationException;
 use App\Repositories\AttachRepository;
 use App\Repositories\ProcessRepository;
 use App\Repositories\ReadySentRepository;
@@ -48,8 +51,24 @@ class AjaxController extends Controller
     {
         @set_time_limit(0);
 
+        $action = (string) $request->input('action');
+        if (!in_array($action, ['get_categories', 'count_send', 'log_online', 'alert_update'], true)) {
+            abort_unless($request->isMethod('POST'), 405);
+        }
+        if ($action !== 'change_lng') {
+            abort_unless(Auth::check(), 401);
+        }
+        if (in_array($action, ['start_update', 'alert_update'], true)) {
+            abort_unless($this->currentUserIsAdmin(), 403);
+        }
+        if (in_array($action, ['remove_schedule', 'remove_attach', 'send_test_email', 'send_out', 'count_send', 'log_online', 'start_mailing', 'process'], true)) {
+            abort_unless(Auth::user()?->canManageProjects(), 403);
+        }
+
         try {
             return response()->json($this->getResult($request));
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface|ValidationException|\Illuminate\Database\Eloquent\ModelNotFoundException|\Illuminate\Auth\Access\AuthorizationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             report($e);
 
@@ -105,12 +124,12 @@ class AjaxController extends Controller
 
             'count_send' => $this->sendMailService->countSend($request),
 
-            'log_online' => $this->readySentRepository->logOnline(5),
+            'log_online' => $this->readySentRepository->logOnline(5, (int) $request->input('logId')),
 
-            'start_mailing' => $this->startMailing(),
+            'start_mailing' => $this->startMailing($request),
 
             'get_categories' => [
-                'items' => Category::query()->get(),
+                'items' => ProjectAccess::scope(Category::query())->when($request->filled('project_id'), fn ($query) => $query->where('categories.project_id', (int) $request->input('project_id')))->get(),
             ],
 
             'process' => $this->processCommand($request),
@@ -177,10 +196,27 @@ class AjaxController extends Controller
      *
      * @return array
      */
-    private function startMailing(): array
+    private function startMailing(Request $request): array
     {
+        $data = $request->validate([
+            'templateId' => ['required', 'array', 'min:1'],
+            'templateId.*' => ['required', 'integer', 'distinct'],
+            'categoryId' => ['required', 'array', 'min:1'],
+            'categoryId.*' => ['integer', 'distinct'],
+        ]);
+        $templates = ProjectAccess::scope(Templates::query(), 'manage')
+            ->whereHas('project', fn ($query) => $query->where('status', true))
+            ->whereIn('id', $data['templateId'])->get();
+        abort_unless($templates->count() === count($data['templateId']), 403);
+
+        $categories = $data['categoryId'] ?? [];
+        abort_unless(ProjectAccess::scope(Category::query(), 'manage')
+            ->whereIn('project_id', $templates->pluck('project_id'))
+            ->whereIn('id', $categories)->count() === count($categories), 403);
+
         $log = Logs::query()->create([
             'time' => now(),
+            'user_id' => Auth::id(),
         ]);
 
         return [

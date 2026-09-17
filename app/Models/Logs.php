@@ -14,6 +14,7 @@ class Logs extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'user_id',
         'time',
     ];
 }

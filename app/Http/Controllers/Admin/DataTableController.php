@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Helpers\PermissionsHelper;
 use App\Helpers\StringHelper;
 use App\Models\Category;
 use App\Models\Logs;
@@ -13,12 +12,29 @@ use App\Models\Smtp;
 use App\Models\Subscribers;
 use App\Models\Templates;
 use App\Models\User;
+use App\Repositories\ProjectRepository;
+use App\Services\ProjectAccess;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class DataTableController extends Controller
 {
+    public function getProjects(ProjectRepository $projectRepository): JsonResponse
+    {
+        $rows = $projectRepository->getForDataTable();
+
+        return DataTables::of($rows)
+            ->editColumn('status', fn ($row) => $row->status ? __('frontend.str.projects.active') : __('frontend.str.projects.inactive'))
+            ->addColumn('actions', function ($row) {
+                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'
+                    .'<a class="btn btn-sm btn-primary" title="'.e(__('frontend.str.edit')).'" href="'.route('admin.projects.edit', ['id' => $row->id]).'"><i class="fa-solid fa-pen-to-square"></i></a>'
+                    .'<button type="button" class="btn btn-sm btn-danger deleteRow" id="'.$row->id.'" title="'.e(__('frontend.str.remove')).'"><i class="fa-solid fa-trash"></i></button></div>';
+            })
+            ->rawColumns(['actions'])
+            ->make(true);
+    }
+
     /**
      * Return email template rows formatted for the templates DataTable.
      *
@@ -26,11 +42,12 @@ class DataTableController extends Controller
      */
     public function getTemplates(): JsonResponse
     {
-        $rows = Templates::query()
-            ->with('attach')
+        $rows = ProjectAccess::scope(Templates::query(), 'manage')
+            ->with(['attach', 'project'])
             ->select('templates.*');
 
         return DataTables::of($rows)
+            ->addColumn('project', fn ($row) => $row->project?->name)
             ->addColumn('checkbox', fn ($row) => sprintf(
                 '<input type="checkbox" class="form-check-input check" value="%d" name="templateId[]">',
                 $row->id
@@ -53,8 +70,8 @@ class DataTableController extends Controller
             ->editColumn('name', function ($row) {
                 $body = preg_replace('/(<.*?>)|(&.*?;)/', '', $row->body);
 
-                return $row->name.'<br><br><small class="text-muted">'.
-                    StringHelper::shortText($body ?? '', 500).
+                return e($row->name).'<br><br><small class="text-muted">'.
+                    e(StringHelper::shortText($body ?? '', 500)).
                     '</small>';
             })
             ->editColumn('prior', fn ($row) => $row->getPrior())
@@ -74,11 +91,13 @@ class DataTableController extends Controller
     public function getCategory(): JsonResponse
     {
         $rows = Category::query()
-            ->selectRaw('categories.id, categories.name, count(subscriptions.category_id) AS subcount')
+            ->selectRaw('categories.id, categories.name, projects.name AS project, count(subscriptions.category_id) AS subcount')
+            ->leftJoin('projects', 'categories.project_id', '=', 'projects.id')
             ->leftJoin('subscriptions', 'categories.id', '=', 'subscriptions.category_id')
-            ->groupBy('categories.id', 'categories.name');
+            ->groupBy('categories.id', 'categories.name', 'projects.name');
 
         return DataTables::of($rows)
+            ->editColumn('project', fn ($row) => $row->project ?? __('frontend.str.projects.subscriber_unassigned'))
             ->addColumn('actions', function ($row) {
                 $editBtn = sprintf(
                     '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
@@ -148,8 +167,15 @@ class DataTableController extends Controller
      */
     public function getSubscribers(): JsonResponse
     {
-        $rows = Subscribers::query()
-            ->with(['subscriptions:subscriber_id,category_id', 'subscriptions.category:id,name'])
+        $visibleProjectIds = ProjectAccess::projects()->select('projects.id');
+        $rows = ProjectAccess::subscribers(Subscribers::query())
+            ->with([
+                'projects' => fn ($query) => $query->whereIn('projects.id', $visibleProjectIds)->select('projects.id', 'projects.name')->orderBy('projects.name'),
+                'subscriptions' => fn ($query) => $query
+                    ->select('subscriber_id', 'category_id')
+                    ->whereHas('category', fn ($categories) => $categories->whereIn('project_id', $visibleProjectIds)),
+                'subscriptions.category:id,name',
+            ])
             ->select([
                 'subscribers.id',
                 'subscribers.name',
@@ -159,6 +185,10 @@ class DataTableController extends Controller
             ]);
 
         return DataTables::of($rows)
+            ->whitelist(['id', 'name', 'email', 'active', 'created_at', 'subscribers.id', 'subscribers.name', 'subscribers.email', 'subscribers.active', 'subscribers.created_at'])
+            ->addColumn('projects', fn ($row) => $row->projects->isEmpty()
+                ? __('frontend.str.projects.subscriber_unassigned')
+                : $row->projects->pluck('name')->implode(', '))
             ->addColumn('checkbox', fn ($row) => sprintf(
                 '<input type="checkbox" class="form-check-input check" value="%d" name="activate[]">',
                 $row->id
@@ -244,6 +274,8 @@ class DataTableController extends Controller
             ->join('ready_sent', 'logs.id', '=', 'ready_sent.log_id')
             ->groupBy('logs.id', 'logs.time');
 
+        ProjectAccess::scope($rows, 'view', 'ready_sent.project_id');
+
         return DataTables::of($rows)
             ->editColumn('count', fn ($row) => sprintf(
                 '<a href="%s">%s</a>',
@@ -252,7 +284,7 @@ class DataTableController extends Controller
             ))
             ->addColumn('unsent', fn ($row) => (int) $row->count - (int) $row->sent)
             ->editColumn('read_mail', fn ($row) => $row->read_mail ?? 0)
-            ->addColumn('report', fn ($row) => PermissionsHelper::has_permission('admin') && (int) $row->count > 0
+            ->addColumn('report', fn ($row) => (int) $row->count > 0
                 ? sprintf(
                     '<a href="%s">%s</a>',
                     route('admin.log.report', ['id' => $row->id]),
@@ -272,8 +304,12 @@ class DataTableController extends Controller
     public function getInfoLog(?int $id = null): JsonResponse
     {
         $rows = $id
-            ? ReadySent::query()->where('log_id', $id)
-            : ReadySent::query();
+            ? ProjectAccess::scope(ReadySent::query())->where('log_id', $id)
+            : ProjectAccess::scope(ReadySent::query());
+
+        if ($id) {
+            abort_unless((clone $rows)->exists(), 404);
+        }
 
         return DataTables::of($rows)
             ->editColumn('success', fn ($row) => $row->success === 1
@@ -295,7 +331,7 @@ class DataTableController extends Controller
      */
     public function getRedirectLogs(): JsonResponse
     {
-        $rows = Redirect::query()
+        $rows = ProjectAccess::scope(Redirect::query())
             ->selectRaw('url, COUNT(email) as count')
             ->groupBy('url')
             ->distinct();
@@ -306,13 +342,11 @@ class DataTableController extends Controller
                 route('admin.redirect.info', ['url' => $this->encodeRouteBase64($row->url)]),
                 $row->count
             ))
-            ->addColumn('report', fn ($row) => PermissionsHelper::has_permission('admin')
-                ? sprintf(
+            ->addColumn('report', fn ($row) => sprintf(
                     '<a href="%s">%s</a>',
                     route('admin.redirect.report', ['url' => $this->encodeRouteBase64($row->url)]),
                     __('frontend.str.download')
-                )
-                : '')
+                ))
             ->rawColumns(['count', 'report'])
             ->make(true);
     }
@@ -326,7 +360,7 @@ class DataTableController extends Controller
     {
         $decodedUrl = $this->decodeRouteBase64($url);
 
-        $rows = Redirect::query()->where('url', $decodedUrl);
+        $rows = ProjectAccess::scope(Redirect::query())->where('url', $decodedUrl);
 
         return DataTables::of($rows)
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
