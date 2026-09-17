@@ -1,4 +1,4 @@
-<div class="alert alert-info alert-dismissible fade show" role="alert" id="alert_msg_block" style="display:none;">
+<div class="alert alert-info alert-dismissible fade show mt-3" role="alert" id="alert_msg_block" style="display:none;">
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('frontend.str.close') }}" onClick="$.cookie('alertshow', 'no');"></button>
     <h5><i class="icon fa-solid fa-info"></i> {{ __('frontend.str.warning_alert') }}</h5>
     <span id="alert_warning_msg"></span>
@@ -11,14 +11,14 @@
 @endif
 
 @if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('frontend.str.close') }}"></button>
         <h5><i class="icon fa-solid fa-check"></i> {{ session('success') }}</h5>
     </div>
 @endif
 
 @if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('frontend.str.close') }}"></button>
         <h5><i class="icon fa-solid fa-ban"></i> {{ __('frontend.str.error_alert') }}</h5>
         {{ session('error') }}
@@ -26,7 +26,7 @@
 @endif
 
 @if ($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('frontend.str.close') }}"></button>
         <h5><i class="icon fa-solid fa-ban"></i> {{ __('frontend.str.error_alert') }}</h5>
         <ul>
@@ -36,5 +36,4 @@
         </ul>
     </div>
 @endif
-
 
