@@ -22,6 +22,9 @@
 
                 <!-- general form elements -->
                 <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fa-solid fa-user-group me-2" aria-hidden="true"></i>{{ $title }}</h3>
+                    </div>
 
                     <!-- form start -->
                     <form action="{{ route('admin.subscribers.export_subscribers') }}" method="POST">

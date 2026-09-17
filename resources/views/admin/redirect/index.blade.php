@@ -20,7 +20,7 @@
                 <div class="card card-outline card-primary">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-chart-line me-1"></i>
+                            <i class="fa-solid fa-link me-2" aria-hidden="true"></i>
                             {{ __('frontend.str.redirect') }}
                         </h3>
 

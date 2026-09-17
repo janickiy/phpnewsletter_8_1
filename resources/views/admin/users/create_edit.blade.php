@@ -22,6 +22,9 @@
 
                 <!-- general form elements -->
                 <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fa-solid fa-users me-2" aria-hidden="true"></i>{{ $title }}</h3>
+                    </div>
 
                     <!-- form start -->
                     <form action="{{ isset($row) ? route('admin.users.update') : route('admin.users.store') }}" method="POST">

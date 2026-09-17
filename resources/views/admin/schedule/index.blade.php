@@ -285,6 +285,12 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-calendar-days me-2" aria-hidden="true"></i>
+                            {{ $title }}
+                        </h3>
+                    </div>
                     <div class="card-body">
                         <div class="schedule-actions d-flex justify-content-end">
                             <a href="{{ route('admin.schedule.create') }}" class="btn btn-primary btn-sm">

@@ -20,7 +20,7 @@
                 <div class="card card-outline card-primary">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-chart-bar me-1"></i>
+                            <i class="fa-solid fa-chart-area me-2" aria-hidden="true"></i>
                             {{ __('frontend.str.mailing_report') }}
                         </h3>
 
@@ -60,7 +60,7 @@
                 <div class="card card-outline card-secondary">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-list me-1"></i>
+                            <i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i>
                             {{ __('frontend.str.log') }}
                         </h3>
                     </div>

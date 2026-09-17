@@ -8,36 +8,50 @@
 
     <style>
 
-        pre {
+        .subscription-form-preview {
+            width: 100%;
+            max-width: 720px;
+            padding-top: 1rem;
+        }
+
+        .subscription-form-preview > .mb-3 {
+            margin-bottom: 0 !important;
+        }
+
+        .subscription-form-page .card-title {
+            font-size: 1.125rem;
+        }
+
+        .subscription-form-page pre {
             position: relative;
             border: 1px solid #30363d !important;
             border-radius: 8px;
             background: #0d1117 !important;
             padding: 0 !important;
-            margin-bottom: 15px !important;
+            margin-bottom: 0;
             font-size: 14px !important;
             overflow: auto;
         }
 
-        pre code {
+        .subscription-form-page pre code {
             background: #0d1117 !important;
             font-size: 13.5px !important;
             white-space: pre;
         }
 
-        .hljs {
+        .subscription-form-page .hljs {
             background: #0d1117 !important;
         }
 
-        .hljs-ln {
+        .subscription-form-page .hljs-ln {
             width: 100%;
         }
 
-        .hljs-ln td {
+        .subscription-form-page .hljs-ln td {
             padding: 0;
         }
 
-        .hljs-ln-numbers {
+        .subscription-form-page .hljs-ln-numbers {
             background: #010409;
             border-right: 1px solid #30363d;
             color: #6e7681;
@@ -48,12 +62,8 @@
             vertical-align: top;
         }
 
-        .hljs-ln-code {
+        .subscription-form-page .hljs-ln-code {
             padding-left: 14px !important;
-        }
-
-        .copy-code-button {
-            margin-bottom: 10px;
         }
 
     </style>
@@ -63,66 +73,71 @@
 
 @section('content')
 
-    <div class="container-fluid">
+    <div class="container-fluid subscription-form-page">
         <div class="row">
             <div class="col-12">
 
-                <div class="card">
-                    <!-- /.card-header -->
-                    <div class="card-body">
-
-                        @include('include.subform')
-
-                        <div class="mb-3">
-
-                            <button type="button" class="btn btn-primary copy-code-button"
-                                    onclick="copyToClipboard('#codebox')">
-                                <span id="myTooltip">{{ __('frontend.str.copy_to_clipboard') }}</span>
-                            </button>
-
-                            <pre><code class="language-html" id="codebox">{{ $embedCode }}</code></pre>
-
-                        </div>
-
-                        <!-- /.card-body -->
+                <div class="card card-outline card-primary mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">
+                            <i class="fa-solid fa-envelope-open-text me-2" aria-hidden="true"></i>{{ $title }}
+                        </h3>
                     </div>
-                    <!-- /.card -->
+                    <div class="card-body">
+                        <div class="subscription-form-preview">
+                            @include('include.subform')
+                        </div>
+                    </div>
                 </div>
-                <!-- /.col -->
+
+                <div class="card card-outline card-secondary mb-3">
+                    <div class="card-header d-flex align-items-center flex-wrap gap-2">
+                        <h3 class="card-title mb-0">
+                            <i class="fa-solid fa-code me-2" aria-hidden="true"></i>HTML
+                        </h3>
+                        <button type="button" class="btn btn-outline-primary btn-sm ms-auto" id="copy-embed-code">
+                            <i class="fa-solid fa-copy me-2" aria-hidden="true"></i>{{ __('frontend.str.copy_to_clipboard') }}
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <pre><code class="language-html" id="codebox">{{ $embedCode }}</code></pre>
+                    </div>
+                </div>
             </div>
-            <!-- /.row -->
         </div>
     </div>
-    <!-- /.container-fluid -->
 
 @endsection
 
 @section('js')
 
-    <!-- <script src="{{ asset('/plugins/highlightjs/highlight.js') }}"></script> -->
-    <!-- <script src="{{ asset('/plugins/highlightjs/highlightjs-line-numbers.js') }}"></script> -->
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlightjs-line-numbers.js/2.6.0/highlightjs-line-numbers.min.js"></script>
-
-    <script>hljs.highlightAll();</script>
-    <script>hljs.initLineNumbersOnLoad();</script>
+    <script src="{{ asset('/plugins/highlightjs/highlight.js') }}"></script>
+    <script src="{{ asset('/plugins/highlightjs/highlightjs-line-numbers.js') }}"></script>
 
     <script>
-        async function copyToClipboard(element) {
-            const content = $(element).text().trim();
+        const codebox = document.getElementById('codebox');
+        // Keep the original line breaks before the highlighter creates its line-number table.
+        const subscriptionEmbedCode = codebox.textContent;
 
+        hljs.highlightElement(codebox);
+        hljs.lineNumbersBlockSync(codebox);
+
+        document.getElementById('copy-embed-code').addEventListener('click', async function () {
             if (navigator.clipboard) {
-                await navigator.clipboard.writeText(content);
-                return;
+                try {
+                    await navigator.clipboard.writeText(subscriptionEmbedCode);
+                    return;
+                } catch (error) {
+                    // Use the selection-based fallback when clipboard access is unavailable.
+                }
             }
 
-            let $temp = $("<textarea>");
+            const $temp = $('<textarea readonly>').css({ position: 'fixed', opacity: 0 });
             $("body").append($temp);
-            $temp.val(content).select();
+            $temp.val(subscriptionEmbedCode).select();
             document.execCommand("copy");
             $temp.remove();
-        }
+        });
     </script>
 
 @endsection

@@ -15,6 +15,11 @@
             <div class="col-12">
 
                 <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-brands fa-php me-2" aria-hidden="true"></i>{{ $title }}
+                        </h3>
+                    </div>
                     <!-- /.card-header -->
                     <div class="card-body">
 

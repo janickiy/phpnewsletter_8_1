@@ -30,7 +30,10 @@
                         @endif
 
                     <div class="card-header">
-                        <h3 class="card-title">{{ $title }}</h3>
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-inbox me-2" aria-hidden="true"></i>
+                            {{ $title }}
+                        </h3>
                     </div>
 
                     @if (isset($row))

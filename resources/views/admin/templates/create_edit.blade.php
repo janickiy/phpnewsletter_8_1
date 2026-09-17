@@ -17,6 +17,24 @@
     <link rel="stylesheet" href="{{ asset('/plugins/codemirror/codemirror.css') }}">
     <link rel="stylesheet" href="{{ asset('/plugins/codemirror/theme/monokai.css') }}">
 
+    <style>
+        .template-editor-page .template-editor-hint {
+            padding: .75rem 1rem;
+            border-inline-start: 3px solid var(--bs-primary);
+            border-radius: var(--bs-border-radius);
+            background: var(--bs-tertiary-bg);
+            color: var(--bs-secondary-color);
+            font-size: .875rem;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .template-editor-page .note-editor.note-frame {
+            border-color: var(--bs-border-color);
+            border-radius: var(--bs-border-radius);
+        }
+    </style>
+
 @endsection
 
 @section('content')
@@ -43,7 +61,7 @@
                     <div class="card card-outline card-primary">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fas fa-envelope-open-text me-1"></i>
+                                <i class="fa-solid fa-envelope-open-text me-2" aria-hidden="true"></i>
                                 {{ $title }}
                             </h3>
                         </div>
@@ -67,71 +85,43 @@
 
                                 <label for="body" class="form-label">{{ __('frontend.form.template') }}*</label>
 
-                                <textarea name="body" id="body" rows="8" placeholder="{{ __('frontend.form.template') }}" class="form-control">{{ old('body', $template->body ?? '') }}</textarea>
+                                <textarea name="body" id="body" rows="3" placeholder="{{ __('frontend.form.template') }}" class="form-control">{{ old('body', $template->body ?? '') }}</textarea>
 
                                 @if ($errors->has('body'))
                                     <p class="text-danger">{{ $errors->first('body') }}</p>
                                 @endif
 
-                                <div class="callout callout-info py-2 mt-3 mb-2">
-                                    <small>{!! __('frontend.note.personalization') !!}</small>
+                                <div class="template-editor-hint mt-3">
+                                    {!! __('frontend.note.personalization') !!}
                                 </div>
 
                                 @if($macrosList)
-                                    <div class="callout callout-info py-2 mb-0">
-                                        <small>{!! __('frontend.note.macros') !!} {!! $macrosList !!}</small>
+                                    <div class="template-editor-hint mt-3">
+                                        {!! __('frontend.note.macros') !!} {!! $macrosList !!}
                                     </div>
                                 @endif
 
                             </div>
 
-                            <div class="mb-3">
+                            <section class="border rounded p-3 mb-3" aria-labelledby="template-priority-title">
+                                <h4 class="h6 fw-semibold mb-3" id="template-priority-title">
+                                    <i class="fa-solid fa-sliders me-2" aria-hidden="true"></i>{{ __('frontend.form.prior') }}
+                                </h4>
 
-                                <label for="attachfile" class="form-label">{{ __('frontend.form.attach_files') }}</label>
-
-                                <input type="file" name="attachfile[]" id="attachfile" multiple class="form-control">
-
-                                @if ($errors->has('attachfile'))
-                                    <p class="text-danger">{{ $errors->first('attachfile') }}</p>
-                                @endif
-
-                            </div>
-
-                            @if(isset($attachment) && $attachment->isNotEmpty())
-                                <div id="existing-attachments" class="mb-3">
-
-                                    <label for="attachments" class="form-label">{{ __('frontend.str.attachments') }}</label>
-
-                                    <div class="d-flex flex-wrap">
-                                        @foreach($attachment as $a)
-                                            <span id="attach_{{ $a->id }}" class="badge text-bg-light border me-2 mb-2 p-2">
-                                                {{ $a->file_name }}
-                                                <a href="#" data-num="{{ $a->id }}" class="remove_attach text-danger ms-1" title="{{ __('frontend.str.remove') }}">X</a>
-                                            </span>
-                                        @endforeach
-                                    </div>
-
-                                </div>
-                            @endif
-
-                            <div class="mb-3">
-
-                                <label for="prior" class="form-label">{{ __('frontend.form.prior') }}</label>
-
-                                <div>
-                                    <div class="form-check form-check-inline">
+                                <div role="radiogroup" aria-labelledby="template-priority-title">
+                                    <div class="form-check mb-2">
                                         <input type="radio" name="prior" value="0" class="form-check-input" id="prior_normal" @checked($priorValue === 0)>
 
                                         <label class="form-check-label" for="prior_normal">{{ __('frontend.form.normal') }}</label>
                                     </div>
 
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check mb-2">
                                         <input type="radio" name="prior" value="2" class="form-check-input" id="prior_low" @checked($priorValue === 2)>
 
                                         <label class="form-check-label" for="prior_low">{{ __('frontend.form.low') }}</label>
                                     </div>
 
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check mb-0">
                                         <input type="radio" name="prior" value="1" class="form-check-input" id="prior_high" @checked($priorValue === 1)>
 
                                         <label class="form-check-label" for="prior_high">{{ __('frontend.form.high') }}</label>
@@ -143,39 +133,61 @@
 
                                 </div>
 
-                            </div>
+                            </section>
+
+                            <section class="border rounded p-3 mb-3" aria-labelledby="template-attachments-title">
+                                <h4 class="h6 fw-semibold mb-3" id="template-attachments-title">
+                                    <i class="fa-solid fa-paperclip me-2" aria-hidden="true"></i>{{ __('frontend.str.attachments') }}
+                                </h4>
+
+                                <label for="attachfile" class="form-label">{{ __('frontend.form.attach_files') }}</label>
+                                <input type="file" name="attachfile[]" id="attachfile" multiple class="form-control">
+
+                                @if ($errors->has('attachfile'))
+                                    <p class="text-danger">{{ $errors->first('attachfile') }}</p>
+                                @endif
+
+                                @if(isset($attachment) && $attachment->isNotEmpty())
+                                    <div id="existing-attachments" class="mt-3">
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach($attachment as $a)
+                                                <span id="attach_{{ $a->id }}" class="badge text-bg-light border p-2">
+                                                    {{ $a->file_name }}
+                                                    <a href="#" data-num="{{ $a->id }}" class="remove_attach text-danger ms-1" title="{{ __('frontend.str.remove') }}">X</a>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <p id="attachments-empty" @class(['text-body-secondary mt-3 mb-0', 'd-none' => isset($attachment) && $attachment->isNotEmpty()])>{{ __('frontend.str.no') }}</p>
+                            </section>
+
+                            <section class="border rounded bg-body-tertiary p-3" aria-labelledby="template-test-title">
+                                <h4 class="h6 fw-semibold mb-3" id="template-test-title">
+                                    <i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i>{{ __('frontend.str.send_test_letter') }}<span id="process"></span>
+                                </h4>
+
+                                <div id="resultSend"></div>
+
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                                    <input type="text" name="email" id="email" value="{{ old('email', '') }}" class="form-control" placeholder="Email" aria-label="Email">
+                                    <button type="button" id="send_test" class="btn btn-info">{{ __('frontend.str.send') }}</button>
+                                </div>
+                            </section>
 
                         </div>
                         <!-- /.card-body -->
 
-                        <div class="card-footer">
+                        <div class="card-footer form-actions-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <button type="submit" class="btn btn-primary">
                                 {{ isset($template) ? __('frontend.form.edit') : __('frontend.form.add') }}
                             </button>
-                            <a class="btn btn-outline-secondary float-sm-end" href="{{ route('admin.templates.index') }}">
-                                <i class="fas fa-arrow-left me-1"></i>
+                            <a class="btn btn-outline-secondary btn-back" href="{{ route('admin.templates.index') }}">
                                 {{ __('frontend.form.back') }}
                             </a>
 
-                        </div>
-                    </div>
-
-                    <div class="card card-outline card-info mt-4">
-                        <div class="card-header">
-                            <h3 class="card-title">{{ __('frontend.str.send_test_letter') }}<span id="process"></span></h3>
-                        </div>
-                        <div class="card-body">
-
-                            <div id="resultSend"></div>
-
-                            <div class="input-group mb-3">
-                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-
-                                <input type="text" name="email" id="email" value="{{ old('email', '') }}" class="form-control" placeholder="Email">
-
-                                <button type="button" id="send_test" class="btn btn-info">{{ __('frontend.str.send') }}</button>
-
-                            </div>
                         </div>
                     </div>
 
@@ -207,13 +219,21 @@
         $(function () {
             // Summernote
             $('#body').summernote({
-                height: 300,
+                height: 60,
+                minHeight: 60,
                 codemirror: {theme: 'monokai'},
             });
 
             $('#tmplForm').on('submit', function () {
                 $('#body').val($('#body').summernote('code'));
             });
+
+            function updateAttachmentEmptyState() {
+                const hasAttachments = $('#existing-attachments .badge').length > 0 || $('#attachfile')[0].files.length > 0;
+                $('#attachments-empty').toggleClass('d-none', hasAttachments);
+            }
+
+            $('#attachfile').on('change', updateAttachmentEmptyState);
 
             $(document).on("click", ".remove_attach", function (event) {
                 event.preventDefault();
@@ -238,6 +258,8 @@
                         if ($("#existing-attachments .badge").length === 0) {
                             $("#existing-attachments").remove();
                         }
+
+                        updateAttachmentEmptyState();
                     }
                 });
             });

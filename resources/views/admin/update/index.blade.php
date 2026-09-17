@@ -12,20 +12,28 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-
-                @if (!empty($button_update))
-                    <div id="btn_refresh">
-                        <button type="button" id="start_update" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-arrows-rotate"></i> {!! $button_update !!}
-                        </button>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-arrows-rotate me-2" aria-hidden="true"></i>{{ $title }}
+                        </h3>
                     </div>
-                @endif
+                    <div class="card-body">
+                        @if (!empty($button_update))
+                            <div id="btn_refresh">
+                                <button type="button" id="start_update" class="btn btn-outline-secondary">
+                                    <i class="fa-solid fa-arrows-rotate"></i> {!! $button_update !!}
+                                </button>
+                            </div>
+                        @endif
 
-                @if (!empty($msg_no_update))
-                    <button type="button" class="btn btn-outline-secondary" disabled>
-                        <i class="fa-solid fa-arrows-rotate"></i> {!! $msg_no_update !!}
-                    </button>
-                @endif
+                        @if (!empty($msg_no_update))
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                <i class="fa-solid fa-arrows-rotate"></i> {!! $msg_no_update !!}
+                            </button>
+                        @endif
+                    </div>
+                </div>
 
             </div>
             <!-- /.col -->

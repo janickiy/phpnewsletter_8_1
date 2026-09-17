@@ -33,7 +33,10 @@
 
                         <div class="card-body p-0">
                             <div class="border-bottom p-3">
-                                <h5>{{ $template->name }}</h5>
+                                <h5>
+                                    <i class="fa-solid fa-envelope me-2" aria-hidden="true"></i>
+                                    {{ $template->name }}
+                                </h5>
                                 <h6 class="mt-2 mb-0">
                                     {{ __('frontend.str.importance') }}: {{ $template->getPrior() }}
                                     <span class="text-body-secondary float-sm-end">

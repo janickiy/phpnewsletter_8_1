@@ -19,7 +19,7 @@
 
                 <div class="card card-outline card-primary">
                     <div class="card-header d-flex flex-wrap align-items-center gap-2">
-                        <h3 class="card-title">{{ $title }}</h3>
+                        <h3 class="card-title"><i class="fa-solid fa-user-group me-2" aria-hidden="true"></i>{{ $title }}</h3>
                         <div class="card-tools ms-auto d-flex flex-wrap align-items-center gap-2">
                             <a class="btn btn-outline-secondary btn-sm"
                                title="{{ __('frontend.str.import_subscribers') }}"

@@ -13,7 +13,12 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header p-2">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fa-solid fa-gears me-2" aria-hidden="true"></i>{{ $title }}
+                        </h3>
+                    </div>
+                    <div class="p-2 border-bottom">
                         <ul class="nav nav-pills flex-column flex-sm-row gap-1" role="tablist">
                             <li class="nav-item border-0" role="presentation">
                                 <button type="button" class="nav-link active" id="s1-tab" data-bs-target="#s1" data-bs-toggle="tab" role="tab" aria-controls="s1" aria-selected="true">{{ __('frontend.str.interface_settings') }}</button>
@@ -25,7 +30,7 @@
                                 <button type="button" class="nav-link" id="s3-tab" data-bs-target="#s3" data-bs-toggle="tab" role="tab" aria-controls="s3" aria-selected="false">{{ __('frontend.str.additional_headers') }}</button>
                             </li>
                         </ul>
-                    </div><!-- /.card-header -->
+                    </div>
 
                     <form action="{{ route('admin.settings.update') }}" method="POST">
                         @csrf
