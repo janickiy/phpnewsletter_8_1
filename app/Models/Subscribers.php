@@ -18,7 +18,10 @@ class Subscribers extends Model
 
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class, 'project_subscriber', 'subscriber_id', 'project_id')->withTimestamps();
+        $relation = $this->belongsToMany(Project::class, 'project_subscriber', 'subscriber_id', 'project_id')->withTimestamps();
+        $relation->getQuery()->includingDefault();
+
+        return $relation;
     }
 
     protected $fillable = [

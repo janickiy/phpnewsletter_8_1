@@ -32,9 +32,10 @@ var __webpack_exports__ = {};
         height: 'Altura da linha',
         name: 'Fonte',
         strikethrough: 'Riscado',
-        subscript: 'Subscript',
-        superscript: 'Superscript',
-        size: 'Tamanho da fonte'
+        subscript: 'Subscrito',
+        superscript: 'Sobrescrito',
+        size: 'Tamanho da fonte',
+        sizeunit: 'Unidade do tamanho da fonte'
       },
       image: {
         image: 'Imagem',
@@ -42,18 +43,19 @@ var __webpack_exports__ = {};
         resizeFull: 'Redimensionar Completo',
         resizeHalf: 'Redimensionar Metade',
         resizeQuarter: 'Redimensionar Um Quarto',
-        floatLeft: 'Float Esquerda',
-        floatRight: 'Float Direita',
-        floatNone: 'Sem Float',
+        resizeNone: 'Tamanho original',
+        floatLeft: 'Flutuar à esquerda',
+        floatRight: 'Flutuar à direita',
+        floatNone: 'Sem flutuação',
         shapeRounded: 'Forma: Arredondado',
         shapeCircle: 'Forma: Círculo',
-        shapeThumbnail: 'Forma: Minhatura',
+        shapeThumbnail: 'Forma: Miniatura',
         shapeNone: 'Forma: Nenhum',
         dragImageHere: 'Arraste uma imagem para aqui',
         dropImage: 'Arraste uma imagem ou texto',
         selectFromFiles: 'Selecione a partir dos arquivos',
-        maximumFileSize: 'Tamanho máximo do fixeiro',
-        maximumFileSizeError: 'Tamanho máximo do fixeiro é maior que o permitido.',
+        maximumFileSize: 'Tamanho máximo do ficheiro',
+        maximumFileSizeError: 'O tamanho do ficheiro é maior que o permitido.',
         url: 'Endereço da imagem',
         remove: 'Remover Imagem',
         original: 'Original'
@@ -63,7 +65,7 @@ var __webpack_exports__ = {};
         videoLink: 'Link para vídeo',
         insert: 'Inserir vídeo',
         url: 'URL do vídeo?',
-        providers: '(YouTube, Google Drive, Vimeo, Vine, Instagram, DailyMotion or Youku)'
+        providers: '(YouTube, Google Drive, Vimeo, Vine, Instagram, DailyMotion ou Youku)'
       },
       link: {
         link: 'Link',
@@ -71,7 +73,7 @@ var __webpack_exports__ = {};
         unlink: 'Remover ligação',
         edit: 'Editar',
         textToDisplay: 'Texto para exibir',
-        url: 'Que endereço esta licação leva?',
+        url: 'Para que endereço deve ir esta ligação?',
         openInNewWindow: 'Abrir numa nova janela'
       },
       table: {
@@ -79,7 +81,7 @@ var __webpack_exports__ = {};
         addRowAbove: 'Adicionar linha acima',
         addRowBelow: 'Adicionar linha abaixo',
         addColLeft: 'Adicionar coluna à Esquerda',
-        addColRight: 'Adicionar coluna à Esquerda',
+        addColRight: 'Adicionar coluna à Direita',
         delRow: 'Excluir linha',
         delCol: 'Excluir coluna',
         delTable: 'Excluir tabela'
@@ -134,9 +136,11 @@ var __webpack_exports__ = {};
         textFormatting: 'Formatação de texto',
         action: 'Ação',
         paragraphFormatting: 'Formatação de parágrafo',
-        documentStyle: 'Estilo de documento'
+        documentStyle: 'Estilo de documento',
+        extraKeys: 'Teclas adicionais'
       },
       help: {
+        'escape': 'Sair',
         'insertParagraph': 'Inserir Parágrafo',
         'undo': 'Desfazer o último comando',
         'redo': 'Refazer o último comando',
@@ -163,15 +167,18 @@ var __webpack_exports__ = {};
         'formatH5': 'Alterar formato do bloco para Título 5',
         'formatH6': 'Alterar formato do bloco para Título 6',
         'insertHorizontalRule': 'Inserir linha horizontal',
-        'linkDialog.show': 'Inserir uma ligração'
+        'linkDialog.show': 'Mostrar a caixa de diálogo de ligação'
       },
       history: {
         undo: 'Desfazer',
         redo: 'Refazer'
       },
       specialChar: {
-        specialChar: 'SPECIAL CHARACTERS',
-        select: 'Select Special characters'
+        specialChar: 'CARACTERES ESPECIAIS',
+        select: 'Selecionar caracteres especiais'
+      },
+      output: {
+        noSelection: 'Nada selecionado!'
       }
     }
   });

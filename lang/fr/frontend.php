@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'default_name' => 'Projet par défaut',
+            'subscriber_default_project_hint' => 'Si aucun projet n’est sélectionné, l’abonné sera ajouté au projet par défaut.',
             'subscriber_unassigned' => 'Sans projet',
             'subscriber_projects_hint' => 'Vous pouvez sélectionner un ou plusieurs projets. Une sélection vide signifie qu’aucun projet n’est associé.',
             'subscriber_shared_status' => 'Le statut de l’abonné est commun à tous les projets. La désinscription met fin aux envois de tous les projets.',
@@ -98,6 +100,8 @@ return [
         'sender_name' => 'Nom de l’expéditeur',
         'sender_email' => 'E-mail de l’expéditeur',
         'add_schedule' => 'Ajouter une planification',
+        'schedule_categories_hint' => 'Après la sélection d’un modèle, seules les catégories de son projet seront affichées.',
+        'schedule_categories_empty' => 'Le projet du modèle sélectionné ne contient pas encore de catégories d’abonnés.',
         'enter_login' => 'Saisir le login',
         'enter_password' => 'Saisir le mot de passe',
         'singin' => 'Se connecter',
@@ -298,6 +302,7 @@ return [
         'redirect_index' => 'Statistiques des clics sur les liens',
         'redirect_info' => 'Statistiques des clics sur les liens',
         'schedule_index' => 'Planification des envois',
+        'schedule_create' => 'Ajout d’une planification d’envoi',
         'schedule_edit' => 'Modification d’une planification d’envoi',
         'settings_index' => 'Paramètres',
         'smtp_index' => 'Liste SMTP',

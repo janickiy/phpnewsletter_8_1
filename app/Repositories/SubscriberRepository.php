@@ -69,8 +69,7 @@ class SubscriberRepository extends BaseRepository
     public function add(SubscriberCreateData $data): Subscribers
     {
         abort_unless(auth()->check(), 403);
-        abort_unless(auth()->user()->isAdmin() || $data->projectIds !== [], 403);
-        $this->validateAssignments($data->projectIds, $data->categoryIds);
+        $this->validateAssignments($data->projectIds ?: [Project::DEFAULT_ID], $data->categoryIds);
 
         return $this->persistSubscriber($data);
     }
@@ -82,7 +81,7 @@ class SubscriberRepository extends BaseRepository
                 ['email' => strtolower(trim($data->email))],
                 $this->mapping([...$data->toArray(), 'email' => strtolower(trim($data->email))])
             );
-            $model->projects()->syncWithoutDetaching($data->projectIds);
+            $model->projects()->syncWithoutDetaching($data->projectIds ?: [Project::DEFAULT_ID]);
             $this->syncSubscriptions($model->id, $data->categoryIds);
 
             return $model;
@@ -381,7 +380,7 @@ class SubscriberRepository extends BaseRepository
 
     private function validateAssignments(array $projectIds, array $categoryIds, bool $public = false): void
     {
-        $projects = $public ? Project::query()->where('status', 1) : ProjectAccess::projects();
+        $projects = $public ? Project::query()->includingDefault()->where('status', 1) : ProjectAccess::projects();
         abort_unless((!$public || count($projectIds) === 1)
             && $projects->whereIn('projects.id', $projectIds)->count() === count(array_unique($projectIds)), 403);
         abort_unless(Category::query()->whereIn('project_id', $projectIds)->whereIn('id', $categoryIds)->count()

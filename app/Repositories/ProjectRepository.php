@@ -43,6 +43,8 @@ class ProjectRepository extends BaseRepository
      */
     public function find(int $id): ?Project
     {
+        abort_if($id === Project::DEFAULT_ID, 403);
+
         return $this->managedProjects()->with(['owner', 'members'])->find($id);
     }
 
@@ -85,8 +87,10 @@ class ProjectRepository extends BaseRepository
      */
     public function update(int $id, ProjectUpdateData $data): bool
     {
+        abort_if($id === Project::DEFAULT_ID, 403);
+
         return $this->database->transaction(function () use ($id, $data): bool {
-            $project = $this->managedProjects()->lockForUpdate()->findOrFail($id);
+            $project = $this->storedManagedProjects()->lockForUpdate()->findOrFail($id);
             $user = auth()->user();
             abort_unless($data->ownerId === null || $user->isAdmin(), 403);
             abort_unless($data->projectAdminIds === null || $user->isAdmin() || $project->owner_id === $user->id, 403);
@@ -107,8 +111,10 @@ class ProjectRepository extends BaseRepository
      */
     public function delete(int $id): bool
     {
+        abort_if($id === Project::DEFAULT_ID, 403);
+
         return $this->database->transaction(function () use ($id): bool {
-            $project = $this->managedProjects()->lockForUpdate()->find($id);
+            $project = $this->storedManagedProjects()->lockForUpdate()->find($id);
             if (!$project) {
                 return false;
             }
@@ -123,8 +129,8 @@ class ProjectRepository extends BaseRepository
                 ->distinct()->pluck('log_id');
 
             // Foreign keys remove attachments and schedule junctions with their parents.
-            // Subscriber categories and their subscriptions survive; deleting the project
-            // clears only categories.project_id through its ON DELETE SET NULL constraint.
+            // Categories and their subscriptions survive as unassigned records.
+            $project->categories()->update(['project_id' => null]);
             foreach (['ready_sent', 'redirect', 'schedule', 'templates'] as $table) {
                 $this->database->table($table)->where('project_id', $project->id)->delete();
             }
@@ -199,6 +205,12 @@ class ProjectRepository extends BaseRepository
     private function managedProjects(): Builder
     {
         return ProjectAccess::projects('manage');
+    }
+
+    /** Lock the stored project row itself, not the derived list containing the virtual project. */
+    private function storedManagedProjects(): Builder
+    {
+        return Project::query()->whereIn('projects.id', $this->managedProjects()->select('projects.id'));
     }
 
     /**

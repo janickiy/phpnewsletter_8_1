@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('ready_sent', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('project_id')->index();
-            $table->foreign('project_id')->references('id')->on('projects')->restrictOnDelete();
+            // The virtual default project (0) has no row; real projects retain referential integrity.
+            $table->unsignedInteger('project_reference_id')->nullable()->storedAs('nullif(project_id, 0)');
+            $table->foreign('project_reference_id')->references('id')->on('projects')->restrictOnDelete();
 
             $table->unsignedBigInteger('subscriber_id');
             $table->string('email');

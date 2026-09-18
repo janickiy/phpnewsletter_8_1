@@ -34,7 +34,8 @@ var __webpack_exports__ = {};
         strikethrough: 'Barré',
         superscript: 'Exposant',
         subscript: 'Indice',
-        size: 'Taille de police'
+        size: 'Taille de police',
+        sizeunit: 'Unité de taille de police'
       },
       image: {
         image: 'Image',
@@ -42,6 +43,7 @@ var __webpack_exports__ = {};
         resizeFull: 'Taille originale',
         resizeHalf: 'Redimensionner à 50 %',
         resizeQuarter: 'Redimensionner à 25 %',
+        resizeNone: 'Taille originale',
         floatLeft: 'Aligné à gauche',
         floatRight: 'Aligné à droite',
         floatNone: 'Pas d\'alignement',
@@ -63,7 +65,7 @@ var __webpack_exports__ = {};
         videoLink: 'Lien vidéo',
         insert: 'Insérer une vidéo',
         url: 'URL de la vidéo',
-        providers: '(YouTube, Google Drive, Vimeo, Vine, Instagram, DailyMotion or Youku)'
+        providers: '(YouTube, Google Drive, Vimeo, Vine, Instagram, DailyMotion ou Youku)'
       },
       link: {
         link: 'Lien',
@@ -125,7 +127,8 @@ var __webpack_exports__ = {};
         transparent: 'Transparent',
         setTransparent: 'Définir la transparence',
         reset: 'Restaurer',
-        resetToDefault: 'Restaurer la couleur par défaut'
+        resetToDefault: 'Restaurer la couleur par défaut',
+        cpSelect: 'Sélectionner'
       },
       shortcut: {
         shortcuts: 'Raccourcis',
@@ -137,6 +140,7 @@ var __webpack_exports__ = {};
         extraKeys: 'Touches supplémentaires'
       },
       help: {
+        'escape': 'Fermer',
         'insertParagraph': 'Insérer paragraphe',
         'undo': 'Défaire la dernière commande',
         'redo': 'Refaire la dernière commande',
@@ -172,6 +176,9 @@ var __webpack_exports__ = {};
       specialChar: {
         specialChar: 'Caractères spéciaux',
         select: 'Choisir des caractères spéciaux'
+      },
+      output: {
+        noSelection: 'Aucune sélection effectuée !'
       }
     }
   });

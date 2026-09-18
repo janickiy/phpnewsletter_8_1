@@ -2,6 +2,8 @@
 
 namespace App\DTO\Create;
 
+use App\Models\Project;
+
 class TemplatesCreateData
 {
     /**
@@ -11,7 +13,7 @@ class TemplatesCreateData
         public readonly string $name,
         public readonly string $body,
         public readonly int $prior,
-        public readonly int $projectId,
+        public readonly int $projectId = Project::DEFAULT_ID,
     ) {
     }
 

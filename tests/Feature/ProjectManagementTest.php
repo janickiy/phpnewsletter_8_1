@@ -52,15 +52,15 @@ class ProjectManagementTest extends TestCase
         $assigned->members()->attach($manager, ['role' => 'project_admin']);
         $assigned->members()->attach($moderator, ['role' => 'moderator']);
 
-        $this->assertEqualsCanonicalizing([$owned->id, $assigned->id], ProjectAccess::projects('manage', $owner)->pluck('id')->all());
-        $this->assertEquals([$assigned->id], ProjectAccess::projects('manage', $manager)->pluck('id')->all());
-        $this->assertEquals([$assigned->id], ProjectAccess::projects('view', $moderator)->pluck('id')->all());
-        $this->assertCount(0, ProjectAccess::projects('manage', $moderator)->get());
-        $this->assertEqualsCanonicalizing([$owned->id, $assigned->id, $other->id], ProjectAccess::projects('manage', $admin)->pluck('id')->all());
+        $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $owned->id, $assigned->id], ProjectAccess::projects('manage', $owner)->pluck('id')->all());
+        $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $assigned->id], ProjectAccess::projects('manage', $manager)->pluck('id')->all());
+        $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $assigned->id], ProjectAccess::projects('view', $moderator)->pluck('id')->all());
+        $this->assertSame([Project::DEFAULT_ID], ProjectAccess::projects('manage', $moderator)->pluck('id')->all());
+        $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $owned->id, $assigned->id, $other->id], ProjectAccess::projects('manage', $admin)->pluck('id')->all());
 
         $this->actingAs($manager);
-        $this->getJson(route('admin.datatable.projects'))->assertOk()
-            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $assigned->id);
+        $rows = $this->getJson(route('admin.datatable.projects'))->assertOk()->assertJsonCount(2, 'data')->json('data');
+        $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $assigned->id], array_column($rows, 'id'));
     }
 
     public function test_an_unassigned_manager_cannot_view_update_or_delete_another_project(): void

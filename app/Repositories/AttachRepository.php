@@ -29,7 +29,8 @@ class AttachRepository extends BaseRepository
             return false;
         }
 
-        ProjectAccess::authorizeProject((int) $model->template?->project_id, 'manage');
+        abort_unless($model->template, 404);
+        ProjectAccess::authorizeProject((int) $model->template->project_id, 'manage');
         $model->remove();
 
         return true;

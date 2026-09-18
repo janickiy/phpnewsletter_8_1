@@ -34,7 +34,8 @@ var __webpack_exports__ = {};
         strikethrough: '删除线',
         subscript: '下标',
         superscript: '上标',
-        size: '字号'
+        size: '字号',
+        sizeunit: '字号单位'
       },
       image: {
         image: '图片',
@@ -42,6 +43,7 @@ var __webpack_exports__ = {};
         resizeFull: '缩放至 100%',
         resizeHalf: '缩放至 50%',
         resizeQuarter: '缩放至 25%',
+        resizeNone: '原始尺寸',
         floatLeft: '靠左浮动',
         floatRight: '靠右浮动',
         floatNone: '取消浮动',
@@ -125,7 +127,8 @@ var __webpack_exports__ = {};
         transparent: '透明',
         setTransparent: '透明',
         reset: '重置',
-        resetToDefault: '默认'
+        resetToDefault: '默认',
+        cpSelect: '选择'
       },
       shortcut: {
         shortcuts: '快捷键',
@@ -137,6 +140,7 @@ var __webpack_exports__ = {};
         extraKeys: '额外按键'
       },
       help: {
+        'escape': '关闭',
         insertParagraph: '插入段落',
         undo: '撤销',
         redo: '重做',
@@ -172,6 +176,9 @@ var __webpack_exports__ = {};
       specialChar: {
         specialChar: '特殊字符',
         select: '选取特殊字符'
+      },
+      output: {
+        noSelection: '未选择任何内容！'
       }
     }
   });

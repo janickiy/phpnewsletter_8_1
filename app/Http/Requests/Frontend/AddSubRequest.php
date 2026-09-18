@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Frontend;
 
+use App\Models\Project;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 use Illuminate\Contracts\Validation\Validator;
@@ -33,7 +34,7 @@ class AddSubRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_id' => ['required', 'integer', Rule::exists('projects', 'id')->where('status', 1)],
+            'project_id' => ['required', 'integer', Rule::in(Project::query()->includingDefault()->where('status', 1)->pluck('id')->all())],
             'email' => ['required', 'email:rfc', 'max:255', Rule::unique('subscribers', 'email')->where(function (Builder $query): void {
                 $query->whereExists(function (Builder $memberships): void {
                     $memberships->selectRaw('1')

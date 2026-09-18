@@ -14,6 +14,9 @@ class UpdateRequest extends StoreRequest
         }
 
         $project = ProjectAccess::authorizeProject($this->integer('id'), 'manage');
+        if ($project->isDefault()) {
+            return false;
+        }
         $canAssignAdministrators = $this->user()->isAdmin() || $project->owner_id === $this->user()->id;
 
         return ($this->user()->isAdmin() || !$this->exists('owner_id'))

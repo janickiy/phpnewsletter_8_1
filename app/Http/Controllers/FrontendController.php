@@ -93,7 +93,7 @@ class FrontendController extends Controller
         $projects = $subscriberModel->projects();
 
         if ($request->has('project_id')) {
-            $projectId = filter_var($request->query('project_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $projectId = filter_var($request->query('project_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
             abort_if($projectId === false, 404);
             $project = $projects->whereKey($projectId)->where('status', 1)->firstOrFail();
         } else {
@@ -162,7 +162,7 @@ class FrontendController extends Controller
      */
     public function form(Request $request): View
     {
-        $project = Project::query()->where('status', 1)->findOrFail((int) $request->input('project_id'));
+        $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id'));
         return view('frontend.subform', [
             'project' => $project,
             'category' => Category::query()->where('project_id', $project->id)->orderBy('name')->get(),
@@ -218,7 +218,7 @@ class FrontendController extends Controller
      */
     public function getCategories(Request $request): JsonResponse
     {
-        $project = Project::query()->where('status', 1)->findOrFail((int) $request->input('project_id'));
+        $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id'));
         return response()->json([
             'items' => Category::query()
                 ->where('project_id', $project->id)

@@ -102,7 +102,7 @@
                 'columns': [
                     {data: 'name', name: 'name'},
                     {data: 'description', name: 'description', defaultContent: ''},
-                    {data: 'owner.name', name: 'owner.name'},
+                    {data: 'owner.name', name: 'owner.name', defaultContent: ''},
                     {data: 'status', name: 'status'},
                     {data: 'members_count', name: 'members_count', searchable: false},
                     {data: 'actions', name: 'actions', orderable: false, searchable: false}

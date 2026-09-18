@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\Templates\DeleteRequest;
 use App\Http\Requests\Admin\Templates\UpdateRequest;
 use App\Models\Macros;
 use App\Models\Category;
+use App\Models\Project;
 use App\Services\ProjectAccess;
 use App\Repositories\CategoryRepository;
 use App\Repositories\TemplateRepository;
@@ -59,7 +60,9 @@ class TemplatesController extends Controller
         return view('admin.templates.create_edit', [
             'infoAlert' => __('frontend.hint.template_create'),
             'macrosList' => $this->getMacros(),
-            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
+            'projects' => ProjectAccess::projects('manage')
+                ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [Project::DEFAULT_ID])
+                ->orderBy('name')->get(),
             'title' => __('frontend.title.template_create'),
         ]);
     }
@@ -132,7 +135,9 @@ class TemplatesController extends Controller
             'attachment' => $template->attach,
             'infoAlert' => __('frontend.hint.template_edit'),
             'macrosList' => $this->getMacros(),
-            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
+            'projects' => ProjectAccess::projects('manage')
+                ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [Project::DEFAULT_ID])
+                ->orderBy('name')->get(),
             'title' => __('frontend.title.template_edit'),
         ]);
     }

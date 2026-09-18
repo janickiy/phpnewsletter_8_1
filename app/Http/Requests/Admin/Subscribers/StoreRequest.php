@@ -23,7 +23,7 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->projectRules() + [
+        return $this->projectRules(defaultProject: true) + [
             'name' => [
                 'nullable',
                 'string',

@@ -34,7 +34,8 @@ var __webpack_exports__ = {};
         strikethrough: 'فى وسطه خط',
         subscript: 'مخطوطة',
         superscript: 'حرف فوقي',
-        size: 'الحجم'
+        size: 'الحجم',
+        sizeunit: 'وحدة حجم الخط'
       },
       image: {
         image: 'صورة',
@@ -42,6 +43,7 @@ var __webpack_exports__ = {};
         resizeFull: 'الحجم بالكامل',
         resizeHalf: 'تصغير للنصف',
         resizeQuarter: 'تصغير للربع',
+        resizeNone: 'الحجم الأصلي',
         floatLeft: 'تطيير لليسار',
         floatRight: 'تطيير لليمين',
         floatNone: 'ثابته',
@@ -56,14 +58,14 @@ var __webpack_exports__ = {};
         maximumFileSizeError: 'تم تجاوز الحد الأقصى لحجم الملف',
         url: 'رابط الصورة',
         remove: 'حذف الصورة',
-        original: 'Original'
+        original: 'الأصل'
       },
       video: {
         video: 'فيديو',
         videoLink: 'رابط الفيديو',
         insert: 'إدراج الفيديو',
         url: 'رابط الفيديو',
-        providers: '(YouTube, Google Drive, Vimeo, Vine, Instagram, DailyMotion or Youku)'
+        providers: '(YouTube, Google Drive, Vimeo, Vine, Instagram, DailyMotion أو Youku)'
       },
       link: {
         link: 'رابط',
@@ -132,12 +134,13 @@ var __webpack_exports__ = {};
         shortcuts: 'إختصارات',
         close: 'غلق',
         textFormatting: 'تنسيق النص',
-        action: 'Action',
+        action: 'إجراء',
         paragraphFormatting: 'تنسيق الفقرة',
         documentStyle: 'تنسيق المستند',
         extraKeys: 'أزرار إضافية'
       },
       help: {
+        'escape': 'إغلاق',
         'insertParagraph': 'إدراج فقرة',
         'undo': 'تراجع عن آخر أمر',
         'redo': 'إعادة تنفيذ آخر أمر',
@@ -173,6 +176,9 @@ var __webpack_exports__ = {};
       specialChar: {
         specialChar: 'محارف خاصة',
         select: 'اختر المحرف الخاص'
+      },
+      output: {
+        noSelection: 'لم يتم تحديد أي شيء!'
       }
     }
   });

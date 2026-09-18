@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'default_name' => 'Projeto padrão',
+            'subscriber_default_project_hint' => 'Se nenhum projeto for selecionado, o assinante será adicionado ao projeto padrão.',
             'subscriber_unassigned' => 'Sem projeto',
             'subscriber_projects_hint' => 'Você pode selecionar um ou mais projetos. Uma seleção vazia significa que não há vínculo com nenhum projeto.',
             'subscriber_shared_status' => 'O status do assinante é compartilhado entre todos os projetos. O cancelamento da assinatura interrompe os envios de todos os projetos.',
@@ -98,6 +100,8 @@ return [
         'sender_name' => 'Nome do remetente',
         'sender_email' => 'E-mail do remetente',
         'add_schedule' => 'Adicionar agendamento',
+        'schedule_categories_hint' => 'Após selecionar um modelo, serão exibidas apenas as categorias do projeto dele.',
+        'schedule_categories_empty' => 'O projeto do modelo selecionado ainda não tem categorias de assinantes.',
         'enter_login' => 'Inserir login',
         'enter_password' => 'Inserir senha',
         'singin' => 'Entrar',
@@ -300,6 +304,7 @@ return [
         'redirect_index' => 'Estatísticas de cliques',
         'redirect_info' => 'Estatísticas de cliques',
         'schedule_index' => 'Agendamento de envio',
+        'schedule_create' => 'Adicionar agendamento',
         'schedule_edit' => 'Editar agendamento',
         'settings_index' => 'Configurações',
         'smtp_index' => 'Lista SMTP',

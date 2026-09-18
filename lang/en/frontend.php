@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'default_name' => 'Default project',
+            'subscriber_default_project_hint' => 'If no projects are selected, the subscriber will be added to the default project.',
             'subscriber_unassigned' => 'Without a project',
             'subscriber_projects_hint' => 'You can select one or more projects. An empty selection means no project association.',
             'subscriber_shared_status' => 'The subscriber’s status is shared across all projects. Unsubscribing stops mailings from every project.',
@@ -98,6 +100,8 @@ return [
         'sender_name' => 'Sender name',
         'sender_email' => 'Sender Email',
         'add_schedule' => 'Add schedule',
+        'schedule_categories_hint' => 'After you select a template, only categories from its project will remain.',
+        'schedule_categories_empty' => 'The selected template’s project has no subscriber categories yet.',
         'enter_login' => 'Enter login',
         'enter_password' => 'Enter password',
         'singin' => 'singin',
@@ -298,6 +302,7 @@ return [
         'redirect_index' => 'Link click statistics',
         'redirect_info' => 'Link click statistics',
         'schedule_index' => 'Mailing schedule',
+        'schedule_create' => 'Add schedule',
         'schedule_edit' => 'Editing a schedule of mailing',
         'settings_index' => 'Settings',
         'smtp_index' => 'SMTP List',

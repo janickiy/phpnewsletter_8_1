@@ -48,14 +48,18 @@ class SubscriberProjectAccessTest extends TestCase
         $this->assertSame([$this->other->id], $other->projects()->pluck('projects.id')->all());
     }
 
-    public function test_create_rejects_foreign_project_or_category_and_missing_project(): void
+    public function test_create_rejects_foreign_assignments_and_uses_the_default_when_project_is_missing(): void
     {
         $category = Category::query()->create(['project_id' => $this->other->id, 'name' => 'Foreign']);
         $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->other->id], 'email' => 'one@example.test'])->assertSessionHasErrors('project_ids.0');
         $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->own->id], 'email' => 'one@example.test', 'categoryId' => [$category->id]])->assertSessionHasErrors('categoryId.0');
-        $this->post(route('admin.subscribers.store'), ['email' => 'one@example.test'])->assertSessionHasErrors('project_ids');
-        $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->own->id], 'email' => 'one@example.test'])->assertSessionHasNoErrors();
+        $this->post(route('admin.subscribers.store'), ['email' => 'one@example.test'])->assertSessionHasNoErrors()->assertSessionMissing('error');
+        $subscriber = Subscribers::query()->where('email', 'one@example.test')->sole();
+        $this->assertSame([Project::DEFAULT_ID], $subscriber->projects()->pluck('projects.id')->all());
+
+        $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->own->id], 'email' => 'one@example.test'])->assertSessionHasNoErrors()->assertSessionMissing('error');
         $this->assertDatabaseCount('subscribers', 1);
+        $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $this->own->id], $subscriber->projects()->pluck('projects.id')->all());
     }
 
     public function test_bulk_operations_are_atomic_and_delete_all_only_removes_accessible_projects(): void

@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'default_name' => 'المشروع الافتراضي',
+            'subscriber_default_project_hint' => 'إذا لم يتم اختيار أي مشروع، فستتم إضافة المشترك إلى المشروع الافتراضي.',
             'subscriber_unassigned' => 'بدون مشروع',
             'subscriber_projects_hint' => 'يمكن اختيار مشروع واحد أو أكثر. يعني ترك الاختيار فارغًا عدم الارتباط بأي مشروع.',
             'subscriber_shared_status' => 'حالة المشترك مشتركة بين جميع المشاريع. يؤدي إلغاء الاشتراك إلى إيقاف الرسائل من جميع المشاريع.',
@@ -98,6 +100,8 @@ return [
         'sender_name' => 'اسم المرسل',
         'sender_email' => 'بريد المرسل الإلكتروني',
         'add_schedule' => 'إضافة جدول',
+        'schedule_categories_hint' => 'بعد اختيار قالب، ستظهر فقط الفئات التابعة لمشروعه.',
+        'schedule_categories_empty' => 'لا يحتوي مشروع القالب المحدد على فئات للمشتركين بعد.',
         'enter_login' => 'أدخل اسم المستخدم',
         'enter_password' => 'أدخل كلمة المرور',
         'singin' => 'تسجيل الدخول',
@@ -298,6 +302,7 @@ return [
         'redirect_index' => 'إحصائيات النقر على الروابط',
         'redirect_info' => 'إحصائيات النقر على الروابط',
         'schedule_index' => 'جدول الإرسال',
+        'schedule_create' => 'إضافة جدول إرسال',
         'schedule_edit' => 'تحرير جدول الإرسال',
         'settings_index' => 'الإعدادات',
         'smtp_index' => 'قائمة SMTP',

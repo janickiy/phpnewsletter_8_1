@@ -93,7 +93,7 @@ class ScheduleRepository extends BaseRepository
     {
         return $this->model
             ->with('template.project')
-            ->whereHas('project', fn ($query) => $query->where('status', 1))
+            ->whereHas('project', fn ($query) => $query->includingDefault()->where('status', 1))
             ->whereHas('template', fn ($query) => $query->whereColumn('templates.project_id', 'schedule.project_id'))
             ->where('event_start', '<=', Carbon::now()->toDateTimeString())
             ->where('event_end', '>=', Carbon::now()->toDateTimeString())

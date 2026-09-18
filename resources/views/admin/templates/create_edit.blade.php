@@ -73,9 +73,8 @@
                             <div class="mb-3">
                                 <label for="project_id" class="form-label">{{ __('frontend.str.projects.project') }}*</label>
                                 <select name="project_id" id="project_id" class="form-select @error('project_id') is-invalid @enderror" required @disabled(isset($template))>
-                                    <option value="">{{ __('frontend.form.select') }}</option>
                                     @foreach($projects as $project)
-                                        <option value="{{ $project->id }}" @selected((string) old('project_id', $template->project_id ?? '') === (string) $project->id)>{{ $project->name }}</option>
+                                        <option value="{{ $project->id }}" @selected((string) old('project_id', $template->project_id ?? \App\Models\Project::DEFAULT_ID) === (string) $project->id)>{{ $project->name }}</option>
                                     @endforeach
                                 </select>
                                 @if(isset($template))
@@ -220,9 +219,24 @@
 
 @section('js')
 
+    @php
+        $editorLocale = match (app()->getLocale()) {
+            'ru' => 'ru-RU',
+            'es' => 'es-ES',
+            'fr' => 'fr-FR',
+            'de' => 'de-DE',
+            'zh-cn' => 'zh-CN',
+            'pt' => 'pt-PT',
+            'ar' => 'ar-AR',
+            'hi' => 'hi-IN',
+            default => 'en-US',
+        };
+    @endphp
+
     <script src="{{ asset('/plugins/dompurify/purify.min.js') }}"></script>
     <!-- Summernote -->
     <script src="{{ asset('/plugins/summernote/summernote-bs5.min.js') }}"></script>
+    <script src="{{ asset('/plugins/summernote/lang/summernote-' . $editorLocale . '.js') }}"></script>
 
     <!-- CodeMirror -->
     <script src="{{ asset('/plugins/codemirror/codemirror.js') }}"></script>
@@ -251,6 +265,7 @@
 
             // Sanitize before Summernote places stored HTML into the administration page.
             $('#body').val(cleanTemplateHtml($('#body').val())).summernote({
+                lang: @json($editorLocale),
                 modules: {...$.summernote.options.modules, codeview: SafeCodeview, editor: SafeEditor},
                 disableDragAndDrop: true,
                 callbacks: {

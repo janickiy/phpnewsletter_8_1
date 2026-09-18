@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'default_name' => '默认项目',
+            'subscriber_default_project_hint' => '如果未选择任何项目，订阅者将被添加到默认项目。',
             'subscriber_unassigned' => '未关联项目',
             'subscriber_projects_hint' => '可以选择一个或多个项目。留空表示未关联任何项目。',
             'subscriber_shared_status' => '订阅者的状态在所有项目中通用。退订后将停止接收所有项目的邮件。',
@@ -98,6 +100,8 @@ return [
         'sender_name' => '发件人名称',
         'sender_email' => '发件人邮箱',
         'add_schedule' => '添加计划',
+        'schedule_categories_hint' => '选择模板后，将仅显示其所属项目的分类。',
+        'schedule_categories_empty' => '所选模板的项目尚无订阅者分类。',
         'enter_login' => '输入登录名',
         'enter_password' => '输入密码',
         'singin' => '登录',
@@ -329,6 +333,7 @@ return [
         'redirect_index' => '链接点击统计',
         'redirect_info' => '链接点击统计',
         'schedule_index' => '发送计划',
+        'schedule_create' => '添加发送计划',
         'schedule_edit' => '编辑发送计划',
         'settings_index' => '设置',
         'smtp_index' => 'SMTP 列表',

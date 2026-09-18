@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ProjectRepository;
 use App\Repositories\SubscriberRepository;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -156,17 +157,23 @@ class ProjectDeletionTest extends TestCase
         $this->assertDatabaseHas('subscriptions', $data['subscriptions']);
     }
 
-    public function test_the_project_foreign_key_preserves_categories_and_subscriptions_when_the_project_is_deleted(): void
+    public function test_the_project_foreign_key_rejects_raw_deletion_before_categories_are_detached(): void
     {
         $project = $this->project($this->user('admin'));
-        $category = $this->insert('categories', ['project_id' => $project->id, 'name' => 'Retained by the foreign key']);
+        $category = $this->insert('categories', ['project_id' => $project->id, 'name' => 'Protected by the foreign key']);
         $subscriber = $this->subscriberFixture(['email' => 'retained@example.test', 'token' => str_repeat('a', 32)]);
         $subscription = ['subscriber_id' => $subscriber->id, 'category_id' => $category['id']];
         DB::table('subscriptions')->insert($subscription);
 
-        DB::table('projects')->where('id', $project->id)->delete();
+        try {
+            DB::table('projects')->where('id', $project->id)->delete();
+            $this->fail('Project deletion must use the repository to preserve associated categories.');
+        } catch (QueryException $exception) {
+            $this->assertSame('23000', $exception->getCode());
+        }
 
-        $this->assertDatabaseHas('categories', [...$category, 'project_id' => null]);
+        $this->assertModelExists($project);
+        $this->assertDatabaseHas('categories', $category);
         $this->assertDatabaseHas('subscriptions', $subscription);
         $this->assertModelExists($subscriber);
     }

@@ -12,7 +12,8 @@ class AttachmentController extends Controller
     public function download(int $id): StreamedResponse
     {
         $attachment = Attach::query()->with('template')->findOrFail($id);
-        ProjectAccess::authorizeProject((int) $attachment->template?->project_id, 'manage');
+        abort_unless($attachment->template, 404);
+        ProjectAccess::authorizeProject((int) $attachment->template->project_id, 'manage');
         abort_unless($attachment->file_name === basename($attachment->file_name), 404);
 
         $path = Attach::DIRECTORY.'/'.$attachment->file_name;

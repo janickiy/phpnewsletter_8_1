@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('project_id')->nullable()->index();
-            $table->foreign('project_id')->references('id')->on('projects')->nullOnDelete();
+            // The virtual default project (0) has no row; real projects retain referential integrity.
+            $table->unsignedInteger('project_reference_id')->nullable()->storedAs('nullif(project_id, 0)');
+            $table->foreign('project_reference_id')->references('id')->on('projects')->restrictOnDelete();
             $table->string('name');
             $table->timestamps();
         });

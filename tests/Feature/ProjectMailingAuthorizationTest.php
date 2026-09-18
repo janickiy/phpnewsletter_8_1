@@ -38,12 +38,14 @@ class ProjectMailingAuthorizationTest extends TestCase
         $this->actingAs($this->manager);
     }
 
-    public function test_templates_require_a_managed_project_and_reject_foreign_identifiers(): void
+    public function test_templates_use_the_default_or_a_managed_project_and_reject_foreign_identifiers(): void
     {
-        $this->get(route('admin.templates.create'))->assertOk()->assertSee('Accessible project')->assertDontSee('Foreign project');
+        $this->get(route('admin.templates.create'))->assertOk()->assertSee(__('frontend.str.projects.default_name'))->assertSee('Accessible project')->assertDontSee('Foreign project');
         $payload = ['name' => 'New template', 'body' => '<p>Hello</p>', 'prior' => 0];
-        $this->post(route('admin.templates.store'), $payload)->assertSessionHasErrors('project_id');
+        $this->post(route('admin.templates.store'), $payload)->assertSessionHasNoErrors()->assertRedirect(route('admin.templates.index'));
+        $this->assertDatabaseHas('templates', ['name' => 'New template', 'project_id' => Project::DEFAULT_ID]);
         $this->post(route('admin.templates.store'), $payload + ['project_id' => $this->foreignProject->id])->assertSessionHasErrors('project_id');
+        $this->assertDatabaseMissing('templates', ['name' => 'New template', 'project_id' => $this->foreignProject->id]);
         $this->post(route('admin.templates.store'), $payload + ['project_id' => $this->project->id])->assertSessionHasNoErrors()->assertRedirect(route('admin.templates.index'));
         $this->assertDatabaseHas('templates', ['name' => 'New template', 'project_id' => $this->project->id]);
         $this->get(route('admin.templates.show', $this->foreignTemplate->id))->assertNotFound();

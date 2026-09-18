@@ -6,6 +6,7 @@ use App\Helpers\StringHelper;
 use App\Models\Category;
 use App\Models\Logs;
 use App\Models\Macros;
+use App\Models\Project;
 use App\Models\ReadySent;
 use App\Models\Redirect;
 use App\Models\Smtp;
@@ -27,9 +28,15 @@ class DataTableController extends Controller
         return DataTables::of($rows)
             ->editColumn('status', fn ($row) => $row->status ? __('frontend.str.projects.active') : __('frontend.str.projects.inactive'))
             ->addColumn('actions', function ($row) {
+                if ($row->isDefault()) {
+                    return '';
+                }
+
+                $deleteButton = '<button type="button" class="btn btn-sm btn-danger deleteRow" id="'.$row->id.'" title="'.e(__('frontend.str.remove')).'"><i class="fa-solid fa-trash"></i></button>';
+
                 return '<div class="d-flex justify-content-end gap-1 text-nowrap">'
                     .'<a class="btn btn-sm btn-primary" title="'.e(__('frontend.str.edit')).'" href="'.route('admin.projects.edit', ['id' => $row->id]).'"><i class="fa-solid fa-pen-to-square"></i></a>'
-                    .'<button type="button" class="btn btn-sm btn-danger deleteRow" id="'.$row->id.'" title="'.e(__('frontend.str.remove')).'"><i class="fa-solid fa-trash"></i></button></div>';
+                    .$deleteButton.'</div>';
             })
             ->rawColumns(['actions'])
             ->make(true);
@@ -92,7 +99,7 @@ class DataTableController extends Controller
     {
         $rows = Category::query()
             ->selectRaw('categories.id, categories.name, projects.name AS project, count(subscriptions.category_id) AS subcount')
-            ->leftJoin('projects', 'categories.project_id', '=', 'projects.id')
+            ->leftJoinSub(Project::query()->includingDefault()->select('projects.*'), 'projects', 'categories.project_id', '=', 'projects.id')
             ->leftJoin('subscriptions', 'categories.id', '=', 'subscriptions.category_id')
             ->groupBy('categories.id', 'categories.name', 'projects.name');
 

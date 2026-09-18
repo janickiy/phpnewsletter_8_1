@@ -77,13 +77,15 @@
                                             ->map(fn ($value) => (string) $value)
                                             ->all();
                                     @endphp
-                                    <select name="categoryId[]" id="categoryId" multiple class="form-select @error('categoryId') is-invalid @enderror">
+                                    <select name="categoryId[]" id="categoryId" multiple size="4" aria-describedby="schedule-categories-hint schedule-categories-empty" class="form-select @error('categoryId') is-invalid @enderror">
                                         @foreach($category_options as $categoryValue => $categoryLabel)
                                             <option value="{{ $categoryValue }}" data-project="{{ $categoryProjects[$categoryValue] }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>
                                                 {{ $categoryLabel }}
                                             </option>
                                         @endforeach
                                     </select>
+                                    <div id="schedule-categories-hint" class="form-text">{{ __('frontend.str.schedule_categories_hint') }}</div>
+                                    <div id="schedule-categories-empty" class="form-text text-warning-emphasis d-none" role="status">{{ __('frontend.str.schedule_categories_empty') }}</div>
                                     @error('categoryId')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -142,14 +144,19 @@
         $(function () {
 
             const templateProjects = @json($templateProjects);
+            const categorySelect = $('#categoryId');
+            const categoryOptions = categorySelect.find('option').clone();
 
             function filterCategories() {
-                const projectId = String(templateProjects[$('#template_id').val()] || '');
-                $('#categoryId option').each(function () {
-                    const available = projectId !== '' && String($(this).data('project')) === projectId;
-                    $(this).prop('hidden', !available).prop('disabled', !available);
-                    if (!available) $(this).prop('selected', false);
-                });
+                const projectId = String(templateProjects[$('#template_id').val()] ?? '');
+                const selectedIds = categorySelect.val() || [];
+                const availableOptions = categoryOptions.filter(function () {
+                    return projectId === '' || String($(this).data('project')) === projectId;
+                }).clone();
+
+                categorySelect.empty().append(availableOptions).val(selectedIds);
+                $('#schedule-categories-hint').toggleClass('d-none', projectId !== '');
+                $('#schedule-categories-empty').toggleClass('d-none', projectId === '' || availableOptions.length > 0);
             }
 
             $('#template_id').on('change', filterCategories);

@@ -34,7 +34,8 @@ var __webpack_exports__ = {};
         strikethrough: 'Durchgestrichen',
         subscript: 'Tiefgestellt',
         superscript: 'Hochgestellt',
-        size: 'Schriftgröße'
+        size: 'Schriftgröße',
+        sizeunit: 'Einheit der Schriftgröße'
       },
       image: {
         image: 'Bild',
@@ -42,6 +43,7 @@ var __webpack_exports__ = {};
         resizeFull: 'Originalgröße',
         resizeHalf: '1/2 Größe',
         resizeQuarter: '1/4 Größe',
+        resizeNone: 'Originalgröße',
         floatLeft: 'Linksbündig',
         floatRight: 'Rechtsbündig',
         floatNone: 'Kein Textfluss',
@@ -126,7 +128,8 @@ var __webpack_exports__ = {};
         transparent: 'Transparenz',
         setTransparent: 'Transparenz setzen',
         reset: 'Zurücksetzen',
-        resetToDefault: 'Auf Standard zurücksetzen'
+        resetToDefault: 'Auf Standard zurücksetzen',
+        cpSelect: 'Auswählen'
       },
       shortcut: {
         shortcuts: 'Tastenkürzel',
@@ -138,6 +141,7 @@ var __webpack_exports__ = {};
         extraKeys: 'Weitere Tasten'
       },
       help: {
+        'escape': 'Schließen',
         insertParagraph: 'Absatz einfügen',
         undo: 'Letzte Anweisung rückgängig',
         redo: 'Letzte Anweisung wiederholen',
@@ -173,6 +177,9 @@ var __webpack_exports__ = {};
       specialChar: {
         specialChar: 'Sonderzeichen',
         select: 'Zeichen auswählen'
+      },
+      output: {
+        noSelection: 'Nichts ausgewählt!'
       }
     }
   });

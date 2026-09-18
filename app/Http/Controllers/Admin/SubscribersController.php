@@ -9,6 +9,7 @@ use App\Helpers\StringHelper;
 use App\Http\Requests\Admin\Subscribers\EditRequest;
 use App\Http\Requests\Admin\Subscribers\ExportRequest;
 use App\Models\Category;
+use App\Models\Project;
 use App\Models\Subscribers;
 use App\Services\ProjectAccess;
 use Illuminate\Validation\Rule;
@@ -58,7 +59,7 @@ class SubscribersController extends Controller
     public function create(): View
     {
         return view('admin.subscribers.create_edit', [
-            ...$this->projectFormData(),
+            ...$this->projectFormData(defaultProject: true),
             'infoAlert' => __('frontend.hint.subscribers_create'),
             'title' => __('frontend.title.subscribers_create'),
         ]);
@@ -167,7 +168,7 @@ class SubscribersController extends Controller
     public function import(): View
     {
         return view('admin.subscribers.import', [
-            ...$this->projectFormData(),
+            ...$this->projectFormData(defaultProject: true),
             'maxUploadFileSize' => StringHelper::maxUploadFileSize(),
             'infoAlert' => __('frontend.hint.subscribers_import'),
             'title' => __('frontend.title.subscribers_import'),
@@ -313,24 +314,29 @@ class SubscribersController extends Controller
      * @param Subscribers|null $subscriber
      * @return array
      */
-    private function projectFormData(?Subscribers $subscriber = null): array
+    private function projectFormData(?Subscribers $subscriber = null, bool $defaultProject = false): array
     {
-        $projects = ProjectAccess::projects()->orderBy('name')->get();
+        $projects = ProjectAccess::projects()->orderByRaw('projects.id = ? desc', [Project::DEFAULT_ID])->orderBy('name')->get();
         $defaultIds = $subscriber
             ? $subscriber->projects()->whereIn('projects.id', $projects->pluck('id'))->pluck('projects.id')->all()
-            : (array) request('project_ids', request('project_id') ? [request('project_id')] : []);
+            : (array) request('project_ids', request('project_id') !== null ? [request('project_id')] : []);
+        $selectedIds = (array) (session()->hasOldInput() ? old('project_ids', []) : $defaultIds);
+        if ($defaultProject && $selectedIds === []) {
+            $selectedIds = [Project::DEFAULT_ID];
+        }
         $selectedProjectIds = array_values(array_intersect(
-            array_map('intval', (array) (session()->hasOldInput() ? old('project_ids', []) : $defaultIds)),
+            array_map('intval', $selectedIds),
             $projects->pluck('id')->all()
         ));
-        $categories = ProjectAccess::scope(Category::query())->with('project')->orderBy('name')->get();
-        $options = $categories->whereIn('project_id', $selectedProjectIds)
+        $categories = ProjectAccess::scope(Category::query())->whereNotNull('project_id')->with('project')->orderBy('name')->get();
+        $options = $categories->whereInStrict('project_id', $selectedProjectIds)
             ->mapWithKeys(fn ($category) => [$category->id => $category->project->name.' — '.$category->name]);
 
         return [
             'projects' => $projects,
             'selectedProjectIds' => $selectedProjectIds,
-            'projectSelectionRequired' => !$subscriber && !auth()->user()->isAdmin(),
+            'projectSelectionRequired' => !$subscriber && !$defaultProject && !auth()->user()->isAdmin(),
+            'defaultProjectSelection' => $defaultProject,
             'categories' => $categories,
             'options' => $options,
             'category_options' => $options,

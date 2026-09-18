@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Helpers\StringHelper;
+use App\Models\Project;
 use App\Services\ProjectAccess;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -77,7 +78,8 @@ class PagesController extends Controller
      */
     public function subscriptionForm(Request $request): View
     {
-        $projects = ProjectAccess::projects()->where('status', 1)->orderBy('name')->get();
+        $projects = ProjectAccess::projects()->where('status', 1)
+            ->orderByRaw('projects.id = ? DESC', [Project::DEFAULT_ID])->orderBy('name')->get();
         $project = $request->filled('project_id')
             ? ProjectAccess::authorizeProject((int) $request->input('project_id'))
             : $projects->first();

@@ -205,7 +205,7 @@ class AjaxController extends Controller
             'categoryId.*' => ['integer', 'distinct'],
         ]);
         $templates = ProjectAccess::scope(Templates::query(), 'manage')
-            ->whereHas('project', fn ($query) => $query->where('status', true))
+            ->whereHas('project', fn ($query) => $query->includingDefault()->where('status', true))
             ->whereIn('id', $data['templateId'])->get();
         abort_unless($templates->count() === count($data['templateId']), 403);
 

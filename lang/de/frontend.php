@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'default_name' => 'Standardprojekt',
+            'subscriber_default_project_hint' => 'Wenn keine Projekte ausgewählt sind, wird der Abonnent dem Standardprojekt hinzugefügt.',
             'subscriber_unassigned' => 'Ohne Projekt',
             'subscriber_projects_hint' => 'Sie können ein oder mehrere Projekte auswählen. Eine leere Auswahl bedeutet, dass keine Projektzuordnung besteht.',
             'subscriber_shared_status' => 'Der Status des Abonnenten gilt für alle Projekte. Eine Abmeldung beendet den Newsletterversand aus allen Projekten.',
@@ -98,6 +100,8 @@ return [
         'sender_name' => 'Absendername',
         'sender_email' => 'Absender-E-Mail',
         'add_schedule' => 'Zeitplan hinzufügen',
+        'schedule_categories_hint' => 'Nach Auswahl einer Vorlage werden nur die Kategorien ihres Projekts angezeigt.',
+        'schedule_categories_empty' => 'Das Projekt der ausgewählten Vorlage hat noch keine Abonnentenkategorien.',
         'enter_login' => 'Login eingeben',
         'enter_password' => 'Passwort eingeben',
         'singin' => 'Anmelden',
@@ -298,6 +302,7 @@ return [
         'redirect_index' => 'Statistik der Link-Klicks',
         'redirect_info' => 'Statistik der Link-Klicks',
         'schedule_index' => 'Versandplan',
+        'schedule_create' => 'Versandplan hinzufügen',
         'schedule_edit' => 'Versandplan bearbeiten',
         'settings_index' => 'Einstellungen',
         'smtp_index' => 'SMTP-Liste',

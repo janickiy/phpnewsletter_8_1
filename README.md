@@ -85,16 +85,23 @@ their subscription links are preserved, including contacts left without projects
 Categories from a deleted project are marked as unassigned and remain manageable
 by administrators. They are excluded from project mailing selections. Shared mailing logs are
 retained while they contain results from another project.
-Choose zero or more projects when creating, editing or importing subscribers.
-Only administrators can create or view contacts without projects and permanently
-delete contact records. Project administrators and moderators see contacts assigned
+The default project has ID `0` and is available to every admin-panel user within
+their role permissions, without an explicit membership. It is virtual: the
+`projects` table contains only ordinary projects. Its name follows the interface
+language; its status is always active. It has no owner and cannot be edited or
+deleted, including by administrators.
+Choose zero or more projects when creating or importing subscribers. An empty
+selection adds the contact to the default project. Clearing all memberships when
+editing still leaves an unassigned contact. Only administrators can view contacts
+without projects and permanently delete contact records. Project administrators and moderators see contacts assigned
 to their projects; removing a contact removes only their accessible memberships and
 categories. Editing memberships or importing cannot remove links to projects the
 current user cannot access.
 Imports reuse an existing email without overwriting its name or active status.
 Exports combine the selected projects without duplicate contacts; an empty project
-selection exports unassigned contacts for administrators. Templates require one
-project and their project link cannot be changed after creation.
+selection exports unassigned contacts for administrators. Templates use the default
+project when no project is submitted. The default project is selected first in the
+form, and the project link cannot be changed after template creation.
 Generate subscription embed code separately for each project in **Subscription form**.
 Previously embedded forms must be copied again to include the required `project_id`.
 
@@ -214,9 +221,20 @@ settings and the `charsets` table are not part of this baseline.
 Installations from before project support also require a separate schema and data
 migration to associate their existing records with projects.
 
-Existing category tables must also allow `categories.project_id` to be null and
-use `ON DELETE SET NULL` for the project foreign key, so project deletion preserves
+Existing category tables must allow `categories.project_id` to be null. Project
+deletion clears this field in the repository before deleting the project, preserving
 categories and their subscriber links.
+
+For virtual default-project support, `templates`, `categories`, `redirect`,
+`schedule`, `project_subscriber` and `ready_sent` use a stored generated column
+`project_reference_id = NULLIF(project_id, 0)` with a restrictive foreign key to
+`projects.id`. This permits the virtual ID `0` while rejecting missing ordinary
+projects. Replace the former direct project foreign keys with these generated-column
+foreign keys before removing the old `projects.id = 0` row and its redundant
+`project_user` assignments. Preserve every other reference with `project_id = 0`.
+`project_user` continues to reference ordinary projects directly. Take a backup and
+stop the application and scheduler while converting an existing database; the
+consolidated creation migrations do not perform this conversion.
 
 Installations with the former `subscribers.project_id` column also need a data
 conversion before using this version: copy memberships to `project_subscriber`,

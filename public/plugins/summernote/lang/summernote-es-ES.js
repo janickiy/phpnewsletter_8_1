@@ -140,6 +140,7 @@ var __webpack_exports__ = {};
         extraKeys: 'Teclas adicionales'
       },
       help: {
+        'escape': 'Salir',
         insertParagraph: 'Insertar un párrafo',
         undo: 'Deshacer la última acción',
         redo: 'Rehacer la última acción',

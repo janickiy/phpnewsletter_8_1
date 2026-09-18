@@ -14,7 +14,9 @@ return new class extends Migration
             $table->timestamps();
             $table->primary(['project_id', 'subscriber_id']);
             $table->index('subscriber_id');
-            $table->foreign('project_id')->references('id')->on('projects')->cascadeOnDelete();
+            // The virtual default project (0) has no row; real projects retain referential integrity.
+            $table->unsignedInteger('project_reference_id')->nullable()->storedAs('nullif(project_id, 0)');
+            $table->foreign('project_reference_id')->references('id')->on('projects')->restrictOnDelete();
             $table->foreign('subscriber_id')->references('id')->on('subscribers')->cascadeOnDelete();
         });
     }

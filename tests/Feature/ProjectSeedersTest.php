@@ -8,7 +8,6 @@ use App\Models\Subscribers;
 use App\Models\Templates;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
-use Database\Seeders\DefaultProjectSeeder;
 use Database\Seeders\FakeSubscribersSeeder;
 use Database\Seeders\LocalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,21 +18,22 @@ class ProjectSeedersTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_initial_seeds_wait_for_an_owner_and_then_create_one_project_with_categories(): void
+    public function test_initial_seeds_create_default_categories_without_a_project_record_or_owner(): void
     {
         $this->seed(DatabaseSeeder::class);
         $this->assertDatabaseCount('projects', 0);
-        $this->assertDatabaseCount('categories', 0);
-
-        $owner = $this->admin();
-        $this->seed(DatabaseSeeder::class);
-        $this->seed(DatabaseSeeder::class);
-
-        $this->assertDatabaseCount('projects', 1);
         $this->assertDatabaseCount('categories', 3);
-        $project = Project::query()->sole();
-        $this->assertSame($owner->id, $project->owner_id);
-        $this->assertSame(DefaultProjectSeeder::NAME, $project->name);
+
+        $this->admin();
+        $this->seed(DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
+
+        $this->assertDatabaseCount('projects', 0);
+        $this->assertDatabaseCount('categories', 3);
+        $project = Project::defaultProject();
+        $this->assertSame(Project::DEFAULT_ID, $project->id);
+        $this->assertNull($project->owner_id);
+        $this->assertSame(__('frontend.str.projects.default_name'), $project->name);
         $this->assertSame(3, $project->categories()->count());
     }
 
@@ -64,7 +64,9 @@ class ProjectSeedersTest extends TestCase
         $this->assertDatabaseHas('subscriptions', ['category_id' => $category->id, 'subscriber_id' => $subscriber->id]);
         $this->assertDatabaseHas('redirect', ['project_id' => $other->id, 'email' => $subscriber->email]);
 
-        $demo = Project::query()->where('name', DefaultProjectSeeder::NAME)->sole();
+        $demo = Project::defaultProject();
+        $this->assertDatabaseCount('projects', 1);
+        $this->assertDatabaseMissing('projects', ['id' => Project::DEFAULT_ID]);
         $this->assertSame(500, $demo->subscribers()->count());
         $this->assertSame(5, $demo->templates()->count());
         $this->assertSame(5, $demo->schedules()->count());

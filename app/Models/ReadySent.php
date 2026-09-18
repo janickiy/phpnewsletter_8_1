@@ -12,9 +12,14 @@ class ReadySent extends Model
 
     protected $table = 'ready_sent';
 
+    protected $hidden = ['project_reference_id'];
+
     public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        $relation = $this->belongsTo(Project::class);
+        $relation->getQuery()->includingDefault();
+
+        return $relation;
     }
 
     protected $fillable = [

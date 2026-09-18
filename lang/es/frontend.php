@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'default_name' => 'Proyecto predeterminado',
+            'subscriber_default_project_hint' => 'Si no se selecciona ningún proyecto, el suscriptor se añadirá al proyecto predeterminado.',
             'subscriber_unassigned' => 'Sin proyecto',
             'subscriber_projects_hint' => 'Puede seleccionar uno o varios proyectos. Una selección vacía significa que no hay vinculación con ningún proyecto.',
             'subscriber_shared_status' => 'El estado del suscriptor se comparte entre todos los proyectos. Al darse de baja, dejará de recibir correos de todos los proyectos.',
@@ -98,6 +100,8 @@ return [
         'sender_name'  => 'Nombre del remitente',
         'sender_email' => 'Correo electrónico del remitente',
         'add_schedule' => 'Agregar programación',
+        'schedule_categories_hint' => 'Después de seleccionar una plantilla, solo se mostrarán las categorías de su proyecto.',
+        'schedule_categories_empty' => 'El proyecto de la plantilla seleccionada aún no tiene categorías de suscriptores.',
         'enter_login'  => 'Introducir usuario',
         'enter_password' => 'Introducir contraseña',
         'singin' => 'Iniciar sesión',
@@ -298,6 +302,7 @@ return [
         'redirect_index' => 'Estadísticas de clics en enlaces',
         'redirect_info'  => 'Estadísticas de clics en enlaces',
         'schedule_index' => 'Programación de envíos',
+        'schedule_create' => 'Agregar programación de envíos',
         'schedule_edit'  => 'Edición de una programación de envíos',
         'settings_index' => 'Configuración',
         'smtp_index'  => 'Lista SMTP',

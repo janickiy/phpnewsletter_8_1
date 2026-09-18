@@ -32,7 +32,8 @@ class LocalDemoSeeder extends Seeder
         $this->call(SettingsSeeder::class);
 
         DB::transaction(function () {
-            $this->project = DefaultProjectSeeder::forAdministrator($this->seedAdmin());
+            $this->seedAdmin();
+            $this->project = Project::defaultProject();
             $categories = $this->seedCategories();
             $templates = $this->seedTemplates();
             $subscribers = $this->seedSubscribers($categories);

@@ -105,7 +105,7 @@ class ScheduleController extends Controller
             'options' => $this->templateRepository->getOption(),
             ...$this->categoryOptions(),
             'infoAlert' => __('frontend.hint.schedule_create'),
-            'title' => __('frontend.title.schedule_index'),
+            'title' => __('frontend.title.schedule_create'),
         ]);
     }
 

@@ -45,7 +45,7 @@
                             <label for="project_id" class="form-label">{{ __('frontend.str.projects.project') }}{{ !isset($row) || $row->project_id !== null ? '*' : '' }}</label>
                             @if(isset($row))
                                 <input type="hidden" name="project_id" value="{{ $row->project_id }}">
-                                <input id="project_id" class="form-control" value="{{ $projects->firstWhere('id', $row->project_id)?->name ?? __('frontend.str.projects.subscriber_unassigned') }}" readonly>
+                                <input id="project_id" class="form-control" value="{{ $row->project_id === null ? __('frontend.str.projects.subscriber_unassigned') : $projects->firstWhere('id', $row->project_id)?->name }}" readonly>
                             @else
                                 <select name="project_id" id="project_id" class="form-select" required>
                                     <option value="">{{ __('frontend.str.projects.select') }}</option>

@@ -12,7 +12,7 @@ class ProjectAccess
     public static function projects(string $ability = 'view', ?User $user = null): Builder
     {
         $user ??= auth()->user();
-        $query = Project::query();
+        $query = Project::query()->includingDefault();
 
         if (!$user) {
             return $query->whereRaw('1 = 0');
@@ -23,7 +23,8 @@ class ProjectAccess
         }
 
         return $query->where(function (Builder $query) use ($user, $ability): void {
-            $query->where('projects.owner_id', $user->id);
+            $query->where('projects.id', Project::DEFAULT_ID)
+                ->orWhere('projects.owner_id', $user->id);
 
             if ($user->isProjectAdmin() || ($ability === 'view' && $user->isModerator())) {
                 $query->orWhereHas('members', function (Builder $members) use ($user): void {

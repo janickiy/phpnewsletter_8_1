@@ -4,6 +4,7 @@ namespace App\Services;
 
 
 use App\Helpers\StringHelper;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -201,14 +202,13 @@ class SubscriberService
     }
 
     /**
-     * Resolve the projects an import may attach, allowing unassigned contacts for administrators.
+     * Resolve import destinations, using the shared default project when none are selected.
      *
      * @return array<int, int>
      */
     private function authorizedProjectIds(array $projectIds): array
     {
-        $projectIds = array_values(array_unique(array_map('intval', $projectIds)));
-        abort_if($projectIds === [] && !auth()->user()?->isAdmin(), 403);
+        $projectIds = array_values(array_unique(array_map('intval', $projectIds ?: [Project::DEFAULT_ID])));
 
         foreach ($projectIds as $projectId) {
             ProjectAccess::authorizeProject($projectId);

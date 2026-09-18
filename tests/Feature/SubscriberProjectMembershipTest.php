@@ -47,13 +47,13 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->actingAs($this->admin);
     }
 
-    public function test_an_administrator_can_create_subscribers_without_projects_and_with_two_projects(): void
+    public function test_an_administrator_can_create_subscribers_with_the_default_or_two_selected_projects(): void
     {
         $this->post(route('admin.subscribers.store'), [
-            'email' => 'orphan@example.test', 'project_ids' => [],
+            'email' => 'default@example.test', 'project_ids' => [],
         ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('error');
-        $orphan = Subscribers::query()->where('email', 'orphan@example.test')->sole();
-        $this->assertSame(0, $orphan->projects()->count());
+        $defaultSubscriber = Subscribers::query()->where('email', 'default@example.test')->sole();
+        $this->assertSame([Project::DEFAULT_ID], $defaultSubscriber->projects()->pluck('projects.id')->all());
 
         $ownCategory = $this->category($this->own, 'Own category');
         $otherCategory = $this->category($this->other, 'Other category');

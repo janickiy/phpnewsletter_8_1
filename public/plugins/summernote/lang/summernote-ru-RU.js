@@ -34,7 +34,8 @@ var __webpack_exports__ = {};
         strikethrough: 'Зачёркнутый',
         subscript: 'Нижний индекс',
         superscript: 'Верхний индекс',
-        size: 'Размер шрифта'
+        size: 'Размер шрифта',
+        sizeunit: 'Единица размера шрифта'
       },
       image: {
         image: 'Картинка',
@@ -42,6 +43,7 @@ var __webpack_exports__ = {};
         resizeFull: 'Восстановить размер',
         resizeHalf: 'Уменьшить до 50%',
         resizeQuarter: 'Уменьшить до 25%',
+        resizeNone: 'Исходный размер',
         floatLeft: 'Расположить слева',
         floatRight: 'Расположить справа',
         floatNone: 'Расположение по-умолчанию',
@@ -125,7 +127,8 @@ var __webpack_exports__ = {};
         transparent: 'Прозрачный',
         setTransparent: 'Сделать прозрачным',
         reset: 'Сброс',
-        resetToDefault: 'Восстановить умолчания'
+        resetToDefault: 'Восстановить умолчания',
+        cpSelect: 'Выбрать'
       },
       shortcut: {
         shortcuts: 'Сочетания клавиш',
@@ -137,16 +140,17 @@ var __webpack_exports__ = {};
         extraKeys: 'Дополнительные комбинации'
       },
       help: {
+        'escape': 'Закрыть',
         'insertParagraph': 'Новый параграф',
         'undo': 'Отменить последнюю команду',
         'redo': 'Повторить последнюю команду',
-        'tab': 'Tab',
-        'untab': 'Untab',
+        'tab': 'Добавить табуляцию',
+        'untab': 'Убрать табуляцию',
         'bold': 'Установить стиль "Жирный"',
         'italic': 'Установить стиль "Наклонный"',
         'underline': 'Установить стиль "Подчеркнутый"',
         'strikethrough': 'Установить стиль "Зачеркнутый"',
-        'removeFormat': 'Сборсить стили',
+        'removeFormat': 'Сбросить стили',
         'justifyLeft': 'Выровнять по левому краю',
         'justifyCenter': 'Выровнять по центру',
         'justifyRight': 'Выровнять по правому краю',
@@ -170,8 +174,11 @@ var __webpack_exports__ = {};
         redo: 'Повтор'
       },
       specialChar: {
-        specialChar: 'SPECIAL CHARACTERS',
-        select: 'Select Special characters'
+        specialChar: 'Специальные символы',
+        select: 'Выбрать специальные символы'
+      },
+      output: {
+        noSelection: 'Ничего не выбрано!'
       }
     }
   });
