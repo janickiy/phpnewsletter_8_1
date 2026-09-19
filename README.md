@@ -103,7 +103,9 @@ selection exports unassigned contacts for administrators. Templates use the defa
 project when no project is submitted. The default project is selected first in the
 form, and the project link cannot be changed after template creation.
 Generate subscription embed code separately for each project in **Subscription form**.
-Previously embedded forms must be copied again to include the required `project_id`.
+The public form, categories and subscription endpoints use the default project (`0`)
+when `project_id` is omitted. Embed code for the default project loads `/categories`
+without a query parameter. Forms for other projects must pass their explicit `project_id`.
 
 ### Analytics and Reporting
 

@@ -13,6 +13,10 @@ class AddSubRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        if ($this->input('project_id') === null || $this->input('project_id') === '') {
+            $this->merge(['project_id' => Project::DEFAULT_ID]);
+        }
+
         if (is_string($this->input('email'))) {
             $this->merge(['email' => strtolower(trim($this->input('email')))]);
         }

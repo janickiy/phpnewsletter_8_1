@@ -162,7 +162,7 @@ class FrontendController extends Controller
      */
     public function form(Request $request): View
     {
-        $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id'));
+        $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id', Project::DEFAULT_ID));
         return view('frontend.subform', [
             'project' => $project,
             'category' => Category::query()->where('project_id', $project->id)->orderBy('name')->get(),
@@ -218,7 +218,7 @@ class FrontendController extends Controller
      */
     public function getCategories(Request $request): JsonResponse
     {
-        $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id'));
+        $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id', Project::DEFAULT_ID));
         return response()->json([
             'items' => Category::query()
                 ->where('project_id', $project->id)

@@ -1,7 +1,7 @@
 <script>
     $(document).ready(function () {
         $.ajax({
-            url: "{{ route('frontend.categories', ['project_id' => $project?->id]) }}",
+            url: "{{ route('frontend.categories', $project && !$project->isDefault() ? ['project_id' => $project->id] : []) }}",
             method: "get",
             dataType: "json",
             success: function (data) {

@@ -119,16 +119,19 @@ class SubscriberProjectAccessTest extends TestCase
         return [['text', 'none'], ['text', 'zip'], ['excel', 'none'], ['excel', 'zip']];
     }
 
-    public function test_public_subscription_and_category_list_require_an_active_project(): void
+    public function test_public_subscription_defaults_to_zero_and_explicit_projects_must_be_active(): void
     {
         auth()->logout();
         $this->mock(SendMailService::class)->shouldReceive('sendFrontendSubscriberEmails')->once();
         $ownCategory = Category::query()->create(['project_id' => $this->own->id, 'name' => 'Public category']);
         $foreignCategory = Category::query()->create(['project_id' => $this->other->id, 'name' => 'Foreign category']);
         $this->getJson(route('frontend.categories', ['project_id' => $this->own->id]))->assertOk()->assertJsonCount(1, 'items')->assertJsonPath('items.0.id', $ownCategory->id);
-        $this->postJson(route('frontend.addsub'), ['email' => 'public@example.test'])->assertUnprocessable()->assertJsonValidationErrors('project_id', 'errors');
+        $this->postJson(route('frontend.addsub'), ['email' => 'public@example.test'])->assertOk()->assertJsonPath('result', 'success');
+        $subscriber = Subscribers::query()->where('email', 'public@example.test')->sole();
+        $this->assertSame([Project::DEFAULT_ID], $subscriber->projects()->pluck('projects.id')->all());
         $this->postJson(route('frontend.addsub'), ['project_id' => $this->own->id, 'email' => 'public@example.test', 'categoryId' => [$foreignCategory->id]])->assertUnprocessable();
         $this->postJson(route('frontend.addsub'), ['project_id' => $this->own->id, 'email' => 'public@example.test', 'categoryId' => [$ownCategory->id]])->assertOk();
+        $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $this->own->id], $subscriber->projects()->pluck('projects.id')->all());
         $this->own->update(['status' => 0]);
         $this->getJson(route('frontend.categories', ['project_id' => $this->own->id]))->assertNotFound();
         $this->postJson(route('frontend.addsub'), ['project_id' => $this->own->id, 'email' => 'blocked@example.test'])->assertUnprocessable();

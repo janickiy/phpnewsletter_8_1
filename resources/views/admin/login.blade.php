@@ -27,6 +27,16 @@
         .login-box .card-header {
             padding: 1.25rem 1.25rem 1rem;
         }
+
+        .login-remember .form-check-input {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .login-remember .form-check-input,
+        .login-remember .form-check-label {
+            cursor: pointer;
+        }
     </style>
 
 </head>
@@ -64,11 +74,11 @@
                         <p class="text-danger w-100 mb-0 mt-1">{{ $errors->first('password') }}</p>
                     @endif
                 </div>
-                <div class="row">
+                <div class="row align-items-center">
                     <div class="col-8">
-                        <div class="form-check">
+                        <div class="form-check login-remember d-flex align-items-center gap-2 p-0 mb-0">
 
-                            <input type="checkbox" name="remember" class="form-check-input" value="1" id="remember" @checked(old('remember'))>
+                            <input type="checkbox" name="remember" class="form-check-input float-none m-0 flex-shrink-0" value="1" id="remember" @checked(old('remember'))>
 
                             <label for="remember" class="form-check-label">
                                 {{ __('frontend.str.remember_me') }}

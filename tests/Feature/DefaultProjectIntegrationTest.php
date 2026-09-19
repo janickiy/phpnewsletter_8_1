@@ -41,7 +41,7 @@ class DefaultProjectIntegrationTest extends TestCase
     {
         $category = Category::query()->create(['project_id' => 0, 'name' => 'Default readers']);
         $foreignCategory = Category::query()->create(['project_id' => $this->otherProject->id, 'name' => 'Other readers']);
-        $this->mock(SendMailService::class)->shouldReceive('sendFrontendSubscriberEmails')->once();
+        $this->mock(SendMailService::class)->shouldReceive('sendFrontendSubscriberEmails')->twice();
 
         $this->get(route('frontend.form', ['project_id' => 0]))->assertOk()
             ->assertSee('name="project_id" value="0"', false)->assertSee($category->name)->assertDontSee($foreignCategory->name);
@@ -57,7 +57,9 @@ class DefaultProjectIntegrationTest extends TestCase
             'project_id' => 0, 'email' => 'wrong-category@example.test', 'categoryId' => [$foreignCategory->id],
         ])->assertStatus(422)->assertJsonValidationErrors('categoryId.0');
         $this->postJson(route('frontend.addsub'), ['email' => 'missing-project@example.test'])
-            ->assertStatus(422)->assertJsonValidationErrors('project_id');
+            ->assertOk()->assertJsonPath('result', 'success');
+        $defaultSubscriber = Subscribers::query()->where('email', 'missing-project@example.test')->sole();
+        $this->assertSame([Project::DEFAULT_ID], $defaultSubscriber->projects()->pluck('projects.id')->all());
     }
 
     public function test_default_project_tracking_accepts_zero_without_bypassing_membership_checks(): void
