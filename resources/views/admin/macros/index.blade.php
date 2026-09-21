@@ -33,7 +33,7 @@
                             <tr>
                                 <th>{{ __('frontend.str.macros_name') }}</th>
                                 <th>{{ __('frontend.str.macros_type') }}</th>
-                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                <th style="width: 10%">{{ __('frontend.str.action') }}</th>
                             </tr>
                             </thead>
                         </table>
@@ -93,7 +93,7 @@
                 'ajax': {
                     url: '{{ route('admin.datatable.macros') }}'
                 },
-                columnDefs: [{targets: -1, className: 'text-end'}],
+                columnDefs: [{targets: -1, className: 'text-center'}],
                 'columns': [
                     {data: 'name', name: 'name'},
                     {data: 'type', name: 'type', searchable: false},

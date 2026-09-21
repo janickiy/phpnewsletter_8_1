@@ -118,7 +118,7 @@ class AdminLteTablesTest extends TestCase
             $row = collect($response->json('data'))->firstWhere('id', $id);
             $this->assertNotNull($row, $resource);
             $page = $this->parse($row[$actionColumn].($row['checkbox'] ?? ''));
-            $this->assertSame(route('admin.'.$resource.'.edit', ['id' => $id]), $page->evaluate('string(//a[contains(@class,"btn-primary")]/@href)'));
+            $this->assertSame(route('admin.'.$resource.'.edit', ['id' => $id]), $page->evaluate('string(//a[contains(@class,"btn-outline-primary")]/@href)'));
 
             if ($resource !== 'templates') {
                 $this->assertSame(1, $page->query('//button[@type="button"][@id="'.$id.'"][contains(@class,"deleteRow")]')->length, $resource);

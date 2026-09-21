@@ -34,7 +34,7 @@
                                 <th>{{ __('frontend.str.name') }}</th>
                                 <th>{{ __('frontend.str.projects.project') }}</th>
                                 <th>{{ __('frontend.str.subscribers_number') }}</th>
-                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                <th style="width: 10%">{{ __('frontend.str.action') }}</th>
                             </tr>
                             </thead>
                         </table>
@@ -94,7 +94,7 @@
                 'ajax': {
                     url: '{{ route('admin.datatable.category') }}'
                 },
-                columnDefs: [{targets: -1, className: 'text-end'}],
+                columnDefs: [{targets: [2, 3], className: 'text-center'}],
                 'columns': [
                     {data: 'name', name: 'categories.name'},
                     {data: 'project', name: 'projects.name'},

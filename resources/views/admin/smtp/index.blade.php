@@ -49,7 +49,7 @@
                                     <th>{{ __('frontend.str.connection') }}</th>
                                     <th>{{ __('frontend.str.authentication_method') }}</th>
                                     <th>{{ __('frontend.str.status') }}</th>
-                                    <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                    <th style="width: 10%">{{ __('frontend.str.action') }}</th>
                                 </tr>
                                 </thead>
                             </table>
@@ -172,7 +172,7 @@
                 'ajax': {
                     url: '{{ route('admin.datatable.smtp') }}'
                 },
-                columnDefs: [{targets: -1, className: 'text-end'}],
+                columnDefs: [{targets: [4, 5, 6, 7, 8, 9], className: 'text-center'}],
                 'columns': [
                     {data: 'checkbox', name: 'checkbox', orderable: false, searchable: false},
                     {data: 'host', name: 'host'},

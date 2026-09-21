@@ -33,10 +33,10 @@ class DataTableController extends Controller
                     return '';
                 }
 
-                $deleteButton = '<button type="button" class="btn btn-sm btn-danger deleteRow" id="'.$row->id.'" title="'.e(__('frontend.str.remove')).'"><i class="fa-solid fa-trash"></i></button>';
+                $deleteButton = '<button type="button" class="btn btn-sm btn-outline-danger deleteRow" id="'.$row->id.'" title="'.e(__('frontend.str.remove')).'"><i class="fa-solid fa-trash"></i></button>';
 
                 return '<div class="d-flex justify-content-end gap-1 text-nowrap">'
-                    .'<a class="btn btn-sm btn-primary" title="'.e(__('frontend.str.edit')).'" href="'.route('admin.projects.edit', ['id' => $row->id]).'"><i class="fa-solid fa-pen-to-square"></i></a>'
+                    .'<a class="btn btn-sm btn-outline-primary" title="'.e(__('frontend.str.edit')).'" href="'.route('admin.projects.edit', ['id' => $row->id]).'"><i class="fa-solid fa-pen-to-square"></i></a>'
                     .$deleteButton.'</div>';
             })
             ->rawColumns(['actions'])
@@ -62,13 +62,13 @@ class DataTableController extends Controller
             ))
             ->addColumn('action', function ($row) {
                 $showBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-info" href="%s"><span class="fa fa-eye"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-info" href="%s"><span class="fa fa-eye"></span></a>',
                     __('frontend.str.template'),
                     route('admin.templates.show', ['id' => $row->id])
                 );
 
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.templates.edit', ['id' => $row->id])
                 );
@@ -114,18 +114,18 @@ class DataTableController extends Controller
             ->editColumn('project', fn ($row) => $row->project ?? __('frontend.str.projects.subscriber_unassigned'))
             ->addColumn('actions', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.category.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
+                    '<button type="button" title="%s" class="btn btn-sm btn-outline-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     __('frontend.str.remove'),
                     $row->id
                 );
 
-                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
+                return '<div class="d-flex justify-content-center gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->rawColumns(['actions'])
             ->make(true);
@@ -151,23 +151,23 @@ class DataTableController extends Controller
             ->editColumn('activeStatus', fn ($row) => $row->active)
             ->addColumn('action', function ($row) {
                 $showBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-info" href="%s"><span class="fa fa-eye"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-info" href="%s"><span class="fa fa-eye"></span></a>',
                     __('frontend.str.smtp_server'),
                     route('admin.smtp.show', ['id' => $row->id])
                 );
 
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.smtp.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<button type="button" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
+                    '<button type="button" class="btn btn-sm btn-outline-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     $row->id
                 );
 
-                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$showBtn.$editBtn.$deleteBtn.'</div>';
+                return '<div class="d-flex justify-content-center gap-1 text-nowrap">'.$showBtn.$editBtn.$deleteBtn.'</div>';
             })
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
             ->rawColumns(['action', 'checkbox'])
@@ -220,18 +220,18 @@ class DataTableController extends Controller
             ->editColumn('activeStatus', fn ($row) => $row->active)
             ->addColumn('action', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.subscribers.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
+                    '<button type="button" title="%s" class="btn btn-sm btn-outline-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     __('frontend.str.remove'),
                     $row->id
                 );
 
-                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
+                return '<div class="d-flex justify-content-center gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
             ->rawColumns(['action', 'checkbox'])
@@ -250,14 +250,14 @@ class DataTableController extends Controller
         return DataTables::of($rows)
             ->addColumn('action', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.users.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = (int) $row->id !== (int) Auth::id()
                     ? sprintf(
-                        '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
+                        '<button type="button" title="%s" class="btn btn-sm btn-outline-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                         __('frontend.str.remove'),
                         $row->id
                     )
@@ -422,18 +422,18 @@ class DataTableController extends Controller
         return DataTables::of($rows)
             ->addColumn('actions', function ($row) {
                 $editBtn = sprintf(
-                    '<a title="%s" class="btn btn-sm btn-primary" href="%s"><span class="fa fa-edit"></span></a>',
+                    '<a title="%s" class="btn btn-sm btn-outline-primary" href="%s"><span class="fa fa-edit"></span></a>',
                     __('frontend.str.edit'),
                     route('admin.macros.edit', ['id' => $row->id])
                 );
 
                 $deleteBtn = sprintf(
-                    '<button type="button" title="%s" class="btn btn-sm btn-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
+                    '<button type="button" title="%s" class="btn btn-sm btn-outline-danger deleteRow" id="%d"><span class="fa fa-trash"></span></button>',
                     __('frontend.str.remove'),
                     $row->id
                 );
 
-                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
+                return '<div class="d-flex justify-content-center gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->rawColumns(['actions'])
             ->make(true);

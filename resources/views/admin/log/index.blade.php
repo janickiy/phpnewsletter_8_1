@@ -147,6 +147,7 @@
                 ajax: {
                     url: '{{ route('admin.datatable.logs') }}'
                 },
+                columnDefs: [{targets: [1, 2, 3, 4, 5], className: 'text-center'}],
                 columns: [
                     {data: 'event_start', name: 'event_start'},
                     {data: 'count', name: 'count', searchable: false},
@@ -184,6 +185,7 @@
                 ajax: {
                     url: '{{ route('admin.datatable.info_log') }}'
                 },
+                columnDefs: [{targets: [2, 3, 4], className: 'text-center'}],
                 columns: [
                     {data: 'template', name: 'template'},
                     {data: 'email', name: 'email'},

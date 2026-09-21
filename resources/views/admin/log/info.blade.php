@@ -100,6 +100,7 @@
                 ajax: {
                     url: '{{ route('admin.datatable.info_log', ['id' => $id]) }}'
                 },
+                columnDefs: [{targets: [2, 3, 4], className: 'text-center'}],
                 columns: [
                     {data: 'template', name: 'template'},
                     {data: 'email', name: 'email'},
