@@ -35,7 +35,7 @@ class DashboardController extends Controller
             'templates' => ProjectAccess::scope(Templates::query(), 'manage')->count(),
             'subscribers' => ProjectAccess::subscribers(Subscribers::query())->count(),
             'activeSubscribers' => ProjectAccess::subscribers(Subscribers::query())->where('active', 1)->count(),
-            'categories' => ($isAdmin ? Category::query()->count() : 0),
+            'categories' => ($isAdmin ? ProjectAccess::categories(Category::query(), 'manage')->count() : 0),
             'schedule' => ProjectAccess::scope(Schedule::query(), 'manage')->count(),
             'upcomingSchedule' => ProjectAccess::scope(Schedule::query(), 'manage')->where('event_start', '>=', now())->count(),
             'smtp' => $smtpTotal,

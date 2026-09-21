@@ -6,8 +6,10 @@ use App\Helpers\SendEmailHelper;
 use App\Models\{Attach, Category, Logs, Project, ReadySent, Schedule, ScheduleCategory, Subscribers, Subscriptions, Templates, User};
 use App\Repositories\{AttachRepository, ProcessRepository, ReadySentRepository, ScheduleRepository, SubscriberRepository};
 use App\Services\{EmailLinkService, MailingDelayService, SendMailService};
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -180,8 +182,12 @@ class ProjectMailingAuthorizationTest extends TestCase
             try {
                 $this->service($mailer)->{$method}($request);
                 $this->fail('An inactive project must not send mail.');
-            } catch (HttpException $exception) {
-                $this->assertSame(422, $exception->getStatusCode());
+            } catch (ValidationException $exception) {
+                $this->assertSame('sendOut', $method);
+                $this->assertArrayHasKey('categoryId.0', $exception->errors());
+            } catch (ModelNotFoundException $exception) {
+                $this->assertSame('sendTest', $method);
+                $this->assertSame(Project::class, $exception->getModel());
             }
         }
         $this->assertSame([], $mailer->recipients);

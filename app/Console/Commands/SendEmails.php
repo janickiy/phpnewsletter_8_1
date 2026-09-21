@@ -7,6 +7,7 @@ use App\DTO\Create\ReadySentCreateData;
 use App\Helpers\SendEmailHelper;
 use App\Helpers\SettingsHelper;
 use App\Models\Logs;
+use App\Models\Project;
 use App\Models\Subscribers;
 use App\Repositories\ReadySentRepository;
 use App\Repositories\ScheduleRepository;
@@ -84,6 +85,10 @@ class SendEmails extends Command implements Isolatable
             foreach ($subscribers ?? [] as $subscriber) {
                 $this->mailingDelayService->waitBetween($attemptCount);
 
+                if (!Project::query()->includingDefault()->whereKey($row->project_id)->where('status', true)->exists()) {
+                    break;
+                }
+
                 $result = $this->sendToSubscriber($row, $subscriber);
                 $attemptCount++;
 
@@ -147,7 +152,7 @@ class SendEmails extends Command implements Isolatable
      */
     private function sendToSubscriber(object $schedule, object $subscriber): array
     {
-        $sendEmail = new SendEmailHelper();
+        $sendEmail = $this->createSendEmailHelper();
         $sendEmail->body = $schedule->template->body;
         $sendEmail->subject = $schedule->template->name;
         $sendEmail->prior = $schedule->template->prior;
@@ -158,6 +163,11 @@ class SendEmails extends Command implements Isolatable
         $sendEmail->templateId = $schedule->template->id;
 
         return $sendEmail->sendEmail($schedule->template->id);
+    }
+
+    protected function createSendEmailHelper(): SendEmailHelper
+    {
+        return new SendEmailHelper();
     }
 
     /**

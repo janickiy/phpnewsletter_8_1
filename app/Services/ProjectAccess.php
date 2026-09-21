@@ -11,6 +11,21 @@ class ProjectAccess
 {
     public static function projects(string $ability = 'view', ?User $user = null): Builder
     {
+        return self::accessibleProjects($ability, $user)->where('projects.status', true);
+    }
+
+    /** Keep inactive projects available only to administrators managing their settings. */
+    public static function projectsForManagement(?User $user = null): Builder
+    {
+        $user ??= auth()->user();
+
+        return $user?->isAdmin()
+            ? self::accessibleProjects('manage', $user)
+            : self::projects('manage', $user);
+    }
+
+    private static function accessibleProjects(string $ability, ?User $user): Builder
+    {
         $user ??= auth()->user();
         $query = Project::query()->includingDefault();
 
@@ -57,14 +72,33 @@ class ProjectAccess
         if (!$user) {
             return $query->whereRaw('1 = 0');
         }
-        if ($user->isAdmin()) {
-            return $query;
-        }
+        return $query->where(function (Builder|QueryBuilder $query) use ($user): void {
+            $query->whereExists(function (QueryBuilder $membership) use ($user): void {
+                $membership->selectRaw('1')->from('project_subscriber')
+                    ->whereColumn('project_subscriber.subscriber_id', 'subscribers.id')
+                    ->whereIn('project_subscriber.project_id', self::projects('view', $user)->select('projects.id'));
+            });
 
-        return $query->whereExists(function (QueryBuilder $membership) use ($user): void {
-            $membership->selectRaw('1')->from('project_subscriber')
-                ->whereColumn('project_subscriber.subscriber_id', 'subscribers.id')
-                ->whereIn('project_subscriber.project_id', self::projects('view', $user)->select('projects.id'));
+            if ($user->isAdmin()) {
+                $query->orWhereNotExists(function (QueryBuilder $membership): void {
+                    $membership->selectRaw('1')->from('project_subscriber')
+                        ->whereColumn('project_subscriber.subscriber_id', 'subscribers.id');
+                });
+            }
+        });
+    }
+
+    /** Administrators may also manage categories retained after a project was deleted. */
+    public static function categories(Builder|QueryBuilder $query, string $ability = 'view', ?User $user = null): Builder|QueryBuilder
+    {
+        $user ??= auth()->user();
+
+        return $query->where(function (Builder|QueryBuilder $query) use ($ability, $user): void {
+            self::scope($query, $ability, 'categories.project_id', $user);
+
+            if ($user?->isAdmin()) {
+                $query->orWhereNull('categories.project_id');
+            }
         });
     }
 

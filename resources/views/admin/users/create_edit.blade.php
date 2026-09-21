@@ -73,7 +73,7 @@
                                 @if (!isset($row) || $row->id !== Auth::id())
                                     <select name="role" class="form-select" id="role" required aria-describedby="role-description">
                                         @foreach ($options as $value => $label)
-                                            <option value="{{ $value }}" @selected((string) old('role', $row->role ?? 'admin') === (string) $value)>{{ $label }}</option>
+                                            <option value="{{ $value }}" @selected((string) old('role', $row->role ?? \App\Enums\UserRole::Admin->value) === (string) $value)>{{ $label }}</option>
                                         @endforeach
                                     </select>
                                 @else
@@ -86,8 +86,8 @@
                                 <div id="role-description" class="text-body-secondary small mt-2">
                                     <strong>{{ __('frontend.str.projects.roles_note') }}</strong>
                                     <ul class="mb-0 ps-3">
-                                        @foreach ($options as $value => $label)
-                                            <li>{{ __('frontend.str.projects.role_descriptions.' . $value) }}</li>
+                                        @foreach (\App\Enums\UserRole::descriptions() as $description)
+                                            <li>{{ $description }}</li>
                                         @endforeach
                                     </ul>
                                 </div>

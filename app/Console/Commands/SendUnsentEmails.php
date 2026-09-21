@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 
 use App\Helpers\SendEmailHelper;
 use App\Helpers\SettingsHelper;
+use App\Models\Project;
 use App\Models\ReadySent;
 use App\Models\Subscribers;
 use App\Repositories\ScheduleRepository;
@@ -77,6 +78,10 @@ class SendUnsentEmails extends Command implements Isolatable
             foreach ($subscribers ?? [] as $subscriber) {
                 $this->mailingDelayService->waitBetween($attemptCount);
 
+                if (!Project::query()->includingDefault()->whereKey($row->project_id)->where('status', true)->exists()) {
+                    break;
+                }
+
                 $result = $this->sendToSubscriber($row, $subscriber);
                 $attemptCount++;
 
@@ -128,7 +133,7 @@ class SendUnsentEmails extends Command implements Isolatable
      */
     private function sendToSubscriber(object $schedule, object $subscriber): array
     {
-        $sendMail = new SendEmailHelper();
+        $sendMail = $this->createSendEmailHelper();
         $sendMail->body = $schedule->template->body;
         $sendMail->subject = $schedule->template->name;
         $sendMail->prior = $schedule->template->prior;
@@ -139,6 +144,11 @@ class SendUnsentEmails extends Command implements Isolatable
         $sendMail->templateId = $schedule->template->id;
 
         return $sendMail->sendEmail($schedule->template->id);
+    }
+
+    protected function createSendEmailHelper(): SendEmailHelper
+    {
+        return new SendEmailHelper();
     }
 
     /**

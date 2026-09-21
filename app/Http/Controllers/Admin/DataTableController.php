@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserRole;
 use App\Helpers\StringHelper;
 use App\Models\Category;
 use App\Models\Logs;
@@ -72,7 +73,7 @@ class DataTableController extends Controller
                     route('admin.templates.edit', ['id' => $row->id])
                 );
 
-                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$showBtn.$editBtn.'</div>';
+                return '<div class="d-flex justify-content-center gap-1 text-nowrap">'.$showBtn.$editBtn.'</div>';
             })
             ->editColumn('name', function ($row) {
                 $body = preg_replace('/(<.*?>)|(&.*?;)/', '', $row->body);
@@ -81,12 +82,18 @@ class DataTableController extends Controller
                     e(StringHelper::shortText($body ?? '', 500)).
                     '</small>';
             })
-            ->editColumn('prior', fn ($row) => $row->getPrior())
-            ->addColumn('attach', fn ($row) => $row->attach->count() > 0
-                ? __('frontend.str.yes')
-                : __('frontend.str.no'))
+            ->editColumn('prior', fn ($row) => sprintf(
+                '<span class="badge %s">%s</span>',
+                e($row->getPriority()->badgeClass()),
+                e($row->getPrior())
+            ))
+            ->addColumn('attach', fn ($row) => sprintf(
+                '<span class="badge %s">%s</span>',
+                $row->attach->isNotEmpty() ? 'text-bg-success' : 'text-bg-secondary',
+                e($row->attach->isNotEmpty() ? __('frontend.str.yes') : __('frontend.str.no'))
+            ))
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
-            ->rawColumns(['action', 'name', 'checkbox'])
+            ->rawColumns(['action', 'name', 'checkbox', 'prior', 'attach'])
             ->make(true);
     }
 
@@ -97,7 +104,7 @@ class DataTableController extends Controller
      */
     public function getCategory(): JsonResponse
     {
-        $rows = Category::query()
+        $rows = ProjectAccess::categories(Category::query(), 'manage')
             ->selectRaw('categories.id, categories.name, projects.name AS project, count(subscriptions.category_id) AS subcount')
             ->leftJoinSub(Project::query()->includingDefault()->select('projects.*'), 'projects', 'categories.project_id', '=', 'projects.id')
             ->leftJoin('subscriptions', 'categories.id', '=', 'subscriptions.category_id')
@@ -258,9 +265,15 @@ class DataTableController extends Controller
 
                 return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
-            ->editColumn('role', fn ($row) => $row->role_label)
+            ->editColumn('role', function ($row) {
+                $role = UserRole::tryFrom($row->role);
+
+                return $role
+                    ? sprintf('<span class="badge %s">%s</span>', e($role->badgeClass()), e($role->label()))
+                    : e($row->role_label);
+            })
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
-            ->rawColumns(['action'])
+            ->rawColumns(['action', 'role'])
             ->make(true);
     }
 

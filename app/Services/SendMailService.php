@@ -9,6 +9,7 @@ use App\Models\Subscribers;
 use App\Models\Templates;
 use App\Models\Category;
 use App\Models\Logs;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
@@ -158,6 +159,10 @@ class SendMailService
                 }
 
                 $this->mailingDelayService->waitBetween($attemptCount);
+
+                if (!Project::query()->includingDefault()->whereKey($template->project_id)->where('status', true)->exists()) {
+                    break;
+                }
 
                 $sendEmail = $this->createSendEmailHelper();
                 $sendEmail->body = $template->body;

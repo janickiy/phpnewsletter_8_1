@@ -10,6 +10,25 @@
     <link rel="stylesheet" href="{{ asset('vendor/datatables-buttons-bs5/css/buttons.bootstrap5.min.css') }}">
 
     <style>
+        #itemList td.template-meta {
+            font-family: inherit;
+            font-size: inherit;
+            font-style: inherit;
+            font-weight: inherit;
+        }
+
+        .mailing-control-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 3rem;
+            height: 3rem;
+            padding: 0;
+            line-height: 1;
+            vertical-align: middle;
+        }
+
         #divStatus {
             display: inline-block;
             min-height: 20px;
@@ -63,7 +82,7 @@
                                     <th>{{ __('frontend.str.importance') }}</th>
                                     <th>{{ __('frontend.str.attachments') }}</th>
                                     <th>{{ __('frontend.str.date') }}</th>
-                                    <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                    <th style="width: 10%">{{ __('frontend.str.action') }}</th>
                                 </tr>
                                 </thead>
                             </table>
@@ -133,11 +152,11 @@
                         <span style="color: red">{{ __('frontend.str.bad') }}: </span>
                         <span style="color: red" id="unsuccessful">0</span><br><br>
                         <span id="divStatus"></span><br>
-                        <button id="sendout" type="button" class="btn btn-primary rounded-circle btn-lg me-3"
+                        <button id="sendout" type="button" class="btn btn-primary rounded-circle btn-lg mailing-control-button me-3"
                                 title="{{ __('frontend.str.send_out_newsletter') }}"><i
                                 class="fa fa-play"></i></button>
                         <button id="stopsendout" type="button"
-                                class="btn btn-danger rounded-circle btn-lg disabled" disabled="disabled"
+                                class="btn btn-danger rounded-circle btn-lg mailing-control-button disabled" disabled="disabled"
                                 title="{{ __('frontend.str.stop_newsletter') }}">
                             <i class="fa fa-stop"></i>
                         </button>
@@ -293,7 +312,7 @@
                 ajax: {
                     url: '{{ route('admin.datatable.templates') }}'
                 },
-                columnDefs: [{targets: -1, className: 'text-end'}],
+                columnDefs: [{targets: [3, 4, 5, 6, 7], className: 'text-center template-meta'}],
                 columns: [
                     {data: 'checkbox', name: 'checkbox', orderable: false, searchable: false},
                     {data: 'id', name: 'id'},

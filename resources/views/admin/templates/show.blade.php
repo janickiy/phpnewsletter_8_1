@@ -63,15 +63,7 @@
                                 <ul class="list-unstyled row g-2 mb-0">
                                     @foreach($template->attach as $attach)
                                         <li class="col-12 col-md-6 col-xl-4">
-                                            <span class="d-inline-flex align-items-center justify-content-center bg-body-tertiary border rounded p-3">
-                                                <i class="far fa-file"></i>
-                                            </span>
-                                            <div class="d-inline-block align-middle mw-100">
-                                                <a class="d-block text-truncate" href="{{ route('admin.templates.attachment', ['id' => $attach->id]) }}"
-                                                   title="{{ $attach->name }}">
-                                                    <i class="fas fa-paperclip me-1"></i>{{ $attach->name }}
-                                                </a>
-                                            </div>
+                                            @include('admin.templates.partials.attachment', ['attachment' => $attach])
                                         </li>
                                     @endforeach
                                 </ul>

@@ -13,7 +13,7 @@ class UpdateRequest extends StoreRequest
             return false;
         }
 
-        $project = ProjectAccess::authorizeProject($this->integer('id'), 'manage');
+        $project = ProjectAccess::projectsForManagement($this->user())->findOrFail($this->integer('id'));
         if ($project->isDefault()) {
             return false;
         }

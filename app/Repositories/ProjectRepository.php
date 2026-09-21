@@ -204,7 +204,7 @@ class ProjectRepository extends BaseRepository
      */
     private function managedProjects(): Builder
     {
-        return ProjectAccess::projects('manage');
+        return ProjectAccess::projectsForManagement();
     }
 
     /** Lock the stored project row itself, not the derived list containing the virtual project. */

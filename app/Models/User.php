@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use App\Http\Traits\StaticTableName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,9 +13,9 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, StaticTableName;
 
-    public const ROLE_ADMIN = 'admin';
-    public const ROLE_MODERATOR = 'moderator';
-    public const ROLE_PROJECT_ADMIN = 'project_admin';
+    public const ROLE_ADMIN = UserRole::Admin->value;
+    public const ROLE_MODERATOR = UserRole::Moderator->value;
+    public const ROLE_PROJECT_ADMIN = UserRole::ProjectAdmin->value;
     public const ROLE_EDITOR = self::ROLE_PROJECT_ADMIN;
 
     /**
@@ -35,13 +36,12 @@ class User extends Authenticatable
      */
     public function getRoleLabelAttribute(): string
     {
-        $roles = [
-            self::ROLE_ADMIN => __('frontend.str.projects.roles.admin'),
-            self::ROLE_PROJECT_ADMIN => __('frontend.str.projects.roles.project_admin'),
-            self::ROLE_MODERATOR => __('frontend.str.projects.roles.moderator'),
-        ];
+        return UserRole::labelFor($this->role);
+    }
 
-        return $roles[$this->role] ?? $this->role;
+    public function getRoleBadgeClassAttribute(): string
+    {
+        return UserRole::tryFrom($this->role ?? '')?->badgeClass() ?? 'text-bg-secondary';
     }
 
     /**
@@ -49,11 +49,7 @@ class User extends Authenticatable
      */
     public static function getOptions(): array
     {
-        return [
-            self::ROLE_ADMIN => __('frontend.str.projects.roles.admin'),
-            self::ROLE_PROJECT_ADMIN => __('frontend.str.projects.roles.project_admin'),
-            self::ROLE_MODERATOR => __('frontend.str.projects.roles.moderator'),
-        ];
+        return UserRole::options();
     }
 
     /**
@@ -93,7 +89,7 @@ class User extends Authenticatable
 
     public function canManageProjects(): bool
     {
-        return $this->isAdmin() || $this->isProjectAdmin() || $this->ownedProjects()->exists();
+        return $this->isAdmin() || $this->isProjectAdmin() || $this->ownedProjects()->where('status', true)->exists();
     }
 
     /**

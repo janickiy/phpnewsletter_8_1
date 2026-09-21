@@ -5,6 +5,9 @@ namespace App\Repositories;
 use App\DTO\Create\CategoryCreateData;
 use App\DTO\Update\CategoryUpdateData;
 use App\Models\Category;
+use App\Services\ProjectAccess;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class CategoryRepository extends BaseRepository
 {
@@ -25,6 +28,8 @@ class CategoryRepository extends BaseRepository
      */
     public function add(CategoryCreateData $data): Category
     {
+        ProjectAccess::authorizeProject($data->projectId, 'manage');
+
         return $this->create($data->toArray());
     }
 
@@ -37,7 +42,26 @@ class CategoryRepository extends BaseRepository
      */
     public function update(int $id, CategoryUpdateData $data): bool
     {
-        return $this->updateModel($id, $this->mapping($data->toArray()));
+        $category = $this->find($id);
+
+        return $category ? $category->fill($this->mapping($data->toArray()))->save() : false;
+    }
+
+    public function all(): Collection
+    {
+        return $this->managedCategories()->get();
+    }
+
+    public function find(int $id): ?Category
+    {
+        return $this->managedCategories()->find($id);
+    }
+
+    public function delete(int $id): bool
+    {
+        $category = $this->find($id);
+
+        return $category ? (bool) $category->delete() : false;
     }
 
     /**
@@ -47,7 +71,12 @@ class CategoryRepository extends BaseRepository
      */
     public function getOption(): array
     {
-        return $this->model->orderBy('name')->get()->pluck('name', 'id')->toArray();
+        return $this->managedCategories()->orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    private function managedCategories(): Builder
+    {
+        return ProjectAccess::categories($this->model->newQuery(), 'manage');
     }
 
     /**

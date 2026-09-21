@@ -35,7 +35,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table id="itemList" class="table table-striped table-hover align-middle mb-0 cron-job-table">
+                            <table id="itemList" class="table table-borderless table-striped table-hover align-middle mb-0 cron-job-table">
                                 <thead class="table-light">
                                 <tr>
                                     <th scope="col" class="px-3 py-3">Cronjob</th>

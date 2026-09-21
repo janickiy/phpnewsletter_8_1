@@ -4,6 +4,7 @@ namespace App\Models;
 
 
 use App\Http\Traits\StaticTableName;
+use App\Services\AttachmentImagePreview;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +36,11 @@ class Attach extends Model
     public function template(): BelongsTo
     {
         return $this->belongsTo(Templates::class);
+    }
+
+    public function isPreviewableImage(): bool
+    {
+        return app(AttachmentImagePreview::class)->canPreview($this);
     }
 
     /**

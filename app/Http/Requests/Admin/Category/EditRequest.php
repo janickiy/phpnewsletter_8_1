@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Category;
 
 use App\Models\Category;
+use App\Services\ProjectAccess;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Models\User;
@@ -14,7 +15,9 @@ class EditRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->role === User::ROLE_ADMIN;
+        return $this->user()?->role === User::ROLE_ADMIN
+            && ProjectAccess::categories(Category::query(), 'manage', $this->user())
+                ->whereKey($this->integer('id'))->exists();
     }
 
     /**
@@ -24,7 +27,8 @@ class EditRequest extends FormRequest
      */
     public function rules(): array
     {
-        $projectId = Category::query()->find((int) $this->input('id'))?->project_id;
+        $projectId = ProjectAccess::categories(Category::query(), 'manage', $this->user())
+            ->find($this->integer('id'))?->project_id;
 
         return [
             'project_id' => [$projectId === null ? 'nullable' : 'required', 'integer', Rule::in([$projectId])],

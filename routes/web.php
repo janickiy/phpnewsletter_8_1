@@ -51,6 +51,7 @@ Route::get('templates', [TemplatesController::class, 'index'])->name('admin.temp
 
 Route::group(['prefix' => 'template', 'middleware' => 'project-manager'], function () {
     Route::get('attachment/{id}', [AttachmentController::class, 'download'])->name('admin.templates.attachment')->whereNumber('id');
+    Route::get('attachment/{id}/preview', [AttachmentController::class, 'preview'])->name('admin.templates.attachment.preview')->whereNumber('id');
     Route::get('create', [TemplatesController::class, 'create'])->name('admin.templates.create');
     Route::post('store', [TemplatesController::class, 'store'])->name('admin.templates.store');
     Route::get('show/{id}', [TemplatesController::class, 'show'])->name('admin.templates.show')->where('id', '[0-9]+');

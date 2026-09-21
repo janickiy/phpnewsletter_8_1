@@ -54,8 +54,8 @@
                     @endif
 
                     @php
-                        $priorValue = (int) old('prior', $template->prior ?? 0);
-                        $priorValue = in_array($priorValue, [0, 1, 2], true) ? $priorValue : 0;
+                        $priority = \App\Enums\TemplatePriority::tryFrom((int) old('prior', $template->prior ?? \App\Enums\TemplatePriority::Normal->value))
+                            ?? \App\Enums\TemplatePriority::Normal;
                     @endphp
 
                     <div class="card card-outline card-primary">
@@ -122,23 +122,16 @@
                                 </h4>
 
                                 <div role="radiogroup" aria-labelledby="template-priority-title">
-                                    <div class="form-check mb-2">
-                                        <input type="radio" name="prior" value="0" class="form-check-input" id="prior_normal" @checked($priorValue === 0)>
+                                    @foreach (\App\Enums\TemplatePriority::options() as $priorityValue => $priorityLabel)
+                                        @php
+                                            $priorityId = 'prior_'.strtolower(\App\Enums\TemplatePriority::from($priorityValue)->name);
+                                        @endphp
+                                        <div class="form-check {{ $loop->last ? 'mb-0' : 'mb-2' }}">
+                                            <input type="radio" name="prior" value="{{ $priorityValue }}" class="form-check-input" id="{{ $priorityId }}" @checked($priority->value === $priorityValue)>
 
-                                        <label class="form-check-label" for="prior_normal">{{ __('frontend.form.normal') }}</label>
-                                    </div>
-
-                                    <div class="form-check mb-2">
-                                        <input type="radio" name="prior" value="2" class="form-check-input" id="prior_low" @checked($priorValue === 2)>
-
-                                        <label class="form-check-label" for="prior_low">{{ __('frontend.form.low') }}</label>
-                                    </div>
-
-                                    <div class="form-check mb-0">
-                                        <input type="radio" name="prior" value="1" class="form-check-input" id="prior_high" @checked($priorValue === 1)>
-
-                                        <label class="form-check-label" for="prior_high">{{ __('frontend.form.high') }}</label>
-                                    </div>
+                                            <label class="form-check-label" for="{{ $priorityId }}">{{ $priorityLabel }}</label>
+                                        </div>
+                                    @endforeach
 
                                     @if ($errors->has('prior'))
                                         <p class="text-danger">{{ $errors->first('prior') }}</p>
@@ -162,12 +155,11 @@
 
                                 @if(isset($attachment) && $attachment->isNotEmpty())
                                     <div id="existing-attachments" class="mt-3">
-                                        <div class="d-flex flex-wrap gap-2">
+                                        <div class="row g-3">
                                             @foreach($attachment as $a)
-                                                <span id="attach_{{ $a->id }}" class="badge text-bg-light border p-2">
-                                                    {{ $a->file_name }}
-                                                    <a href="#" data-num="{{ $a->id }}" class="remove_attach text-danger ms-1" title="{{ __('frontend.str.remove') }}">X</a>
-                                                </span>
+                                                <div id="attach_{{ $a->id }}" class="col-12 col-md-6 col-xl-4">
+                                                    @include('admin.templates.partials.attachment', ['attachment' => $a, 'removable' => true])
+                                                </div>
                                             @endforeach
                                         </div>
                                     </div>
@@ -288,7 +280,7 @@
             });
 
             function updateAttachmentEmptyState() {
-                const hasAttachments = $('#existing-attachments .badge').length > 0 || $('#attachfile')[0].files.length > 0;
+                const hasAttachments = $('#existing-attachments .template-attachment').length > 0 || $('#attachfile')[0].files.length > 0;
                 $('#attachments-empty').toggleClass('d-none', hasAttachments);
             }
 
@@ -314,7 +306,7 @@
                     if (data.result != null && data.result === true) {
                         $("#attach_" + idAttach).remove();
 
-                        if ($("#existing-attachments .badge").length === 0) {
+                        if ($("#existing-attachments .template-attachment").length === 0) {
                             $("#existing-attachments").remove();
                         }
 

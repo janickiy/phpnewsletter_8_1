@@ -29,7 +29,7 @@
     <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('frontend.str.close') }}"></button>
         <h5 class="fs-6"><i class="icon fa-solid fa-ban"></i> {{ __('frontend.str.error_alert') }}</h5>
-        <ul>
+        <ul class="mb-0">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach

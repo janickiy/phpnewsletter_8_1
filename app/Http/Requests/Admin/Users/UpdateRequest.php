@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Users;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,7 @@ class UpdateRequest extends FormRequest
                 'string',
                 Rule::in($this->integer('id') === $this->user()->id
                     ? [$this->user()->role]
-                    : array_keys(User::getOptions())),
+                    : UserRole::values()),
             ],
             'description' => ['nullable', 'string'],
             'password' => ['nullable', 'string', 'min:6'],

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TemplatePriority;
 use App\Http\Traits\StaticTableName;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -70,14 +71,12 @@ class Templates extends Model
      */
     public function getPrior(): string
     {
-        switch ($this->prior) {
-            case 1:
-                return __('frontend.str.high');
-            case 2:
-                return __('frontend.str.low');
-            default:
-                return __('frontend.str.normal');
-        }
+        return $this->getPriority()->label();
+    }
+
+    public function getPriority(): TemplatePriority
+    {
+        return TemplatePriority::tryFrom((int) $this->prior) ?? TemplatePriority::Normal;
     }
 
     /**

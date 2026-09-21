@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Templates;
 
+use App\Enums\TemplatePriority;
 use App\Models\Templates;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Services\ProjectAccess;
@@ -44,7 +45,7 @@ class UpdateRequest extends FormRequest
             'prior' => [
                 'required',
                 'integer',
-                'in:0,1,2',
+                Rule::in(TemplatePriority::values()),
             ],
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Enums\TemplatePriority;
 use PHPMailer\PHPMailer;
 use App\Models\{Attach, Smtp, CustomHeaders, Templates};
 use Illuminate\Support\Facades\Storage;
@@ -98,13 +99,7 @@ class SendEmailHelper
 
         $m->CharSet = PHPMailer\PHPMailer::CHARSET_UTF8;
 
-        if ($prior == 1) {
-            $m->Priority = 1;
-        } elseif ($prior == 2) {
-            $m->Priority = 5;
-        } else {
-            $m->Priority = 3;
-        }
+        $m->Priority = (TemplatePriority::tryFrom($prior) ?? TemplatePriority::Normal)->mailPriority();
 
         if (SettingsHelper::getInstance()->getValueForKey('HOW_TO_SEND') !== 'smtp') {
             $m->From = SettingsHelper::getInstance()->getValueForKey('EMAIL');

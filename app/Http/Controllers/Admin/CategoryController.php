@@ -8,7 +8,6 @@ use App\DTO\Update\CategoryUpdateData;
 use App\Http\Requests\Admin\Category\EditRequest;
 use App\Http\Requests\Admin\Category\StoreRequest;
 use App\Repositories\CategoryRepository;
-use App\Models\Category;
 use App\Services\ProjectAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -87,9 +86,8 @@ class CategoryController extends Controller
      */
     public function edit(int $id): View
     {
-        // Category management is administrator-only and includes retained categories
-        // whose project has been deleted.
-        $row = Category::query()->findOrFail($id);
+        $row = $this->categoryRepository->find($id);
+        abort_if(!$row, 404);
 
         return view('admin.category.create_edit', [
             'row' => $row,
@@ -136,7 +134,7 @@ class CategoryController extends Controller
      */
     public function destroy(int $id): RedirectResponse
     {
-        Category::query()->findOrFail($id);
+        abort_unless($this->categoryRepository->find($id), 404);
         try {
             $this->categoryRepository->delete($id);
         } catch (\Throwable $e) {
