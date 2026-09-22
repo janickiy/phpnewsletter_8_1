@@ -37,8 +37,8 @@ class SettingsSmtpUserFormsTest extends TestCase
 
         $this->assertSame('Sender "<&>', $xpath->evaluate('string(//input[@name="FROM"]/@value)'));
         $this->assertSame(1, $xpath->query('//input[@name="REQUIRE_SUB_CONFIRMATION"][@checked]')->length);
-        $this->assertSame(1, $xpath->query('//input[@id="CONTENT_TYPE_html"][@checked]')->length);
-        $this->assertSame(1, $xpath->query('//input[@id="HOW_TO_SEND_php"][@checked]')->length);
+        $this->assertSame('html', $xpath->evaluate('string(//select[@name="CONTENT_TYPE"]/option[@selected]/@value)'));
+        $this->assertSame('php', $xpath->evaluate('string(//select[@name="HOW_TO_SEND"]/option[@selected]/@value)'));
         $this->assertSame('"><script id="injected">bad</script>', $xpath->evaluate('string(//input[@name="header_value[]"]/@value)'));
         $this->assertSame(0, $xpath->query('//*[@id="injected"]')->length);
         $this->assertSame(1, $xpath->query('//label[@for="header_value_0"]')->length);
@@ -68,8 +68,8 @@ class SettingsSmtpUserFormsTest extends TestCase
         $this->assertSame('Submitted sender', $xpath->evaluate('string(//input[@name="FROM"]/@value)'));
         $this->assertSame(0, $xpath->query('//input[@name="REQUIRE_SUB_CONFIRMATION"][@checked]')->length);
         $this->assertSame(1, $xpath->query('//input[@name="SHOW_UNSUBSCRIBE_LINK"][@checked]')->length);
-        $this->assertSame(1, $xpath->query('//input[@id="CONTENT_TYPE_plain"][@checked]')->length);
-        $this->assertSame(1, $xpath->query('//input[@id="HOW_TO_SEND_smtp"][@checked]')->length);
+        $this->assertSame('plain', $xpath->evaluate('string(//select[@name="CONTENT_TYPE"]/option[@selected]/@value)'));
+        $this->assertSame('smtp', $xpath->evaluate('string(//select[@name="HOW_TO_SEND"]/option[@selected]/@value)'));
         $this->assertSame('hour', $xpath->evaluate('string(//select[@name="INTERVAL_TYPE"]/option[@selected]/@value)'));
         $this->assertSame('</textarea><script id="injected">bad</script>', $xpath->evaluate('string(//textarea[@name="TEXT_CONFIRMATION"])'));
         $this->assertSame(0, $xpath->query('//*[@id="injected"]')->length);

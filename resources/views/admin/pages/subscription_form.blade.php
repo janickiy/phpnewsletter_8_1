@@ -84,16 +84,6 @@
                         </h3>
                     </div>
                     <div class="card-body">
-                        <form method="GET" class="mb-3">
-                            <label for="subscription-project" class="form-label">{{ __('frontend.str.projects.project') }}</label>
-                            <select name="project_id" id="subscription-project" class="form-select" onchange="this.form.submit()">
-                                @forelse($projects as $option)
-                                    <option value="{{ $option->id }}" @selected($project?->id === $option->id)>{{ $option->name }}</option>
-                                @empty
-                                    <option value="">{{ __('frontend.str.projects.no_projects') }}</option>
-                                @endforelse
-                            </select>
-                        </form>
                         <div class="subscription-form-preview">
                             @include('include.subform')
                         </div>

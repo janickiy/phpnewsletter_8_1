@@ -78,12 +78,11 @@ class PagesController extends Controller
      */
     public function subscriptionForm(Request $request): View
     {
-        $projects = ProjectAccess::projects()->where('status', 1)
-            ->orderByRaw('projects.id = ? DESC', [Project::DEFAULT_ID])->orderBy('name')->get();
-        $project = $request->filled('project_id')
-            ? ProjectAccess::authorizeProject((int) $request->input('project_id'))
-            : $projects->first();
-        abort_if($project && !$project->status, 404);
+        $project = ProjectAccess::authorizeProject(
+            $request->filled('project_id')
+                ? (int) $request->input('project_id')
+                : Project::DEFAULT_ID
+        );
         $subform = view('include.subform', compact('project'))->render();
         $subformJs = view('include.subform_js', compact('project'))->render();
 
@@ -96,7 +95,6 @@ class PagesController extends Controller
             'infoAlert' => __('frontend.hint.subscription_form'),
             'embedCode' => $embedCode,
             'project' => $project,
-            'projects' => $projects,
             'title' => __('frontend.title.subscription_form'),
         ]);
     }

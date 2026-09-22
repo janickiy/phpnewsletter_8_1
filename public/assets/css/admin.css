@@ -139,6 +139,45 @@ a.opislink {
     min-width: 0;
 }
 
+.settings-general,
+.settings-mailing {
+    padding-block: .5rem;
+}
+
+.settings-section + .settings-section {
+    border-top: var(--bs-border-width) solid var(--bs-border-color);
+    margin-top: 1.75rem;
+    padding-top: 1.75rem;
+}
+
+.settings-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.settings-additional-addresses > summary,
+.settings-additional-options > summary {
+    cursor: pointer;
+    width: fit-content;
+}
+
+.settings-field-with-unit {
+    align-items: center;
+    display: flex;
+    gap: .75rem;
+}
+
+.settings-field-with-unit > .form-control {
+    flex: 0 0 8rem;
+    max-width: 45%;
+}
+
+.settings-field-with-unit > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 @media (max-width: 575.98px) {
     .form-actions-footer .btn-back {
         margin-left: 0;

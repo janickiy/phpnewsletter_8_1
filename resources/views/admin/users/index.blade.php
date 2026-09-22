@@ -35,7 +35,7 @@
                                 <th>{{ __('frontend.str.description') }}</th>
                                 <th>{{ __('frontend.str.role') }}</th>
                                 <th>{{ __('frontend.str.added') }}</th>
-                                <th class="text-end" style="width: 10%">{{ __('frontend.str.action') }}</th>
+                                <th style="width: 10%">{{ __('frontend.str.action') }}</th>
                             </tr>
                             </thead>
                         </table>
@@ -95,7 +95,7 @@
                 'ajax': {
                     url: '{{ route('admin.datatable.users') }}'
                 },
-                columnDefs: [{targets: -1, className: 'text-end'}],
+                columnDefs: [{targets: [3, 4, 5], className: 'text-center'}],
                 'columns': [
                     {data: 'login', name: 'login'},
                     {data: 'name', name: 'name'},

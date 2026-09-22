@@ -115,6 +115,7 @@
                 ajax: {
                     url: '{{ route('admin.datatable.redirect') }}'
                 },
+                columnDefs: [{targets: [1, 2], className: 'text-center'}],
                 columns: [
                     {data: 'url', name: 'url'},
                     {data: 'count', name: 'count', searchable: false},

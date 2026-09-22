@@ -136,7 +136,8 @@ class DefaultProjectIntegrationTest extends TestCase
         $this->otherProject->members()->attach($moderator, ['role' => User::ROLE_MODERATOR]);
         $page = $this->actingAs($moderator)->get(route('admin.pages.subscription_form'))->assertOk();
         $this->assertSame(0, $page->viewData('project')->id);
-        $this->assertSame(0, $page->viewData('projects')->first()->id);
+        $page->assertDontSee('id="subscription-project"', false)
+            ->assertSee('<input type="hidden" name="project_id" value="0">', false);
 
         $orphan = Category::query()->create(['project_id' => null, 'name' => 'Category without a project']);
         $page = $this->actingAs($this->administrator)->get(route('admin.category.edit', $orphan->id))->assertOk();

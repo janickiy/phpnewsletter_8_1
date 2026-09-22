@@ -263,7 +263,7 @@ class DataTableController extends Controller
                     )
                     : '';
 
-                return '<div class="d-flex justify-content-end gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
+                return '<div class="d-flex justify-content-center gap-1 text-nowrap">'.$editBtn.$deleteBtn.'</div>';
             })
             ->editColumn('role', function ($row) {
                 $role = UserRole::tryFrom($row->role);

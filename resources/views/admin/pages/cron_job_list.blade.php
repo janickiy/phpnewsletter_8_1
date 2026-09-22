@@ -6,17 +6,18 @@
     <style>
         .cron-job-table {
             min-width: 36rem;
+            table-layout: fixed;
+        }
+
+        #itemList.cron-job-table > :not(caption) > tr > * + * {
+            border-inline-start: 0;
         }
 
         .cron-job-table code {
-            display: block;
-            padding: .75rem;
-            border: 1px solid var(--bs-border-color);
-            border-radius: var(--bs-border-radius);
-            background: var(--bs-tertiary-bg);
-            color: var(--bs-body-color);
+            font: inherit;
+            color: inherit;
             overflow-wrap: anywhere;
-            white-space: pre-wrap;
+            white-space: normal;
         }
     </style>
 @endsection
@@ -35,18 +36,18 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table id="itemList" class="table table-borderless table-striped table-hover align-middle mb-0 cron-job-table">
-                                <thead class="table-light">
+                            <table id="itemList" class="table table-striped table-hover align-middle mb-0 cron-job-table">
+                                <thead>
                                 <tr>
-                                    <th scope="col" class="px-3 py-3">Cronjob</th>
-                                    <th scope="col" class="px-3 py-3">{{ __('frontend.str.description') }}</th>
+                                    <th scope="col" class="px-3 py-2">Cronjob</th>
+                                    <th scope="col" class="px-3 py-2">{{ __('frontend.str.description') }}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 @foreach($cronJob as $job)
                                     <tr>
-                                        <td class="px-3 py-3"><code>{{ $job['cron'] }}</code></td>
-                                        <td class="px-3 py-3">{{ $job['description'] }}</td>
+                                        <td class="px-3 py-2"><code>{{ $job['cron'] }}</code></td>
+                                        <td class="px-3 py-2">{{ $job['description'] }}</td>
                                     </tr>
                                 @endforeach
                                 </tbody>
