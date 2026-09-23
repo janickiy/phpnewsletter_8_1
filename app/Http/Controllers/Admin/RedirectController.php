@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Services\DownloadService;
 use App\Services\ProjectAccess;
+use App\Services\RedirectReportFilter;
 use App\Models\Redirect;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -43,7 +44,7 @@ class RedirectController  extends Controller
     {
         abort_unless(auth()->user()->canManageProjects(), 403);
         try {
-            ProjectAccess::scope(Redirect::query(), 'manage')->delete();
+            ProjectAccess::redirects(Redirect::query(), 'manage')->delete();
 
             return response()->json([
                 'success' => true,
@@ -67,7 +68,7 @@ class RedirectController  extends Controller
      */
     public function download(string $url): StreamedResponse
     {
-        return $this->downloadService->redirect($url);
+        return $this->downloadService->redirect($url, request()->query('newsletter'));
     }
 
     /**
@@ -81,9 +82,16 @@ class RedirectController  extends Controller
         $normalized = strtr($url, '-_', '+/');
         $normalized .= str_repeat('=', (4 - strlen($normalized) % 4) % 4);
         $decodedUrl = base64_decode($normalized, true);
-        abort_unless($decodedUrl !== false && ProjectAccess::scope(Redirect::query())->where('url', $decodedUrl)->exists(), 404);
+        abort_unless($decodedUrl !== false, 404);
+        $newsletter = request()->query('newsletter');
+        $rows = RedirectReportFilter::apply(
+            ProjectAccess::redirects(Redirect::query())->where('url', $decodedUrl),
+            $newsletter
+        );
+        abort_unless($rows->exists(), 404);
         return view('admin.redirect.info', [
             'url' => $url,
+            'newsletter' => $newsletter,
             'infoAlert' => __('frontend.hint.redirectlog_info'),
             'title' => __('frontend.title.redirect_info'),
         ]);

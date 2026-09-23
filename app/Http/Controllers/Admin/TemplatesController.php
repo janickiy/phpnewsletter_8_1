@@ -44,7 +44,7 @@ class TemplatesController extends Controller
     public function index(): View
     {
         return view('admin.templates.index', [
-            'categoryOptions' => ProjectAccess::scope(Category::query(), 'manage')->with('project')->orderBy('name')->get()->mapWithKeys(fn ($category) => [$category->id => $category->project->name . ' — ' . $category->name])->all(),
+            'categoryOptions' => Category::query()->orderBy('name')->pluck('name', 'id')->all(),
             'infoAlert' => __('frontend.hint.template_index'),
             'title' => __('frontend.title.template_index'),
         ]);

@@ -43,7 +43,7 @@ class AdminLteFormLayoutTest extends TestCase
         $this->assertSame(1, $page->query('//*[@role="tabpanel"][contains(concat(" ", normalize-space(@class), " "), " active ")]')->length);
     }
 
-    public function test_upload_and_radio_controls_keep_native_labels_and_submission_values(): void
+    public function test_upload_and_export_controls_keep_native_labels_and_submission_values(): void
     {
         $response = $this->get(route('admin.subscribers.import'))->assertOk();
         $response->assertDontSee('bs-custom-file-input', false);
@@ -55,12 +55,13 @@ class AdminLteFormLayoutTest extends TestCase
         $page = $this->page(route('admin.subscribers.export'), [
             '_old_input' => ['export_type' => 'excel', 'compress' => 'zip'],
         ]);
-        $radios = $page->query('//input[@type="radio"]');
-        $this->assertSame(4, $radios->length);
+        $this->assertSame(2, $page->query('//input[@type="radio"]')->length);
+        $controls = $page->query('//input[@type="radio" and @name="export_type"] | //input[@type="checkbox" and @name="compress"]');
+        $this->assertSame(3, $controls->length);
 
-        foreach ($radios as $radio) {
-            $this->assertSame('form-check-input', $radio->getAttribute('class'));
-            $this->assertSame(1, $page->query('//label[@for="'.$radio->getAttribute('id').'"]')->length);
+        foreach ($controls as $control) {
+            $this->assertContains('form-check-input', explode(' ', $control->getAttribute('class')));
+            $this->assertSame(1, $page->query('//label[@for="'.$control->getAttribute('id').'"]')->length);
         }
 
         $this->assertSame('excel', $page->evaluate('string(//input[@name="export_type"][@checked]/@value)'));

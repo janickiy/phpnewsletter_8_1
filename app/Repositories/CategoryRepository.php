@@ -28,7 +28,7 @@ class CategoryRepository extends BaseRepository
      */
     public function add(CategoryCreateData $data): Category
     {
-        ProjectAccess::authorizeProject($data->projectId, 'manage');
+        abort_unless(auth()->user()?->isAdmin(), 403);
 
         return $this->create($data->toArray());
     }
@@ -42,6 +42,8 @@ class CategoryRepository extends BaseRepository
      */
     public function update(int $id, CategoryUpdateData $data): bool
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
         $category = $this->find($id);
 
         return $category ? $category->fill($this->mapping($data->toArray()))->save() : false;
@@ -59,6 +61,8 @@ class CategoryRepository extends BaseRepository
 
     public function delete(int $id): bool
     {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
         $category = $this->find($id);
 
         return $category ? (bool) $category->delete() : false;

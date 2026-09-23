@@ -24,6 +24,14 @@ class SendEmails extends Command implements Isolatable
 
     protected $description = 'Send emails to subscribers';
 
+    protected $isolated = true;
+
+    /** Match the scheduler's overlap window for long mailing batches. */
+    public function isolationLockExpiresAt(): \DateInterval
+    {
+        return new \DateInterval('P1D');
+    }
+
     /**
      * Initialize the scheduled-mail command with its persistence and delay dependencies.
      */

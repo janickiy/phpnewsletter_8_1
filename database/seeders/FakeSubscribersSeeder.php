@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Project;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -16,8 +17,8 @@ class FakeSubscribersSeeder extends Seeder
      */
     public function run(): void
     {
-        $projectId = DB::table('categories')->orderBy('project_id')->value('project_id');
-        $categoryIds = DB::table('categories')->where('project_id', $projectId)->pluck('id')->all();
+        $projectId = Project::DEFAULT_ID;
+        $categoryIds = DB::table('categories')->pluck('id')->all();
 
         if (empty($categoryIds)) {
             $this->command?->warn('Категории не найдены. Сначала заполните таблицу categories.');

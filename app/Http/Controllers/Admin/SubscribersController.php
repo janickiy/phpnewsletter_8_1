@@ -328,9 +328,8 @@ class SubscribersController extends Controller
             array_map('intval', $selectedIds),
             $projects->pluck('id')->all()
         ));
-        $categories = ProjectAccess::scope(Category::query())->whereNotNull('project_id')->with('project')->orderBy('name')->get();
-        $options = $categories->whereInStrict('project_id', $selectedProjectIds)
-            ->mapWithKeys(fn ($category) => [$category->id => $category->project->name.' — '.$category->name]);
+        $categories = Category::query()->orderBy('name')->get();
+        $options = $categories->pluck('name', 'id');
 
         return [
             'projects' => $projects,

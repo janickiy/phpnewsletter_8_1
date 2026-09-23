@@ -42,7 +42,7 @@ class LocalDemoSeeder extends Seeder
             $this->seedSmtpServers();
             $this->configureLocalMailDelivery();
             $this->seedSchedulesAndDeliveryLog($templates, $subscribers, $categories);
-            $this->seedRedirects($subscribers);
+            $this->seedRedirects($subscribers, $templates);
         });
 
         $this->command?->info(sprintf(
@@ -70,64 +70,16 @@ class LocalDemoSeeder extends Seeder
      */
     private function seedCategories()
     {
-        $categories = [
-            [
-                'name' => 'Category 1',
-                'legacy_names' => ['Категория 1', 'Categoría 1', 'Catégorie 1', 'Kategorie 1', '分类 1', 'Categoria 1', 'الفئة 1', 'श्रेणी 1'],
-            ],
-            [
-                'name' => 'Category 2',
-                'legacy_names' => ['Категория 2', 'Categoría 2', 'Catégorie 2', 'Kategorie 2', '分类 2', 'Categoria 2', 'الفئة 2', 'श्रेणी 2'],
-            ],
-            [
-                'name' => 'Category 3',
-                'legacy_names' => ['Категория 3', 'Categoría 3', 'Catégorie 3', 'Kategorie 3', '分类 3', 'Categoria 3', 'الفئة 3', 'श्रेणी 3'],
-            ],
-            ['name' => 'Product Updates', 'legacy_names' => ['Новости продукта']],
-            ['name' => 'Promotions', 'legacy_names' => ['Промо-акции']],
-            ['name' => 'Blog Digest', 'legacy_names' => ['Дайджест блога']],
-            ['name' => 'Events', 'legacy_names' => ['События']],
-            ['name' => 'VIP Customers', 'legacy_names' => ['VIP клиенты']],
-            ['name' => 'New Users', 'legacy_names' => ['Новые пользователи']],
+        $names = [
+            'Category 1', 'Category 2', 'Category 3', 'Product Updates', 'Promotions',
+            'Blog Digest', 'Events', 'VIP Customers', 'New Users',
         ];
 
-        foreach ($categories as $category) {
-            $this->syncDemoCategory($category['name'], $category['legacy_names']);
+        foreach ($names as $name) {
+            Category::query()->firstOrCreate(['name' => $name]);
         }
 
-        $names = array_column($categories, 'name');
-
-        return Category::query()->where('project_id', $this->project->id)->whereIn('name', $names)->orderBy('id')->get();
-    }
-
-    private function syncDemoCategory(string $name, array $legacyNames): Category
-    {
-        $names = array_values(array_unique(array_merge([$name], $legacyNames)));
-        $existing = Category::query()->where('project_id', $this->project->id)->whereIn('name', $names)->orderBy('id')->get();
-        $target = $existing->firstWhere('name', $name) ?? $existing->first();
-
-        if (!$target) {
-            return Category::query()->create(['project_id' => $this->project->id, 'name' => $name]);
-        }
-
-        $target->forceFill(['name' => $name])->save();
-
-        foreach ($existing as $category) {
-            if ($category->id === $target->id) {
-                continue;
-            }
-
-            DB::table('subscriptions')
-                ->where('category_id', $category->id)
-                ->update(['category_id' => $target->id]);
-            DB::table('schedule_category')
-                ->where('category_id', $category->id)
-                ->update(['category_id' => $target->id]);
-
-            $category->delete();
-        }
-
-        return $target->refresh();
+        return Category::query()->whereIn('name', $names)->orderBy('id')->get();
     }
 
     /**
@@ -260,7 +212,7 @@ class LocalDemoSeeder extends Seeder
 
         DB::table('subscriptions')
             ->whereIn('subscriber_id', $subscribers->pluck('id'))
-            ->whereIn('category_id', Category::query()->where('project_id', $this->project->id)->select('id'))
+            ->whereIn('category_id', $categories->pluck('id'))
             ->delete();
 
         $subscriptions = [];
@@ -442,8 +394,9 @@ class LocalDemoSeeder extends Seeder
 
     /**
      * @param \Illuminate\Support\Collection<int, Subscribers> $subscribers
+     * @param \Illuminate\Support\Collection<int, Templates> $templates
      */
-    private function seedRedirects($subscribers): void
+    private function seedRedirects($subscribers, $templates): void
     {
         $urls = [
             'https://example.test/start',
@@ -453,14 +406,16 @@ class LocalDemoSeeder extends Seeder
             'https://example.test/promo/summer',
         ];
 
-        DB::table('redirect')->where('project_id', $this->project->id)->whereIn('url', $urls)->delete();
+        DB::table('redirect')->whereIn('template_id', $templates->pluck('id'))->whereIn('url', $urls)->delete();
 
         $rows = [];
         $now = now();
 
         foreach ($subscribers->take(70)->values() as $index => $subscriber) {
+            $template = $templates->values()[$index % $templates->count()];
             $rows[] = [
-                'project_id' => $this->project->id,
+                'template_id' => $template->id,
+                'template' => $template->name,
                 'url' => $urls[$index % count($urls)],
                 'email' => $subscriber->email,
                 'created_at' => $now->copy()->subHours(random_int(1, 160)),

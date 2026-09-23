@@ -10,107 +10,71 @@
 @endsection
 
 @section('css')
-
-
+    <style>
+        .subscriber-export [hidden] { display: none !important; }
+        .subscriber-export fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+        .subscriber-export .form-label { margin-bottom: .75rem; font-weight: 600; }
+        .subscriber-export .export-audience > .mb-3 { margin-bottom: 0 !important; }
+        .subscriber-export .export-format:has(input:checked) { background: rgba(var(--bs-primary-rgb), .08); }
+        .subscriber-export .form-check-input { float: none; flex-shrink: 0; margin: 0; }
+        .subscriber-export .export-format { display: flex; align-items: center; gap: .625rem; min-height: 44px; padding: .5rem .875rem; border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius); cursor: pointer; }
+        .subscriber-export .export-format:has(input:checked) { border-color: var(--bs-primary); }
+        .subscriber-export .export-zip { display: flex; align-items: center; gap: .625rem; min-height: 44px; cursor: pointer; }
+        .subscriber-export .card-footer .btn { min-height: 40px; }
+    </style>
 @endsection
 
 @section('content')
-
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-
-                <!-- general form elements -->
-                <div class="card card-outline card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fa-solid fa-user-group me-2" aria-hidden="true"></i>{{ $title }}</h3>
-                    </div>
-
-                    <!-- form start -->
-                    <form action="{{ route('admin.subscribers.export_subscribers') }}" method="POST">
-                    @csrf
-
-                    <div class="card-body">
-
-                        <p>*-{{ __('frontend.form.required_fields') }}</p>
-
-                        @include('admin.subscribers.project_field')
-
-                        <fieldset class="mb-3">
-                            <legend class="fs-6 form-label">{{ __('frontend.form.format') }}</legend>
-
-                            <div class="form-check form-check-inline">
-                                <input type="radio" class="form-check-input" name="export_type" id="export_type" value="text" @checked(old('export_type', 'text') === 'text')>
-                                <label class="form-check-label" for="export_type">{{ __('frontend.form.text') }}</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input type="radio" class="form-check-input" name="export_type" id="export_type_excel" value="excel" @checked(old('export_type', 'text') === 'excel')>
-                                <label class="form-check-label" for="export_type_excel">MS Excel</label>
-                            </div>
-
-                            @if ($errors->has('export_type'))
-                                <p class="text-danger">{{ $errors->first('export_type') }}</p>
-                            @endif
-                        </fieldset>
-
-                        <fieldset class="mb-3">
-                            <legend class="fs-6 form-label">{{ __('frontend.form.compress') }}</legend>
-
-                            <div class="form-check form-check-inline">
-                                <input type="radio" class="form-check-input" name="compress" id="compress" value="none" @checked(old('compress', 'none') === 'none')>
-                                <label class="form-check-label" for="compress">{{ __('frontend.str.no') }}</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input type="radio" class="form-check-input" name="compress" id="compress_zip" value="zip" @checked(old('compress', 'none') === 'zip')>
-                                <label class="form-check-label" for="compress_zip">zip</label>
-                            </div>
-                        </fieldset>
-
-                        <div class="mb-3">
-
-                            <label for="categoryId" class="form-label">{{ __('frontend.form.subscribers_category') }}</label>
-
-                            @php
-                                $selectedCategoryIds = array_map('strval', (array) old('categoryId', []));
-                            @endphp
-                            <select name="categoryId[]" id="categoryId" multiple class="form-select">
-                                @foreach($options as $categoryValue => $categoryLabel)
-                                    <option value="{{ $categoryValue }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>{{ $categoryLabel }}</option>
-                                @endforeach
-                            </select>
-
-                            @if ($errors->has('categoryId') || $errors->has('categoryId.*'))
-                                <p class="text-danger">{{ $errors->first('categoryId') ?: $errors->first('categoryId.*') }}</p>
-                            @endif
-
-                        </div>
-
-                    </div>
-                    <!-- /.card-body -->
-
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
-                            {{ __('frontend.form.send') }}
-                        </button>
-                        <a class="btn btn-outline-secondary float-sm-end" href="{{ route('admin.subscribers.index') }}">
-                            <i class="fa-solid fa-arrow-left me-1"></i>
-                            {{ __('frontend.form.back') }}
-                        </a>
-                    </div>
-
-                </form>
-
-                </div>
-
+        <div class="card card-outline card-primary subscriber-export" id="subscriber-export">
+            <div class="card-header px-3 px-sm-4 py-3">
+                <h3 class="card-title"><i class="fa-solid fa-user-group me-2" aria-hidden="true"></i>{{ __('frontend.str.export_subscribers') }}</h3>
             </div>
-            <!-- /.card -->
+            <form action="{{ route('admin.subscribers.export_subscribers') }}" method="POST">
+                @csrf
+                <div class="card-body p-3 p-sm-4">
+                    <div class="row g-4">
+                        <div class="col-md-6 export-audience">
+                            @include('admin.subscribers.project_field')
+                        </div>
+                        <div class="col-md-6 export-audience">
+                            @include('admin.subscribers.category_field')
+                            <p class="form-text mb-0 mt-2">{{ __('frontend.str.export_categories_hint') }}</p>
+                        </div>
+                    </div>
+
+                    <section class="border-top mt-4 pt-3" aria-labelledby="export-file-heading">
+                        <h4 id="export-file-heading" class="fs-6 fw-semibold mb-3">{{ __('frontend.str.export_file_options') }}</h4>
+                        <div class="d-flex flex-wrap align-items-center gap-3 gap-sm-4">
+                            <fieldset aria-label="{{ __('frontend.form.format') }}" class="d-flex flex-wrap gap-2">
+                                <label class="export-format" for="export_type">
+                                    <input type="radio" class="form-check-input" name="export_type" id="export_type" value="text" @checked(old('export_type', 'text') === 'text')>
+                                    <span>{{ __('frontend.form.text') }} <small class="text-body-secondary">.txt</small></span>
+                                </label>
+                                <label class="export-format" for="export_type_excel">
+                                    <input type="radio" class="form-check-input" name="export_type" id="export_type_excel" value="excel" @checked(old('export_type', 'text') === 'excel')>
+                                    <span>Excel <small class="text-body-secondary">.xlsx</small></span>
+                                </label>
+                            </fieldset>
+                            <input type="hidden" name="compress" value="none">
+                            <label class="export-zip" for="compress_zip">
+                                <input type="checkbox" class="form-check-input" name="compress" id="compress_zip" value="zip" @checked(old('compress', 'none') === 'zip')>
+                                <span>{{ __('frontend.str.export_zip') }}</span>
+                            </label>
+                        </div>
+                        @error('export_type')<p class="text-danger mt-2 mb-0">{{ $message }}</p>@enderror
+                        @error('compress')<p class="text-danger mt-2 mb-0">{{ $message }}</p>@enderror
+                    </section>
+                </div>
+                <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2 px-3 px-sm-4 py-3">
+                    <a class="btn btn-outline-secondary" href="{{ route('admin.subscribers.index') }}">
+                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>{{ __('frontend.form.back') }}
+                    </a>
+                    <button type="submit" class="btn btn-primary ms-auto">
+                        <i class="fa-solid fa-download me-1" aria-hidden="true"></i>{{ __('frontend.str.download_file') }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-
-@endsection
-
-@section('js')
-    @include('admin.subscribers.project_categories_js')
-
-
 @endsection

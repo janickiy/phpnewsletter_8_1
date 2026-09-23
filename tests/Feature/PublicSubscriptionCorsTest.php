@@ -14,17 +14,21 @@ class PublicSubscriptionCorsTest extends TestCase
 
     private const EXTERNAL_ORIGIN = 'http://site1.local';
 
-    public function test_external_form_can_read_only_default_project_categories_without_credentials(): void
+    public function test_external_form_can_read_all_global_categories_without_credentials(): void
     {
         $category = Category::query()->create(['project_id' => Project::DEFAULT_ID, 'name' => 'Common readers']);
-        Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Another project']);
-        Category::query()->create(['project_id' => null, 'name' => 'Unassigned readers']);
+        $otherCategory = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Another project']);
+        $unassignedCategory = Category::query()->create(['project_id' => null, 'name' => 'Unassigned readers']);
 
         $this->getJson(route('frontend.categories'), ['Origin' => self::EXTERNAL_ORIGIN])
             ->assertOk()
             ->assertHeader('Access-Control-Allow-Origin', '*')
             ->assertHeaderMissing('Access-Control-Allow-Credentials')
-            ->assertExactJson(['items' => [['id' => $category->id, 'name' => $category->name]]]);
+            ->assertExactJson(['items' => [
+                ['id' => $otherCategory->id, 'name' => $otherCategory->name],
+                ['id' => $category->id, 'name' => $category->name],
+                ['id' => $unassignedCategory->id, 'name' => $unassignedCategory->name],
+            ]]);
     }
 
     public function test_external_form_can_read_validation_errors_without_creating_subscribers_or_sending_mail(): void

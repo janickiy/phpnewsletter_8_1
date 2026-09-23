@@ -65,11 +65,11 @@ class DefaultProjectSubscribersTest extends TestCase
     public function test_create_and_import_forms_default_to_zero_but_edit_can_still_clear_memberships(): void
     {
         $category = Category::query()->create(['project_id' => Project::DEFAULT_ID, 'name' => 'Default category']);
-        Category::query()->create(['project_id' => null, 'name' => 'Unassigned category']);
+        $globalCategory = Category::query()->create(['name' => 'Global category']);
         $this->actingAs($this->user(User::ROLE_MODERATOR));
 
         foreach (['admin.subscribers.create', 'admin.subscribers.import'] as $route) {
-            $response = $this->get(route($route))->assertOk()->assertSee($category->name);
+            $response = $this->get(route($route))->assertOk()->assertSee($category->name)->assertSee($globalCategory->name);
             $document = new DOMDocument;
             @$document->loadHTML($response->getContent());
             $page = new DOMXPath($document);
@@ -106,15 +106,17 @@ class DefaultProjectSubscribersTest extends TestCase
         }
     }
 
-    public function test_default_assignment_does_not_allow_categories_from_a_private_project(): void
+    public function test_default_assignment_accepts_global_categories_without_private_project_access(): void
     {
         $admin = $this->user(User::ROLE_ADMIN);
         $project = Project::query()->create(['name' => 'Private project', 'owner_id' => $admin->id, 'status' => 1]);
         $category = Category::query()->create(['project_id' => $project->id, 'name' => 'Private category']);
         $this->actingAs($this->user(User::ROLE_MODERATOR))->post(route('admin.subscribers.store'), [
-            'email' => 'forbidden@example.test', 'categoryId' => [$category->id],
-        ])->assertRedirect()->assertSessionHasErrors('categoryId.0');
-        $this->assertDatabaseMissing('subscribers', ['email' => 'forbidden@example.test']);
+            'email' => 'global-default@example.test', 'categoryId' => [$category->id],
+        ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('error');
+        $subscriber = Subscribers::query()->where('email', 'global-default@example.test')->sole();
+        $this->assertSame([Project::DEFAULT_ID], $subscriber->projects()->pluck('projects.id')->all());
+        $this->assertSame([$category->id], $subscriber->subscriptions()->pluck('category_id')->all());
     }
 
     private function user(string $role): User

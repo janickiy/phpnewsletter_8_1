@@ -37,16 +37,16 @@ class DefaultProjectIntegrationTest extends TestCase
         ]);
     }
 
-    public function test_public_subscription_accepts_explicit_zero_and_keeps_categories_scoped(): void
+    public function test_public_subscription_accepts_explicit_zero_and_global_categories(): void
     {
         $category = Category::query()->create(['project_id' => 0, 'name' => 'Default readers']);
         $foreignCategory = Category::query()->create(['project_id' => $this->otherProject->id, 'name' => 'Other readers']);
-        $this->mock(SendMailService::class)->shouldReceive('sendFrontendSubscriberEmails')->twice();
+        $this->mock(SendMailService::class)->shouldReceive('sendFrontendSubscriberEmails')->times(3);
 
         $this->get(route('frontend.form', ['project_id' => 0]))->assertOk()
-            ->assertSee('name="project_id" value="0"', false)->assertSee($category->name)->assertDontSee($foreignCategory->name);
+            ->assertSee('name="project_id" value="0"', false)->assertSee($category->name)->assertSee($foreignCategory->name);
         $this->getJson(route('frontend.categories', ['project_id' => 0]))->assertOk()
-            ->assertJsonCount(1, 'items')->assertJsonPath('items.0.id', $category->id);
+            ->assertJsonCount(2, 'items');
         $payload = ['project_id' => 0, 'email' => 'default-public@example.test', 'categoryId' => [$category->id]];
         $this->postJson(route('frontend.addsub'), $payload)->assertOk()->assertJsonPath('result', 'success');
         $subscriber = Subscribers::query()->where('email', $payload['email'])->sole();
@@ -55,6 +55,11 @@ class DefaultProjectIntegrationTest extends TestCase
 
         $this->postJson(route('frontend.addsub'), [
             'project_id' => 0, 'email' => 'wrong-category@example.test', 'categoryId' => [$foreignCategory->id],
+        ])->assertOk()->assertJsonPath('result', 'success');
+        $globalSubscriber = Subscribers::query()->where('email', 'wrong-category@example.test')->sole();
+        $this->assertDatabaseHas('subscriptions', ['category_id' => $foreignCategory->id, 'subscriber_id' => $globalSubscriber->id]);
+        $this->postJson(route('frontend.addsub'), [
+            'project_id' => 0, 'email' => 'invalid-category@example.test', 'categoryId' => [999999],
         ])->assertStatus(422)->assertJsonValidationErrors('categoryId.0');
         $this->postJson(route('frontend.addsub'), ['email' => 'missing-project@example.test'])
             ->assertOk()->assertJsonPath('result', 'success');
@@ -77,7 +82,7 @@ class DefaultProjectIntegrationTest extends TestCase
         $referral = ['subscriber' => $subscriber->id, 'ref' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')];
 
         $this->get(route('frontend.referral', $referral + ['project_id' => 0]))->assertRedirect($url);
-        $this->assertDatabaseHas('redirect', ['project_id' => 0, 'email' => $subscriber->email, 'url' => $url]);
+        $this->assertDatabaseHas('redirect', ['template_id' => null, 'template' => null, 'email' => $subscriber->email, 'url' => $url]);
         $this->get(route('frontend.referral', $referral + ['project_id' => -1]))->assertNotFound();
         $this->get(route('frontend.referral', $referral))->assertNotFound();
         $this->get(route('frontend.pic', ['subscriber' => $subscriber->id, 'template' => $template->id]))->assertOk();
@@ -110,14 +115,12 @@ class DefaultProjectIntegrationTest extends TestCase
         $page = $this->actingAs($manager)->get(route('admin.schedule.create'))->assertOk();
         $this->assertEquals(0, $page->viewData('templateProjects')->get($template->id));
         $this->assertArrayHasKey($category->id, $page->viewData('category_options'));
-        $this->assertArrayNotHasKey($foreignCategory->id, $page->viewData('category_options'));
+        $this->assertArrayHasKey($foreignCategory->id, $page->viewData('category_options'));
         $payload = [
             'event_name' => 'Default project mailing', 'template_id' => $template->id,
-            'categoryId' => [$foreignCategory->id],
+            'categoryId' => [$category->id, $foreignCategory->id],
             'date_interval' => now()->addDays(3)->format('d.m.Y H:i').' - '.now()->addDays(3)->addHour()->format('d.m.Y H:i'),
         ];
-        $this->post(route('admin.schedule.store'), $payload)->assertSessionHasErrors('categoryId.0');
-        $payload['categoryId'] = [$category->id];
         $this->post(route('admin.schedule.store'), $payload)->assertSessionHasNoErrors()->assertSessionMissing('error')
             ->assertRedirect(route('admin.schedule.index'));
         $schedule = Schedule::query()->sole();
@@ -130,7 +133,7 @@ class DefaultProjectIntegrationTest extends TestCase
         $this->assertSame([$subscriber->id], app(SubscriberRepository::class)->getSubscribersNotReadySent($schedule->id, 'subscribers.id')->pluck('id')->all());
     }
 
-    public function test_subscription_form_defaults_to_common_project_and_orphan_category_label_stays_unassigned(): void
+    public function test_subscription_form_defaults_to_common_project_and_categories_have_no_project_control(): void
     {
         $moderator = $this->user('default-form-moderator', User::ROLE_MODERATOR);
         $this->otherProject->members()->attach($moderator, ['role' => User::ROLE_MODERATOR]);
@@ -143,7 +146,7 @@ class DefaultProjectIntegrationTest extends TestCase
         $page = $this->actingAs($this->administrator)->get(route('admin.category.edit', $orphan->id))->assertOk();
         $document = new \DOMDocument();
         @$document->loadHTML('<?xml encoding="utf-8" ?>'.$page->getContent());
-        $this->assertSame(__('frontend.str.projects.subscriber_unassigned'), $document->getElementById('project_id')->getAttribute('value'));
+        $this->assertNull($document->getElementById('project_id'));
     }
 
     private function user(string $login, string $role): User

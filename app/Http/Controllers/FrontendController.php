@@ -91,11 +91,21 @@ class FrontendController extends Controller
 
         $subscriberModel = Subscribers::query()->findOrFail($subscriber);
         $projects = $subscriberModel->projects();
+        $template = null;
+
+        if ($request->has('template_id')) {
+            $templateId = filter_var($request->query('template_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            abort_if($templateId === false, 404);
+            $template = Templates::query()->findOrFail($templateId);
+        }
 
         if ($request->has('project_id')) {
             $projectId = filter_var($request->query('project_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
             abort_if($projectId === false, 404);
+            abort_if($template && (int) $template->project_id !== $projectId, 404);
             $project = $projects->whereKey($projectId)->where('status', 1)->firstOrFail();
+        } elseif ($template) {
+            $project = $projects->whereKey($template->project_id)->where('status', 1)->firstOrFail();
         } else {
             $memberships = $projects->limit(2)->get();
             abort_unless($memberships->count() === 1 && (bool) $memberships->first()->status, 404);
@@ -107,7 +117,8 @@ class FrontendController extends Controller
                 url: $url,
                 time: now(),
                 email: $subscriberModel->email,
-                projectId: $project->id,
+                templateId: $template?->id,
+                template: $template?->name,
             )
         );
 
@@ -165,7 +176,7 @@ class FrontendController extends Controller
         $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id', Project::DEFAULT_ID));
         return view('frontend.subform', [
             'project' => $project,
-            'category' => Category::query()->where('project_id', $project->id)->orderBy('name')->get(),
+            'category' => Category::query()->orderBy('name')->get(),
             'title' => 'Subform',
         ]);
     }
@@ -218,10 +229,9 @@ class FrontendController extends Controller
      */
     public function getCategories(Request $request): JsonResponse
     {
-        $project = Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id', Project::DEFAULT_ID));
+        Project::query()->includingDefault()->where('status', 1)->findOrFail((int) $request->input('project_id', Project::DEFAULT_ID));
         return response()->json([
             'items' => Category::query()
-                ->where('project_id', $project->id)
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->get(),

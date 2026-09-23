@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => '请选择项目以查看其订阅者分类。',
+            'subscriber_categories_empty' => '所选项目尚无订阅者分类。',
             'default_name' => '默认项目',
             'subscriber_default_project_hint' => '如果未选择任何项目，订阅者将被添加到默认项目。',
             'subscriber_unassigned' => '未关联项目',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => '删除所有订阅者',
         'import_subscribers' => '导入订阅者',
         'export_subscribers' => '导出订阅者',
+        'export_file_options' => '文件选项',
+        'export_zip' => '压缩为 ZIP',
+        'download_file' => '下载文件',
+        'export_projects_hint' => '可以选择多个项目。',
+        'export_unassigned_hint' => '未选择项目时，将导出未关联任何项目的订阅者。',
+        'export_categories_hint' => '未选择分类时，将导出所选项目的所有订阅者。',
         'remove_all_subscribers' => '删除所有订阅者',
         'want_to_delete_all_subscribers' => '您确定要删除所有订阅者吗？',
         'add_subscriber' => '添加订阅者',
@@ -154,8 +162,10 @@ return [
         'sender_name' => '发件人名称',
         'sender_email' => '发件人邮箱',
         'add_schedule' => '添加计划',
-        'schedule_categories_hint' => '选择模板后，将仅显示其所属项目的分类。',
-        'schedule_categories_empty' => '所选模板的项目尚无订阅者分类。',
+        'schedule_categories_hint' => '分类仅对默认项目的模板可用且为必选项。请至少选择一个分类。',
+        'schedule_categories_empty' => '尚未创建订阅者分类。',
+        'manual_mailing_default_categories_hint' => '请为默认项目的模板选择至少一个全局分类。分类筛选仅适用于默认项目中的收件人。',
+        'manual_mailing_project_subscribers_hint' => '其他项目的模板将发送给其所属项目的所有活跃订阅者，无需选择分类。',
         'enter_login' => '输入登录名',
         'enter_password' => '输入密码',
         'singin' => '登录',
@@ -267,6 +277,7 @@ return [
         'remove_subscriber' => '删除未确认订阅的订阅者',
     ],
     'msg' => [
+        'mailing_already_running' => '此邮件发送任务已在运行。',
         'are_you_sure' => '您确定吗？',
         'will_not_be_able_to_recover_information' => '您将无法恢复此信息！',
         'yes_remove' => '是的，删除！',

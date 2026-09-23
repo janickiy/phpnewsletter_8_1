@@ -49,7 +49,7 @@ class AddSubRequest extends FormRequest
             })],
             'name' => ['nullable', 'string', 'max:255'],
             'categoryId' => ['nullable', 'array'],
-            'categoryId.*' => ['integer', 'distinct', Rule::exists('categories', 'id')->where('project_id', (int) $this->input('project_id'))],
+            'categoryId.*' => ['integer', 'distinct', Rule::exists('categories', 'id')],
         ];
     }
 

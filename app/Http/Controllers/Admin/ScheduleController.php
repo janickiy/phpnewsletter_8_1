@@ -126,7 +126,7 @@ class ScheduleController extends Controller
                     eventStart: $data['event_start'],
                     eventEnd: $data['event_end'],
                     templateId: (int) $data['template_id'],
-                    categoryIds: $data['categoryId'],
+                    categoryIds: $data['categoryId'] ?? [],
                 )
             );
         } catch (\Throwable $e) {
@@ -181,7 +181,7 @@ class ScheduleController extends Controller
                     eventStart: $data['event_start'],
                     eventEnd: $data['event_end'],
                     templateId: (int) $data['template_id'],
-                    categoryIds: $data['categoryId'],
+                    categoryIds: $data['categoryId'] ?? [],
                 )
             );
         } catch (\Throwable $e) {
@@ -197,11 +197,12 @@ class ScheduleController extends Controller
 
     private function categoryOptions(): array
     {
-        $categories = ProjectAccess::scope(Category::query(), 'manage')->with('project')->orderBy('name')->get();
+        $categories = Category::query()
+            ->orderBy('name')
+            ->get();
 
         return [
-            'category_options' => $categories->mapWithKeys(fn ($category) => [$category->id => $category->project->name . ' — ' . $category->name])->all(),
-            'categoryProjects' => $categories->pluck('project_id', 'id'),
+            'category_options' => $categories->pluck('name', 'id')->all(),
             'templateProjects' => ProjectAccess::scope(Templates::query(), 'manage')->pluck('project_id', 'id'),
         ];
     }

@@ -39,7 +39,7 @@ class VirtualProjectPublicTest extends TestCase
         $this->assertDatabaseCount('projects', 0);
     }
 
-    public function test_categories_without_a_project_parameter_return_only_the_default_project_categories(): void
+    public function test_categories_are_identical_with_or_without_a_project_parameter(): void
     {
         $defaultCategory = Category::query()->create(['project_id' => Project::DEFAULT_ID, 'name' => 'Common readers']);
         $otherProjectId = $this->testProjectId();
@@ -47,11 +47,11 @@ class VirtualProjectPublicTest extends TestCase
         Category::query()->create(['project_id' => null, 'name' => 'Unassigned readers']);
 
         $defaultResponse = $this->getJson(route('frontend.categories'))->assertOk()
-            ->assertJsonCount(1, 'items')->assertJsonPath('items.0.id', $defaultCategory->id);
+            ->assertJsonCount(3, 'items')->assertJsonPath('items.0.id', $defaultCategory->id);
         $explicitResponse = $this->getJson(route('frontend.categories', ['project_id' => Project::DEFAULT_ID]))->assertOk();
         $this->assertSame($explicitResponse->json(), $defaultResponse->json());
         $this->getJson(route('frontend.categories', ['project_id' => $otherProjectId]))->assertOk()
-            ->assertJsonCount(1, 'items')->assertJsonPath('items.0.id', $otherCategory->id);
+            ->assertJsonCount(3, 'items')->assertExactJson($defaultResponse->json());
     }
 
     public function test_subscription_without_a_project_keeps_category_and_duplicate_membership_validation(): void
@@ -61,9 +61,9 @@ class VirtualProjectPublicTest extends TestCase
         $this->mock(SendMailService::class)->shouldReceive('sendFrontendSubscriberEmails')->once();
 
         $this->postJson(route('frontend.addsub'), [
-            'email' => 'wrong-default-category@example.test', 'categoryId' => [$otherCategory->id],
+            'email' => 'missing-category@example.test', 'categoryId' => [999999],
         ])->assertUnprocessable()->assertJsonValidationErrors('categoryId.0');
-        $this->assertDatabaseMissing('subscribers', ['email' => 'wrong-default-category@example.test']);
+        $this->assertDatabaseMissing('subscribers', ['email' => 'missing-category@example.test']);
 
         $email = 'explicit-project@example.test';
         $this->postJson(route('frontend.addsub'), [
@@ -97,7 +97,7 @@ class VirtualProjectPublicTest extends TestCase
         );
     }
 
-    public function test_virtual_default_does_not_allow_invalid_or_inactive_projects_or_foreign_categories(): void
+    public function test_virtual_default_does_not_allow_invalid_or_inactive_projects_or_missing_categories(): void
     {
         $owner = User::query()->create([
             'name' => 'Owner', 'login' => 'virtual-public-owner', 'role' => User::ROLE_ADMIN, 'password' => 'password',
@@ -117,7 +117,7 @@ class VirtualProjectPublicTest extends TestCase
         $this->get(route('frontend.form', ['project_id' => $inactiveProject->id]))->assertNotFound();
         $this->getJson(route('frontend.categories', ['project_id' => $inactiveProject->id]))->assertNotFound();
         $this->postJson(route('frontend.addsub'), [
-            'project_id' => 0, 'email' => 'foreign-virtual@example.test', 'categoryId' => [$foreignCategory->id],
+            'project_id' => 0, 'email' => 'missing-virtual@example.test', 'categoryId' => [999999],
         ])->assertUnprocessable()->assertJsonValidationErrors('categoryId.0');
 
         $this->assertDatabaseMissing('projects', ['id' => 0]);

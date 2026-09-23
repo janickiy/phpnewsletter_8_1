@@ -403,7 +403,7 @@ class SubscriberService
             return 0;
         }
 
-        abort_unless(DB::table('categories')->whereIn('project_id', $projectIds)->whereIn('id', $categoryIds)->count() === count(array_unique($categoryIds)), 422);
+        abort_unless(DB::table('categories')->whereIn('id', $categoryIds)->count() === count(array_unique($categoryIds)), 422);
 
         $normalizedRows = [];
 
@@ -471,20 +471,20 @@ class SubscriberService
                 }
             }
 
-            $this->syncSubscriptions($subscriberIds, $categoryIds, $projectIds);
+            $this->syncSubscriptions($subscriberIds, $categoryIds);
         });
 
         return count($normalizedRows);
     }
 
     /**
-     * Replace categories in the selected projects while preserving other memberships.
+     * Add global category memberships without removing existing subscriptions.
      *
      * @param array $subscriberIds
      * @param array $categoryIds
      * @return void
      */
-    private function syncSubscriptions(array $subscriberIds, array $categoryIds, array $projectIds): void
+    private function syncSubscriptions(array $subscriberIds, array $categoryIds): void
     {
         $subscriberIds = array_values(array_unique(array_filter($subscriberIds)));
         $categoryIds = array_values(array_unique(array_filter($categoryIds, 'is_numeric')));
@@ -492,11 +492,6 @@ class SubscriberService
         if ($subscriberIds === []) {
             return;
         }
-
-        DB::table('subscriptions')
-            ->whereIn('subscriber_id', $subscriberIds)
-            ->whereIn('category_id', DB::table('categories')->whereIn('project_id', $projectIds)->select('id'))
-            ->delete();
 
         if ($categoryIds === []) {
             return;

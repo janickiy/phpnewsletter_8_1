@@ -53,18 +53,19 @@ class DownloadService
      * @param string $url
      * @return StreamedResponse
      */
-    public function redirect(string $url): StreamedResponse
+    public function redirect(string $url, mixed $newsletter = null): StreamedResponse
     {
         $decodedUrl = $this->decodeRouteBase64($url);
-        $rowsExist = ProjectAccess::scope(Redirect::query(), 'view', 'redirect.project_id')
-            ->where('url', $decodedUrl)
-            ->exists();
+        $rowsExist = RedirectReportFilter::apply(
+            ProjectAccess::redirects(Redirect::query())->where('url', $decodedUrl),
+            $newsletter
+        )->exists();
 
         abort_if(!$rowsExist, 404);
 
         $filename = 'redirect_' . date('d_m_Y') . '.xlsx';
 
-        return $this->streamXlsxFile($filename, fn (): string => $this->buildRedirectXlsxFile($decodedUrl));
+        return $this->streamXlsxFile($filename, fn (): string => $this->buildRedirectXlsxFile($decodedUrl, $newsletter));
     }
 
     /**
@@ -83,7 +84,7 @@ class DownloadService
         }
 
         $categoryIds = (array) ($request->categoryId ?? []);
-        abort_unless(DB::table('categories')->whereIn('project_id', $projectIds)->whereIn('id', $categoryIds)->count() === count(array_unique($categoryIds)), 422);
+        abort_unless(DB::table('categories')->whereIn('id', $categoryIds)->count() === count(array_unique($categoryIds)), 422);
         $this->disableExecutionLimit();
 
         if ($request->export_type === 'excel') {
@@ -217,11 +218,11 @@ class DownloadService
      * @param string $url
      * @return string
      */
-    private function buildRedirectXlsxFile(string $url): string
+    private function buildRedirectXlsxFile(string $url, ?string $newsletter): string
     {
         return $this->buildXlsxFile(
-            function ($sheet) use ($url): void {
-                $this->writeRedirectWorksheet($sheet, $url);
+            function ($sheet) use ($url, $newsletter): void {
+                $this->writeRedirectWorksheet($sheet, $url, $newsletter);
             },
             'Redirect'
         );
@@ -374,36 +375,40 @@ class DownloadService
      * @param string $url
      * @return void
      */
-    private function writeRedirectWorksheet($sheet, string $url): void
+    private function writeRedirectWorksheet($sheet, string $url, ?string $newsletter): void
     {
-        $total = ProjectAccess::scope(Redirect::query(), 'view', 'redirect.project_id')
-            ->where('url', $url)
-            ->count();
+        $query = RedirectReportFilter::apply(
+            ProjectAccess::redirects(Redirect::query())->where('url', $url),
+            $newsletter
+        );
+        $total = (clone $query)->count();
 
         fwrite($sheet, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
         fwrite($sheet, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">');
-        fwrite($sheet, '<dimension ref="A1:B' . ($total + 1) . '"/>');
-        fwrite($sheet, '<cols><col min="1" max="1" width="35" customWidth="1"/><col min="2" max="2" width="22" customWidth="1"/></cols>');
+        fwrite($sheet, '<dimension ref="A1:D' . ($total + 1) . '"/>');
+        fwrite($sheet, '<cols><col min="1" max="1" width="50" customWidth="1"/><col min="2" max="3" width="35" customWidth="1"/><col min="4" max="4" width="22" customWidth="1"/></cols>');
         fwrite($sheet, '<sheetData>');
 
         fwrite($sheet, '<row r="1">');
-        $this->writeInlineCell($sheet, 'A', 1, 'Email', 2);
-        $this->writeInlineCell($sheet, 'B', 1, 'Time', 2);
+        $this->writeInlineCell($sheet, 'A', 1, 'URL', 2);
+        $this->writeInlineCell($sheet, 'B', 1, __('frontend.str.newsletter'), 2);
+        $this->writeInlineCell($sheet, 'C', 1, 'Email', 2);
+        $this->writeInlineCell($sheet, 'D', 1, 'Time', 2);
         fwrite($sheet, '</row>');
 
         $rowIndex = 1;
 
-        ProjectAccess::scope(Redirect::query(), 'view', 'redirect.project_id')
-            ->select(['id', 'email', 'created_at'])
-            ->where('url', $url)
+        $query->select(['id', 'url', 'template', 'email', 'created_at'])
             ->orderBy('id')
             ->chunkById(2000, function ($rows) use ($sheet, &$rowIndex): void {
                 foreach ($rows as $row) {
                     $rowIndex++;
 
                     fwrite($sheet, '<row r="' . $rowIndex . '">');
-                    $this->writeInlineCell($sheet, 'A', $rowIndex, (string) $row->email);
-                    $this->writeInlineCell($sheet, 'B', $rowIndex, (string) $row->created_at);
+                    $this->writeInlineCell($sheet, 'A', $rowIndex, (string) $row->url);
+                    $this->writeInlineCell($sheet, 'B', $rowIndex, $row->template ?? '—');
+                    $this->writeInlineCell($sheet, 'C', $rowIndex, (string) $row->email);
+                    $this->writeInlineCell($sheet, 'D', $rowIndex, (string) $row->created_at);
                     fwrite($sheet, '</row>');
                 }
             });
@@ -1123,13 +1128,12 @@ class DownloadService
         }
 
         if ($ids) {
-            $query->whereExists(function (QueryBuilder $subquery) use ($ids, $projectIds): void {
+            $query->whereExists(function (QueryBuilder $subquery) use ($ids): void {
                 $subquery
                     ->selectRaw('1')
                     ->from('subscriptions')
                     ->join('categories', 'categories.id', '=', 'subscriptions.category_id')
                     ->whereColumn('subscriptions.subscriber_id', 'subscribers.id')
-                    ->whereIn('categories.project_id', $projectIds)
                     ->whereIn('subscriptions.category_id', $ids);
             });
         }

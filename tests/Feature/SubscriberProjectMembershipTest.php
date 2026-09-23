@@ -103,7 +103,7 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->assertSame(1, Subscribers::query()->where('email', 'renamed@example.test')->count());
     }
 
-    public function test_scoped_lists_and_edit_forms_hide_foreign_projects_categories_and_orphans(): void
+    public function test_scoped_lists_and_edit_forms_show_global_categories_but_hide_foreign_projects_and_contacts(): void
     {
         $shared = $this->subscriber('shared@example.test', [$this->own->id, $this->other->id]);
         $foreign = $this->subscriber('foreign@example.test', [$this->other->id]);
@@ -114,11 +114,11 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->actingAs($this->moderator);
 
         $rows = $this->getJson(route('admin.datatable.subscribers', ['draw' => 1, 'start' => 0, 'length' => 20]))
-            ->assertOk()->assertDontSee($this->other->name)->assertDontSee($otherCategory->name)->json('data');
+            ->assertOk()->assertDontSee($this->other->name)->assertSee($otherCategory->name)->json('data');
         $this->assertEquals([$shared->id], array_column($rows, 'id'));
         $this->get(route('admin.subscribers.edit', $shared->id))->assertOk()
             ->assertSee($this->own->name)->assertSee($ownCategory->name)
-            ->assertDontSee($this->other->name)->assertDontSee($otherCategory->name);
+            ->assertDontSee($this->other->name)->assertSee($otherCategory->name);
         $this->get(route('admin.subscribers.edit', $foreign->id))->assertNotFound();
         $this->get(route('admin.subscribers.edit', $orphan->id))->assertNotFound();
         $this->delete(route('admin.subscribers.destroy', $orphan->id))->assertNotFound();
@@ -126,7 +126,7 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->actingAs($this->admin)->get(route('admin.subscribers.edit', $orphan->id))->assertOk();
     }
 
-    public function test_crafted_datatable_relation_search_cannot_probe_hidden_project_or_category_memberships(): void
+    public function test_crafted_datatable_relation_search_cannot_probe_hidden_project_memberships(): void
     {
         $shared = $this->subscriber('shared@example.test', [$this->own->id, $this->other->id]);
         $ownOnly = $this->subscriber('own-only@example.test', [$this->own->id]);
@@ -134,7 +134,7 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->subscribe($shared, $hiddenCategory);
         $this->actingAs($this->moderator);
 
-        foreach (['projects.name' => $this->other->name, 'subscriptions.category.name' => $hiddenCategory->name] as $column => $hiddenName) {
+        foreach (['projects.name' => $this->other->name] as $column => $hiddenName) {
             foreach ([$hiddenName, 'Nonexistent secret membership'] as $needle) {
                 foreach (['column', 'global'] as $searchMode) {
                     $response = $this->getJson(route('admin.datatable.subscribers', [
@@ -145,14 +145,14 @@ class SubscriberProjectMembershipTest extends TestCase
                         ]],
                         'search' => ['value' => $searchMode === 'global' ? $needle : '', 'regex' => 'false'],
                     ]))->assertOk()->assertJsonPath('recordsTotal', 2)->assertJsonPath('recordsFiltered', 2)
-                        ->assertDontSee($this->other->name)->assertDontSee($hiddenCategory->name);
+                        ->assertDontSee($this->other->name)->assertSee($hiddenCategory->name);
                     $this->assertEqualsCanonicalizing([$shared->id, $ownOnly->id], array_column($response->json('data'), 'id'));
                 }
             }
         }
     }
 
-    public function test_editing_accessible_memberships_and_categories_preserves_foreign_links(): void
+    public function test_editing_global_categories_preserves_foreign_project_memberships(): void
     {
         $shared = $this->subscriber('shared@example.test', [$this->own->id, $this->other->id]);
         $oldCategory = $this->category($this->own, 'Old own category');
@@ -166,7 +166,7 @@ class SubscriberProjectMembershipTest extends TestCase
         ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('error');
 
         $this->assertEqualsCanonicalizing([$this->own->id, $this->other->id], $shared->projects()->pluck('projects.id')->all());
-        $this->assertEqualsCanonicalizing([$newCategory->id, $foreignCategory->id], $shared->subscriptions()->pluck('category_id')->all());
+        $this->assertSame([$newCategory->id], $shared->subscriptions()->pluck('category_id')->all());
     }
 
     public function test_non_admin_deletion_only_detaches_accessible_projects_and_admin_deletion_removes_the_identity(): void
@@ -181,7 +181,7 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->delete(route('admin.subscribers.destroy', $shared->id))->assertSuccessful();
         $this->assertModelExists($shared);
         $this->assertSame([$this->other->id], $shared->projects()->pluck('projects.id')->all());
-        $this->assertSame([$otherCategory->id], $shared->subscriptions()->pluck('category_id')->all());
+        $this->assertEqualsCanonicalizing([$ownCategory->id, $otherCategory->id], $shared->subscriptions()->pluck('category_id')->all());
         $this->delete(route('admin.subscribers.destroy', $ownOnly->id))->assertSuccessful();
         $this->assertModelExists($ownOnly);
         $this->assertSame(0, $ownOnly->projects()->count());
@@ -222,7 +222,7 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->assertSame($shared->token, $shared->fresh()->token);
     }
 
-    public function test_import_reuses_the_identity_and_preserves_global_state_and_other_project_categories(): void
+    public function test_import_reuses_the_identity_and_preserves_global_state_and_existing_categories(): void
     {
         $shared = $this->subscriber('shared@example.test', [$this->other->id]);
         $shared->update(['active' => 0, 'timeSent' => '2026-01-02 03:04:05']);
@@ -290,7 +290,7 @@ class SubscriberProjectMembershipTest extends TestCase
         $this->assertEqualsCanonicalizing([$ownCategory->id, $otherCategory->id], $shared->subscriptions()->pluck('category_id')->all());
         $this->assertSame([$ownCategory->id], $ownOnly->subscriptions()->pluck('category_id')->all());
         $this->assertNull($ownCategory->fresh()->project_id);
-        $this->assertSame($this->other->id, $otherCategory->fresh()->project_id);
+        $this->assertNull($otherCategory->fresh()->project_id);
         $this->assertModelMissing($deliveries[0]);
         $this->assertModelExists($deliveries[1]);
         $this->get(route('admin.subscribers.edit', $ownOnly->id))->assertOk();

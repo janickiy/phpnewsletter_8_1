@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
 use App\Models\Logs;
 use App\Models\Schedule;
 use App\Models\Settings;
@@ -34,20 +33,17 @@ class MailingOrderTest extends TestCase
         $this->actingAs($admin);
 
         $template = $this->template();
-        $category = Category::query()->create([
-            'project_id' => $this->testProjectId(),'name' => 'Mailing order category']);
         $log = Logs::query()->create(['time' => now()]);
 
-        $this->mock(SubscriberRepository::class, function (MockInterface $mock) use ($log, $template, $category) {
+        $this->mock(SubscriberRepository::class, function (MockInterface $mock) use ($log, $template) {
             $mock->shouldReceive('getSubscribers')
                 ->once()
-                ->with($log->id, $template->id, [$category->id], 'subscribers.id', 20, $this->eligibilityInterval())
+                ->with($log->id, $template->id, [], 'subscribers.id', 20, $this->eligibilityInterval(), true)
                 ->andReturn(collect());
         });
 
         $result = app(SendMailService::class)->sendOut(Request::create('/ajax', 'POST', [
             'templateId' => [$template->id],
-            'categoryId' => [$category->id],
             'logId' => $log->id,
         ]));
 

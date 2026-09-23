@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\UpdateHelper;
 use App\Models\Category;
 use App\Models\Logs;
+use App\Models\Project;
 use App\Models\User;
 use App\Models\Templates;
 use App\Services\ProjectAccess;
@@ -129,7 +130,7 @@ class AjaxController extends Controller
             'start_mailing' => $this->startMailing($request),
 
             'get_categories' => [
-                'items' => ProjectAccess::scope(Category::query())->when($request->filled('project_id'), fn ($query) => $query->where('categories.project_id', (int) $request->input('project_id')))->get(),
+                'items' => Category::query()->orderBy('name')->get(),
             ],
 
             'process' => $this->processCommand($request),
@@ -201,7 +202,7 @@ class AjaxController extends Controller
         $data = $request->validate([
             'templateId' => ['required', 'array', 'min:1'],
             'templateId.*' => ['required', 'integer', 'distinct'],
-            'categoryId' => ['required', 'array', 'min:1'],
+            'categoryId' => ['nullable', 'array'],
             'categoryId.*' => ['integer', 'distinct'],
         ]);
         $templates = ProjectAccess::scope(Templates::query(), 'manage')
@@ -209,9 +210,12 @@ class AjaxController extends Controller
             ->whereIn('id', $data['templateId'])->get();
         abort_unless($templates->count() === count($data['templateId']), 403);
 
+        if ($templates->contains(fn ($template) => (int) $template->project_id === Project::DEFAULT_ID)) {
+            $request->validate(['categoryId' => ['required', 'array', 'min:1']]);
+        }
+
         $categories = $data['categoryId'] ?? [];
-        abort_unless(ProjectAccess::scope(Category::query(), 'manage')
-            ->whereIn('project_id', $templates->pluck('project_id'))
+        abort_unless(Category::query()
             ->whereIn('id', $categories)->count() === count($categories), 403);
 
         $log = Logs::query()->create([

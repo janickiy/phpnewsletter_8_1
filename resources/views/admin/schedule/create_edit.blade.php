@@ -71,24 +71,29 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="categoryId" class="form-label">{{ __('frontend.form.subscribers_category') }}</label>
                                     @php
+                                        $selectedTemplateProjectId = $templateProjects[old('template_id', $row->template_id ?? '')] ?? null;
+                                        $usesCategories = $selectedTemplateProjectId !== null && (int) $selectedTemplateProjectId === \App\Models\Project::DEFAULT_ID;
                                         $selectedCategoryIds = collect(session()->hasOldInput() ? old('categoryId', []) : ($categoryId ?? []))
                                             ->map(fn ($value) => (string) $value)
                                             ->all();
                                     @endphp
-                                    <select name="categoryId[]" id="categoryId" multiple size="4" aria-describedby="schedule-categories-hint schedule-categories-empty" class="form-select @error('categoryId') is-invalid @enderror">
-                                        @foreach($category_options as $categoryValue => $categoryLabel)
-                                            <option value="{{ $categoryValue }}" data-project="{{ $categoryProjects[$categoryValue] }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>
-                                                {{ $categoryLabel }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div id="schedule-categories-hint" class="form-text">{{ __('frontend.str.schedule_categories_hint') }}</div>
-                                    <div id="schedule-categories-empty" class="form-text text-warning-emphasis d-none" role="status">{{ __('frontend.str.schedule_categories_empty') }}</div>
-                                    @error('categoryId')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                    <div id="schedule-categories-field" @class(['d-none' => !$usesCategories])>
+                                        <label for="categoryId" class="form-label">{{ __('frontend.form.subscribers_category') }}*</label>
+                                        <select name="categoryId[]" id="categoryId" multiple size="4" @disabled(!$usesCategories) @required($usesCategories) aria-describedby="schedule-categories-hint schedule-categories-empty" class="form-select @error('categoryId') is-invalid @enderror">
+                                            @foreach($category_options as $categoryValue => $categoryLabel)
+                                                <option value="{{ $categoryValue }}" @selected($usesCategories && in_array((string) $categoryValue, $selectedCategoryIds, true))>
+                                                    {{ $categoryLabel }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <div id="schedule-categories-empty" @class(['form-text', 'd-none' => !$usesCategories || count($category_options) > 0]) role="status">{{ __('frontend.str.schedule_categories_empty') }}</div>
+                                        @error('categoryId')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div id="schedule-categories-hint" @class(['form-text', 'd-none' => $selectedTemplateProjectId !== null && !$usesCategories])>{{ __('frontend.str.schedule_categories_hint') }}</div>
+                                    <div id="schedule-project-subscribers-hint" @class(['form-text', 'd-none' => $selectedTemplateProjectId === null || $usesCategories])>{{ __('frontend.str.manual_mailing_project_subscribers_hint') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -144,19 +149,23 @@
         $(function () {
 
             const templateProjects = @json($templateProjects);
+            const defaultProjectId = {{ \App\Models\Project::DEFAULT_ID }};
             const categorySelect = $('#categoryId');
-            const categoryOptions = categorySelect.find('option').clone();
 
             function filterCategories() {
-                const projectId = String(templateProjects[$('#template_id').val()] ?? '');
-                const selectedIds = categorySelect.val() || [];
-                const availableOptions = categoryOptions.filter(function () {
-                    return projectId === '' || String($(this).data('project')) === projectId;
-                }).clone();
+                const projectId = templateProjects[$('#template_id').val()];
+                const hasProject = projectId !== undefined && projectId !== null;
+                const usesCategories = hasProject && Number(projectId) === defaultProjectId;
 
-                categorySelect.empty().append(availableOptions).val(selectedIds);
-                $('#schedule-categories-hint').toggleClass('d-none', projectId !== '');
-                $('#schedule-categories-empty').toggleClass('d-none', projectId === '' || availableOptions.length > 0);
+                if (!usesCategories) {
+                    categorySelect.val([]);
+                }
+
+                categorySelect.prop('disabled', !usesCategories).prop('required', usesCategories);
+                $('#schedule-categories-field').toggleClass('d-none', !usesCategories);
+                $('#schedule-categories-hint').toggleClass('d-none', hasProject && !usesCategories);
+                $('#schedule-project-subscribers-hint').toggleClass('d-none', !hasProject || usesCategories);
+                $('#schedule-categories-empty').toggleClass('d-none', !usesCategories || categorySelect.find('option').length > 0);
             }
 
             $('#template_id').on('change', filterCategories);

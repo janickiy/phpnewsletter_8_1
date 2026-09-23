@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'Select a project to see its subscriber categories.',
+            'subscriber_categories_empty' => 'The selected projects do not have any subscriber categories yet.',
             'default_name' => 'Default project',
             'subscriber_default_project_hint' => 'If no projects are selected, the subscriber will be added to the default project.',
             'subscriber_unassigned' => 'Without a project',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'Delete all subscribers',
         'import_subscribers' => 'Import subscribers',
         'export_subscribers' => 'Export Subscribers',
+        'export_file_options' => 'File options',
+        'export_zip' => 'Compress as ZIP',
+        'download_file' => 'Download file',
+        'export_projects_hint' => 'You can select multiple projects.',
+        'export_unassigned_hint' => 'With no projects selected, subscribers without a project will be exported.',
+        'export_categories_hint' => 'With no categories selected, all subscribers from the selected projects will be exported.',
         'remove_all_subscribers' => 'Delete all subscribers',
         'want_to_delete_all_subscribers' => 'Are you sure you want to delete all subscribers?',
         'add_subscriber' => 'Add Subscriber',
@@ -154,8 +162,10 @@ return [
         'sender_name' => 'Sender name',
         'sender_email' => 'Sender Email',
         'add_schedule' => 'Add schedule',
-        'schedule_categories_hint' => 'After you select a template, only categories from its project will remain.',
-        'schedule_categories_empty' => 'The selected template’s project has no subscriber categories yet.',
+        'schedule_categories_hint' => 'Categories are available and required only for templates from the default project. Select at least one category.',
+        'schedule_categories_empty' => 'No subscriber categories have been created yet.',
+        'manual_mailing_default_categories_hint' => 'Select at least one global category for templates from the default project. Category filtering applies only to recipients in the default project.',
+        'manual_mailing_project_subscribers_hint' => 'Templates from other projects will be sent to all active subscribers of their own project, without selecting categories.',
         'enter_login' => 'Enter login',
         'enter_password' => 'Enter password',
         'singin' => 'singin',
@@ -236,6 +246,7 @@ return [
         'remove_subscriber' => 'Removing subscribers who have not confirmed their subscription',
     ],
     'msg' => [
+        'mailing_already_running' => 'This mailing is already running.',
         'are_you_sure' => 'Are you sure?',
         'will_not_be_able_to_recover_information' => 'You will not be able to recover this information!',
         'yes_remove' => 'Yes, delete!',

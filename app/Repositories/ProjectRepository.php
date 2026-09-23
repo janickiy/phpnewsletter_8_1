@@ -129,9 +129,8 @@ class ProjectRepository extends BaseRepository
                 ->distinct()->pluck('log_id');
 
             // Foreign keys remove attachments and schedule junctions with their parents.
-            // Categories and their subscriptions survive as unassigned records.
-            $project->categories()->update(['project_id' => null]);
-            foreach (['ready_sent', 'redirect', 'schedule', 'templates'] as $table) {
+            // Click snapshots retain their template ID and name after its deletion.
+            foreach (['ready_sent', 'schedule', 'templates'] as $table) {
                 $this->database->table($table)->where('project_id', $project->id)->delete();
             }
             $project->subscribers()->detach();

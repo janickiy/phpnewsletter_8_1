@@ -9,7 +9,6 @@ use App\Services\{EmailLinkService, MailingDelayService, SendMailService};
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -78,11 +77,11 @@ class ProjectMailingAuthorizationTest extends TestCase
         $this->assertSame($this->project->id, $this->template->fresh()->project_id);
     }
 
-    public function test_schedule_accepts_only_the_templates_project_categories_and_scopes_calendar_actions(): void
+    public function test_schedule_rejects_categories_for_named_projects_and_scopes_calendar_actions(): void
     {
         $payload = ['event_name' => 'Project schedule', 'template_id' => $this->template->id, 'categoryId' => [$this->foreignCategory->id], 'date_interval' => now()->addDays(3)->format('d.m.Y H:i').' - '.now()->addDays(3)->addHour()->format('d.m.Y H:i')];
-        $this->post(route('admin.schedule.store'), $payload)->assertSessionHasErrors('categoryId.0');
-        $payload['categoryId'] = [$this->category->id];
+        $this->post(route('admin.schedule.store'), $payload)->assertSessionHasErrors('categoryId');
+        unset($payload['categoryId']);
         $this->post(route('admin.schedule.store'), $payload)->assertSessionHasNoErrors()->assertRedirect(route('admin.schedule.index'));
         $this->assertDatabaseHas('schedule', ['event_name' => 'Project schedule', 'project_id' => $this->project->id]);
         $foreign = $this->scheduleFor($this->foreignTemplate, $this->foreignCategory);
@@ -98,7 +97,7 @@ class ProjectMailingAuthorizationTest extends TestCase
     {
         $recipient = $this->subscriberFor($this->project, $this->category, 'own@example.test');
         $foreign = $this->subscriberFor($this->foreignProject, $this->foreignCategory, 'foreign@example.test');
-        // Even an inconsistent legacy category link must never cross the project boundary.
+        // A shared global category must never cross the recipient project boundary.
         Subscriptions::query()->create(['subscriber_id' => $foreign->id, 'category_id' => $this->category->id]);
         $log = Logs::query()->create(['time' => now(), 'user_id' => $this->manager->id]);
         $mailer = new ProjectRecordingMailer();
@@ -121,7 +120,7 @@ class ProjectMailingAuthorizationTest extends TestCase
         $log = Logs::query()->create(['time' => now(), 'user_id' => $this->manager->id]);
         $mailer = new ProjectRecordingMailer();
         $service = $this->service($mailer);
-        $request = Request::create('/ajax', 'POST', ['templateId' => [$this->template->id, $this->foreignTemplate->id], 'categoryId' => [$this->category->id, $this->foreignCategory->id], 'logId' => $log->id]);
+        $request = Request::create('/ajax', 'POST', ['templateId' => [$this->template->id, $this->foreignTemplate->id], 'logId' => $log->id]);
         $this->assertSame(2, $service->countSend($request)['total']);
         $service->sendOut($request);
         $this->assertSame(['batch-a@example.test', 'batch-b@example.test'], $mailer->recipients);
@@ -182,9 +181,9 @@ class ProjectMailingAuthorizationTest extends TestCase
             try {
                 $this->service($mailer)->{$method}($request);
                 $this->fail('An inactive project must not send mail.');
-            } catch (ValidationException $exception) {
+            } catch (HttpException $exception) {
                 $this->assertSame('sendOut', $method);
-                $this->assertArrayHasKey('categoryId.0', $exception->errors());
+                $this->assertSame(404, $exception->getStatusCode());
             } catch (ModelNotFoundException $exception) {
                 $this->assertSame('sendTest', $method);
                 $this->assertSame(Project::class, $exception->getModel());
@@ -214,7 +213,7 @@ class ProjectMailingAuthorizationTest extends TestCase
 
     private function mailingRequest(Logs $log): Request
     {
-        return Request::create('/ajax', 'POST', ['templateId' => [$this->template->id], 'categoryId' => [$this->category->id], 'logId' => $log->id]);
+        return Request::create('/ajax', 'POST', ['templateId' => [$this->template->id], 'logId' => $log->id]);
     }
 
     private function service(ProjectRecordingMailer $mailer): SendMailService

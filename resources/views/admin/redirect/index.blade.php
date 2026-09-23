@@ -46,6 +46,7 @@
                             <thead>
                             <tr>
                                 <th>URL</th>
+                                <th>{{ __('frontend.str.newsletter') }}</th>
                                 <th>{{ __('frontend.str.redirect_number') }}</th>
                                 <th>{{ __('frontend.str.excel_report') }}</th>
                                 <th>{{ __('frontend.str.time') }}</th>
@@ -110,15 +111,16 @@
                 },
                 "autoWidth": false,
                 "responsive": true,
-                aaSorting: [[3, 'desc']],
+                aaSorting: [[4, 'desc']],
                 processing: true,
                 serverSide: true,
                 ajax: {
                     url: '{{ route('admin.datatable.redirect') }}'
                 },
-                columnDefs: [{targets: [1, 2], className: 'text-center'}],
+                columnDefs: [{targets: [2, 3], className: 'text-center'}],
                 columns: [
                     {data: 'url', name: 'url'},
+                    {data: 'template', name: 'template'},
                     {data: 'count', name: 'count', searchable: false},
                     {data: 'report', name: 'report', orderable: false, searchable: false},
                     {data: 'last_clicked_at', name: 'last_clicked_at', visible: false, searchable: false},

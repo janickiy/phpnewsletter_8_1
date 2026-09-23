@@ -43,9 +43,9 @@ class ProjectReportingAccessTest extends TestCase
         $this->ownDelivery = $this->delivery($this->own, $this->mixedLog, 'allowed@example.test', 1);
         $this->foreignDelivery = $this->delivery($this->other, $this->mixedLog, 'secret@example.test', 0);
         $this->delivery($this->other, $this->foreignLog, 'foreign@example.test', 0);
-        Redirect::query()->create(['project_id' => $this->own->id, 'url' => self::SHARED_URL, 'email' => 'allowed@example.test']);
-        Redirect::query()->create(['project_id' => $this->other->id, 'url' => self::SHARED_URL, 'email' => 'secret@example.test']);
-        Redirect::query()->create(['project_id' => $this->other->id, 'url' => self::FOREIGN_URL, 'email' => 'foreign@example.test']);
+        Redirect::query()->create(['template_id' => $this->ownDelivery->template_id, 'template' => $this->ownDelivery->template, 'url' => self::SHARED_URL, 'email' => 'allowed@example.test']);
+        Redirect::query()->create(['template_id' => $this->foreignDelivery->template_id, 'template' => $this->foreignDelivery->template, 'url' => self::SHARED_URL, 'email' => 'secret@example.test']);
+        Redirect::query()->create(['template_id' => $this->foreignDelivery->template_id, 'template' => $this->foreignDelivery->template, 'url' => self::FOREIGN_URL, 'email' => 'foreign@example.test']);
         $this->actingAs($this->moderator);
     }
 
@@ -84,7 +84,7 @@ class ProjectReportingAccessTest extends TestCase
         $xml = $this->worksheet($response->streamedContent());
         $this->assertStringContainsString('allowed@example.test', $xml);
         $this->assertStringNotContainsString('secret@example.test', $xml);
-        $this->assertStringContainsString('A1:B2', $xml);
+        $this->assertStringContainsString('A1:D2', $xml);
         foreach (['admin.redirect.info', 'admin.redirect.report'] as $route) {
             $this->get(route($route, $this->encoded(self::FOREIGN_URL)))->assertNotFound();
         }
@@ -105,7 +105,7 @@ class ProjectReportingAccessTest extends TestCase
         $this->assertDatabaseCount('ready_sent', 2);
         $this->assertDatabaseHas('logs', ['id' => $this->mixedLog->id]);
         $this->assertDatabaseHas('logs', ['id' => $this->foreignLog->id]);
-        $this->assertDatabaseMissing('redirect', ['project_id' => $this->own->id]);
+        $this->assertDatabaseMissing('redirect', ['template_id' => $this->ownDelivery->template_id]);
         $this->assertDatabaseCount('redirect', 2);
     }
 
@@ -138,7 +138,7 @@ class ProjectReportingAccessTest extends TestCase
         $this->assertDatabaseCount('ready_sent', 3);
     }
 
-    public function test_public_tracking_cannot_mix_projects_and_redirect_stores_project_snapshot(): void
+    public function test_public_tracking_cannot_mix_projects_and_redirect_stores_template_snapshot(): void
     {
         auth()->logout();
         $this->ownDelivery->update(['readMail' => 0]);
@@ -147,10 +147,10 @@ class ProjectReportingAccessTest extends TestCase
         $this->get(route('frontend.pic', ['subscriber' => $this->ownDelivery->subscriber_id, 'template' => $this->ownDelivery->template_id]))->assertOk();
         $this->assertEquals(1, $this->ownDelivery->fresh()->readMail);
         $url = 'https://example.test/tracked';
-        $this->get(route('frontend.referral', ['subscriber' => $this->ownDelivery->subscriber_id, 'ref' => base64_encode($url)]))->assertRedirect($url);
-        $this->assertDatabaseHas('redirect', ['project_id' => $this->own->id, 'url' => $url, 'email' => 'allowed@example.test']);
+        $this->get(route('frontend.referral', ['subscriber' => $this->ownDelivery->subscriber_id, 'ref' => base64_encode($url), 'template_id' => $this->ownDelivery->template_id]))->assertRedirect($url);
+        $this->assertDatabaseHas('redirect', ['template_id' => $this->ownDelivery->template_id, 'template' => $this->ownDelivery->template, 'url' => $url, 'email' => 'allowed@example.test']);
         $this->own->update(['status' => 0]);
-        $this->get(route('frontend.referral', ['subscriber' => $this->ownDelivery->subscriber_id, 'ref' => base64_encode($url)]))->assertNotFound();
+        $this->get(route('frontend.referral', ['subscriber' => $this->ownDelivery->subscriber_id, 'ref' => base64_encode($url), 'template_id' => $this->ownDelivery->template_id]))->assertNotFound();
     }
 
     public function test_dashboard_counts_and_visible_sections_are_scoped_for_moderator(): void
@@ -189,15 +189,15 @@ class ProjectReportingAccessTest extends TestCase
 
     public function test_redirect_summary_sorts_by_last_accessible_click_before_pagination(): void
     {
-        Redirect::query()->where('project_id', $this->own->id)->update(['created_at' => '2026-01-01 12:00:00']);
-        Redirect::query()->where('project_id', $this->other->id)->update(['created_at' => '2026-12-01 12:00:00']);
+        Redirect::query()->where('template_id', $this->ownDelivery->template_id)->update(['created_at' => '2026-01-01 12:00:00']);
+        Redirect::query()->where('template_id', $this->foreignDelivery->template_id)->update(['created_at' => '2026-12-01 12:00:00']);
         $latestUrl = 'https://example.test/z-latest';
         foreach ([
             [$latestUrl, '2026-07-01 12:00:00'],
             [$latestUrl, '2026-02-01 12:00:00'],
             [self::SHARED_URL, '2026-03-01 12:00:00'],
         ] as [$url, $date]) {
-            $click = new Redirect(['project_id' => $this->own->id, 'url' => $url, 'email' => 'allowed@example.test']);
+            $click = new Redirect(['template_id' => $this->ownDelivery->template_id, 'template' => $this->ownDelivery->template, 'url' => $url, 'email' => 'allowed@example.test']);
             $click->created_at = $date;
             $click->save();
         }
@@ -206,11 +206,12 @@ class ProjectReportingAccessTest extends TestCase
             'draw' => 1, 'start' => 0, 'length' => 1,
             'columns' => [
                 ['data' => 'url', 'name' => 'url', 'orderable' => 'true', 'searchable' => 'true'],
+                ['data' => 'template', 'name' => 'template', 'orderable' => 'true', 'searchable' => 'true'],
                 ['data' => 'count', 'name' => 'count', 'orderable' => 'true', 'searchable' => 'false'],
                 ['data' => 'report', 'name' => 'report', 'orderable' => 'false', 'searchable' => 'false'],
                 ['data' => 'last_clicked_at', 'name' => 'last_clicked_at', 'orderable' => 'true', 'searchable' => 'false'],
             ],
-            'order' => [['column' => 3, 'dir' => 'desc']],
+            'order' => [['column' => 4, 'dir' => 'desc']],
         ];
         $this->getJson(route('admin.datatable.redirect', $parameters))->assertOk()
             ->assertJsonPath('recordsTotal', 2)->assertJsonPath('data.0.url', $latestUrl)

@@ -398,10 +398,18 @@
             let eventId = String($(this).attr('data-id'));
 
             Swal.fire({
-                title: "{{ __('frontend.str.confirm_remove') }}",
+                title: "{{ __('frontend.msg.are_you_sure') }}",
+                text: "{{ __('frontend.msg.will_not_be_able_to_recover_information') }}",
                 showCancelButton: true,
+                icon: 'warning',
                 confirmButtonText: "{{ __('frontend.msg.yes_remove') }}",
                 cancelButtonText: "{{ __('frontend.str.cancel') }}",
+                reverseButtons: true,
+                confirmButtonColor: '#DD6B55',
+                customClass: {
+                    actions: 'my-actions',
+                    cancelButton: 'order-1',
+                },
             }).then((result) => {
                 if (!result.isConfirmed) {
                     return;

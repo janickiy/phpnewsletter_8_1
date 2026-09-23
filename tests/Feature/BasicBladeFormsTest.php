@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Macros;
+use App\Models\Project;
 use App\Models\Schedule;
 use App\Models\ScheduleCategory;
 use App\Models\Templates;
@@ -115,9 +116,9 @@ class BasicBladeFormsTest extends TestCase
     public function test_schedule_edit_keeps_saved_choices_then_clears_omitted_old_categories(): void
     {
         $this->signIn();
-        $category = Category::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Newsletter readers']);
-        $template = Templates::query()->create(['project_id' => $this->testProjectId(), 'name' => 'Newsletter', 'body' => '<p>News</p>', 'prior' => 0]);
-        $schedule = Schedule::query()->create(['project_id' => $this->testProjectId(),
+        $category = Category::query()->create(['name' => 'Newsletter readers']);
+        $template = Templates::query()->create(['project_id' => Project::DEFAULT_ID, 'name' => 'Newsletter', 'body' => '<p>News</p>', 'prior' => 0]);
+        $schedule = Schedule::query()->create(['project_id' => Project::DEFAULT_ID,
             'event_name' => 'Mailing',
             'event_start' => now()->addDays(2),
             'event_end' => now()->addDays(3),

@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'सदस्य श्रेणियाँ देखने के लिए प्रोजेक्ट चुनें।',
+            'subscriber_categories_empty' => 'चुने गए प्रोजेक्ट में अभी कोई सदस्य श्रेणी नहीं है।',
             'default_name' => 'डिफ़ॉल्ट प्रोजेक्ट',
             'subscriber_default_project_hint' => 'यदि कोई प्रोजेक्ट नहीं चुना गया है, तो सदस्य को डिफ़ॉल्ट प्रोजेक्ट में जोड़ा जाएगा।',
             'subscriber_unassigned' => 'बिना परियोजना के',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'सभी सदस्य हटाएँ',
         'import_subscribers' => 'सदस्यों को आयात करें',
         'export_subscribers' => 'सदस्यों को निर्यात करें',
+        'export_file_options' => 'फ़ाइल विकल्प',
+        'export_zip' => 'ZIP में संपीड़ित करें',
+        'download_file' => 'फ़ाइल डाउनलोड करें',
+        'export_projects_hint' => 'आप कई प्रोजेक्ट चुन सकते हैं।',
+        'export_unassigned_hint' => 'कोई प्रोजेक्ट न चुनने पर, किसी भी प्रोजेक्ट से न जुड़े सदस्यों को निर्यात किया जाएगा।',
+        'export_categories_hint' => 'कोई श्रेणी न चुनने पर, चुने गए प्रोजेक्ट के सभी सदस्यों को निर्यात किया जाएगा।',
         'remove_all_subscribers' => 'सभी सदस्य हटाएँ',
         'want_to_delete_all_subscribers' => 'क्या आप वाकई सभी सदस्यों को हटाना चाहते हैं?',
         'add_subscriber' => 'सदस्य जोड़ें',
@@ -154,8 +162,10 @@ return [
         'sender_name' => 'प्रेषक का नाम',
         'sender_email' => 'प्रेषक का ईमेल',
         'add_schedule' => 'शेड्यूल जोड़ें',
-        'schedule_categories_hint' => 'टेम्पलेट चुनने के बाद केवल उसके प्रोजेक्ट की श्रेणियाँ दिखाई देंगी।',
-        'schedule_categories_empty' => 'चुने गए टेम्पलेट के प्रोजेक्ट में अभी कोई सदस्य श्रेणी नहीं है।',
+        'schedule_categories_hint' => 'श्रेणियाँ केवल डिफ़ॉल्ट प्रोजेक्ट के टेम्पलेट के लिए उपलब्ध और अनिवार्य हैं। कम से कम एक श्रेणी चुनें।',
+        'schedule_categories_empty' => 'अभी कोई सदस्य श्रेणी नहीं बनाई गई है।',
+        'manual_mailing_default_categories_hint' => 'डिफ़ॉल्ट प्रोजेक्ट के टेम्पलेट के लिए कम से कम एक साझा श्रेणी चुनें। श्रेणी के अनुसार फ़िल्टर केवल डिफ़ॉल्ट प्रोजेक्ट के प्राप्तकर्ताओं पर लागू होता है।',
+        'manual_mailing_project_subscribers_hint' => 'अन्य प्रोजेक्ट के टेम्पलेट बिना श्रेणी चुने अपने प्रोजेक्ट के सभी सक्रिय ग्राहकों को भेजे जाएँगे।',
         'enter_login' => 'लॉगिन दर्ज करें',
         'enter_password' => 'पासवर्ड दर्ज करें',
         'singin' => 'साइन इन',
@@ -236,6 +246,7 @@ return [
         'remove_subscriber' => 'उन सब्सक्राइबरों को हटाएँ जिन्होंने अपनी सदस्यता की पुष्टि नहीं की है',
     ],
     'msg' => [
+        'mailing_already_running' => 'यह मेलिंग पहले से चल रही है।',
         'are_you_sure' => 'क्या आप सुनिश्चित हैं?',
         'will_not_be_able_to_recover_information' => 'आप इस जानकारी को पुनर्प्राप्त नहीं कर पाएँगे!',
         'yes_remove' => 'हाँ, हटाएँ!',

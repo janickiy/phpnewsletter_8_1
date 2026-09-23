@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'اختر مشروعًا لعرض فئات المشتركين الخاصة به.',
+            'subscriber_categories_empty' => 'لا توجد فئات للمشتركين في المشاريع المحددة حتى الآن.',
             'default_name' => 'المشروع الافتراضي',
             'subscriber_default_project_hint' => 'إذا لم يتم اختيار أي مشروع، فستتم إضافة المشترك إلى المشروع الافتراضي.',
             'subscriber_unassigned' => 'بدون مشروع',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'حذف جميع المشتركين',
         'import_subscribers' => 'استيراد المشتركين',
         'export_subscribers' => 'تصدير المشتركين',
+        'export_file_options' => 'خيارات الملف',
+        'export_zip' => 'ضغط بصيغة ZIP',
+        'download_file' => 'تنزيل الملف',
+        'export_projects_hint' => 'يمكنك اختيار عدة مشاريع.',
+        'export_unassigned_hint' => 'إذا لم تختر مشاريع، فسيتم تصدير المشتركين غير المرتبطين بأي مشروع.',
+        'export_categories_hint' => 'إذا لم تختر فئات، فسيتم تصدير جميع المشتركين في المشاريع المحددة.',
         'remove_all_subscribers' => 'حذف جميع المشتركين',
         'want_to_delete_all_subscribers' => 'هل أنت متأكد أنك تريد حذف جميع المشتركين؟',
         'add_subscriber' => 'إضافة مشترك',
@@ -154,8 +162,10 @@ return [
         'sender_name' => 'اسم المرسل',
         'sender_email' => 'بريد المرسل الإلكتروني',
         'add_schedule' => 'إضافة جدول',
-        'schedule_categories_hint' => 'بعد اختيار قالب، ستظهر فقط الفئات التابعة لمشروعه.',
-        'schedule_categories_empty' => 'لا يحتوي مشروع القالب المحدد على فئات للمشتركين بعد.',
+        'schedule_categories_hint' => 'الفئات متاحة ومطلوبة فقط لقوالب المشروع الافتراضي. اختر فئة واحدة على الأقل.',
+        'schedule_categories_empty' => 'لم يتم إنشاء فئات للمشتركين بعد.',
+        'manual_mailing_default_categories_hint' => 'اختر فئة عامة واحدة على الأقل لقوالب المشروع الافتراضي. تُطبق التصفية حسب الفئات على مستلمي المشروع الافتراضي فقط.',
+        'manual_mailing_project_subscribers_hint' => 'ستُرسل قوالب المشاريع الأخرى إلى جميع المشتركين النشطين في مشروعها دون اختيار فئات.',
         'enter_login' => 'أدخل اسم المستخدم',
         'enter_password' => 'أدخل كلمة المرور',
         'singin' => 'تسجيل الدخول',
@@ -236,6 +246,7 @@ return [
         'remove_subscriber' => 'إزالة المشتركين الذين لم يؤكدوا اشتراكهم',
     ],
     'msg' => [
+        'mailing_already_running' => 'هذا الإرسال قيد التنفيذ بالفعل.',
         'are_you_sure' => 'هل أنت متأكد؟',
         'will_not_be_able_to_recover_information' => 'لن تتمكن من استعادة هذه المعلومات!',
         'yes_remove' => 'نعم، احذف!',

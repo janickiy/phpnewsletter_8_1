@@ -50,16 +50,17 @@ class SubscriberProjectAccessTest extends TestCase
 
     public function test_create_rejects_foreign_assignments_and_uses_the_default_when_project_is_missing(): void
     {
-        $category = Category::query()->create(['project_id' => $this->other->id, 'name' => 'Foreign']);
+        $category = Category::query()->create(['name' => 'Global category']);
         $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->other->id], 'email' => 'one@example.test'])->assertSessionHasErrors('project_ids.0');
-        $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->own->id], 'email' => 'one@example.test', 'categoryId' => [$category->id]])->assertSessionHasErrors('categoryId.0');
-        $this->post(route('admin.subscribers.store'), ['email' => 'one@example.test'])->assertSessionHasNoErrors()->assertSessionMissing('error');
+        $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->own->id], 'email' => 'invalid@example.test', 'categoryId' => [999999]])->assertSessionHasErrors('categoryId.0');
+        $this->post(route('admin.subscribers.store'), ['email' => 'one@example.test', 'categoryId' => [$category->id]])->assertSessionHasNoErrors()->assertSessionMissing('error');
         $subscriber = Subscribers::query()->where('email', 'one@example.test')->sole();
         $this->assertSame([Project::DEFAULT_ID], $subscriber->projects()->pluck('projects.id')->all());
 
-        $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->own->id], 'email' => 'one@example.test'])->assertSessionHasNoErrors()->assertSessionMissing('error');
+        $this->post(route('admin.subscribers.store'), ['project_ids' => [$this->own->id], 'email' => 'one@example.test', 'categoryId' => [$category->id]])->assertSessionHasNoErrors()->assertSessionMissing('error');
         $this->assertDatabaseCount('subscribers', 1);
         $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $this->own->id], $subscriber->projects()->pluck('projects.id')->all());
+        $this->assertSame([$category->id], $subscriber->subscriptions()->pluck('category_id')->all());
     }
 
     public function test_bulk_operations_are_atomic_and_delete_all_only_removes_accessible_projects(): void
@@ -78,7 +79,7 @@ class SubscriberProjectAccessTest extends TestCase
         $this->assertDatabaseHas('subscribers', ['id' => $other->id]);
     }
 
-    public function test_import_same_email_does_not_change_foreign_project_or_its_categories(): void
+    public function test_import_same_email_preserves_foreign_memberships_and_global_categories(): void
     {
         $foreign = $this->subscriber($this->other, 'same@example.test');
         $foreignCategory = Category::query()->create(['project_id' => $this->other->id, 'name' => 'Foreign category']);
@@ -93,15 +94,20 @@ class SubscriberProjectAccessTest extends TestCase
         $this->assertDatabaseHas('project_subscriber', ['project_id' => $this->other->id, 'subscriber_id' => $foreign->id]);
         $this->assertDatabaseHas('subscriptions', ['subscriber_id' => $foreign->id, 'category_id' => $category->id]);
         $this->post(route('admin.subscribers.import_subscribers'), ['project_ids' => [$this->other->id], 'import' => $file])->assertSessionHasErrors('project_ids.0');
-        $this->post(route('admin.subscribers.import_subscribers'), ['project_ids' => [$this->own->id], 'categoryId' => [$foreignCategory->id], 'import' => $file])->assertSessionHasErrors('categoryId.0');
+        $this->post(route('admin.subscribers.import_subscribers'), ['project_ids' => [$this->own->id], 'categoryId' => [$foreignCategory->id], 'import' => $file])->assertSessionHasNoErrors()->assertSessionMissing('error');
+        $this->post(route('admin.subscribers.import_subscribers'), ['project_ids' => [$this->own->id], 'categoryId' => [999999], 'import' => $file])->assertSessionHasErrors('categoryId.0');
     }
 
     #[DataProvider('exportFormats')]
     public function test_every_export_format_is_project_scoped(string $type, string $compression): void
     {
-        $this->subscriber($this->own, 'allowed@example.test');
-        $this->subscriber($this->other, 'secret@example.test');
-        $response = $this->post(route('admin.subscribers.export_subscribers'), ['project_ids' => [$this->own->id], 'export_type' => $type, 'compress' => $compression])->assertOk();
+        $allowed = $this->subscriber($this->own, 'allowed@example.test');
+        $secret = $this->subscriber($this->other, 'secret@example.test');
+        $category = Category::query()->create(['name' => 'Shared global category']);
+        foreach ([$allowed, $secret] as $subscriber) {
+            Subscriptions::query()->create(['subscriber_id' => $subscriber->id, 'category_id' => $category->id]);
+        }
+        $response = $this->post(route('admin.subscribers.export_subscribers'), ['project_ids' => [$this->own->id], 'categoryId' => [$category->id], 'export_type' => $type, 'compress' => $compression])->assertOk();
         $contents = $response->streamedContent();
         if ($compression === 'zip') {
             $contents = $this->unzip($contents);
@@ -125,12 +131,13 @@ class SubscriberProjectAccessTest extends TestCase
         $this->mock(SendMailService::class)->shouldReceive('sendFrontendSubscriberEmails')->once();
         $ownCategory = Category::query()->create(['project_id' => $this->own->id, 'name' => 'Public category']);
         $foreignCategory = Category::query()->create(['project_id' => $this->other->id, 'name' => 'Foreign category']);
-        $this->getJson(route('frontend.categories', ['project_id' => $this->own->id]))->assertOk()->assertJsonCount(1, 'items')->assertJsonPath('items.0.id', $ownCategory->id);
+        $this->getJson(route('frontend.categories', ['project_id' => $this->own->id]))->assertOk()->assertJsonCount(2, 'items');
         $this->postJson(route('frontend.addsub'), ['email' => 'public@example.test'])->assertOk()->assertJsonPath('result', 'success');
         $subscriber = Subscribers::query()->where('email', 'public@example.test')->sole();
         $this->assertSame([Project::DEFAULT_ID], $subscriber->projects()->pluck('projects.id')->all());
-        $this->postJson(route('frontend.addsub'), ['project_id' => $this->own->id, 'email' => 'public@example.test', 'categoryId' => [$foreignCategory->id]])->assertUnprocessable();
-        $this->postJson(route('frontend.addsub'), ['project_id' => $this->own->id, 'email' => 'public@example.test', 'categoryId' => [$ownCategory->id]])->assertOk();
+        $this->postJson(route('frontend.addsub'), ['project_id' => $this->own->id, 'email' => 'public@example.test', 'categoryId' => [$foreignCategory->id, $ownCategory->id]])->assertOk();
+        $this->assertEqualsCanonicalizing([$foreignCategory->id, $ownCategory->id], $subscriber->subscriptions()->pluck('category_id')->all());
+        $this->postJson(route('frontend.addsub'), ['project_id' => $this->own->id, 'email' => 'public@example.test', 'categoryId' => [$ownCategory->id]])->assertUnprocessable()->assertJsonValidationErrors('email');
         $this->assertEqualsCanonicalizing([Project::DEFAULT_ID, $this->own->id], $subscriber->projects()->pluck('projects.id')->all());
         $this->own->update(['status' => 0]);
         $this->getJson(route('frontend.categories', ['project_id' => $this->own->id]))->assertNotFound();

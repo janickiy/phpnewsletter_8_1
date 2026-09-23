@@ -9,7 +9,6 @@ final class CategoryCreateData
      */
     public function __construct(
         public readonly string $name,
-        public readonly int $projectId,
     ) {
     }
 
@@ -19,7 +18,6 @@ final class CategoryCreateData
     public function toArray(): array
     {
         return [
-            'project_id' => $this->projectId,
             'name' => $this->name,
         ];
     }

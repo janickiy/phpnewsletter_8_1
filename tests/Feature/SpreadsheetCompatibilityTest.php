@@ -79,12 +79,12 @@ class SpreadsheetCompatibilityTest extends TestCase
             'active' => 1,
         ]);
         $this->assertSame('Original name', $existing->fresh()->name);
-        $this->assertDatabaseCount('subscriptions', 6);
-        $this->assertDatabaseMissing('subscriptions', ['category_id' => $oldCategory->id]);
+        $this->assertDatabaseCount('subscriptions', 7);
+        $this->assertDatabaseHas('subscriptions', ['subscriber_id' => $existing->id, 'category_id' => $oldCategory->id]);
 
         foreach (Subscribers::query()->get() as $subscriber) {
             $this->assertEqualsCanonicalizing(
-                $categoryIds,
+                $subscriber->id === $existing->id ? [...$categoryIds, $oldCategory->id] : $categoryIds,
                 $subscriber->subscriptions()->pluck('category_id')->all()
             );
         }

@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use App\Enums\TemplatePriority;
 use PHPMailer\PHPMailer;
-use App\Models\{Attach, Smtp, CustomHeaders, Templates};
+use App\Models\{Attach, Smtp, CustomHeaders};
 use Illuminate\Support\Facades\Storage;
 use URL;
 
@@ -177,18 +177,14 @@ class SendEmailHelper
         $msg = $body;
         $url_info = parse_url(SettingsHelper::getInstance()->getValueForKey('URL'));
 
-        $referralProjectId = preg_match('/%REFERRAL:/i', $msg) === 1 && $templateId > 0
-            ? Templates::query()->whereKey($templateId)->value('project_id')
-            : null;
-
-        $msg = preg_replace_callback("/%REFERRAL\:(.+)%/isU", function ($matches) use ($subscriberId, $referralProjectId) {
+        $msg = preg_replace_callback("/%REFERRAL\:(.+)%/isU", function ($matches) use ($subscriberId, $templateId) {
             $parameters = [
                 'ref' => rtrim(strtr(base64_encode($matches[1]), '+/', '-_'), '='),
                 'subscriber' => $subscriberId,
             ];
 
-            if ($referralProjectId !== null) {
-                $parameters['project_id'] = $referralProjectId;
+            if ($templateId > 0) {
+                $parameters['template_id'] = $templateId;
             }
 
             return URL::route('frontend.referral', $parameters);

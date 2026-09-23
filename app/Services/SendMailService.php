@@ -13,6 +13,7 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\{
     ReadySentRepository,
@@ -111,7 +112,7 @@ class SendMailService
 
 
     /**
-     * Send selected templates to eligible category subscribers and record each delivery attempt.
+     * Send selected templates to eligible project recipients and record each delivery attempt.
      *
      * @param Request $request
      * @return array
@@ -121,6 +122,19 @@ class SendMailService
     {
         [$templates, $categoryIds, $logId] = $this->mailingSelection($request);
 
+        $lock = Cache::lock('manual-mailing:'.$logId, 86400);
+        abort_unless($lock->get(), 409, __('frontend.msg.mailing_already_running'));
+
+        try {
+            return $this->sendBatch($templates, $categoryIds, $logId);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /** Send an authorized manual batch while its exclusive lock is held. */
+    private function sendBatch(Collection $templates, array $categoryIds, int $logId): array
+    {
         $this->processRepository->updateByUserId(Auth::id(), ProcessStatus::Start->value);
 
         $mailCount = 0;
@@ -146,7 +160,10 @@ class SendMailService
 
         foreach ($templates ?? [] as $template) {
 
-            $subscribers = $this->subscribersRepository->getSubscribers($logId, $template->id, $categoryIds, $order, $limit, $interval);
+            $wholeProject = (int) $template->project_id !== Project::DEFAULT_ID;
+            $subscribers = $this->subscribersRepository->getSubscribers(
+                $logId, $template->id, $wholeProject ? [] : $categoryIds, $order, $limit, $interval, $wholeProject
+            );
 
             $subscriberUpdates = [];
 
@@ -263,7 +280,13 @@ class SendMailService
                 $interval = null;
         }
 
-        $total = $templates->sum(fn ($template) => $this->subscribersRepository->countSubscriptions($categoryId, $limit, $interval, (int) $template->project_id));
+        $total = $templates->sum(function ($template) use ($categoryId, $limit, $interval) {
+            $wholeProject = (int) $template->project_id !== Project::DEFAULT_ID;
+
+            return $this->subscribersRepository->countSubscriptions(
+                $wholeProject ? [] : $categoryId, $limit, $interval, (int) $template->project_id, $wholeProject
+            );
+        });
         if ($limit !== null) {
             $total = min($total, $limit);
         }
@@ -299,8 +322,8 @@ class SendMailService
         $data = $request->validate([
             'templateId' => ['required', 'array', 'min:1'],
             'templateId.*' => ['required', 'integer', 'distinct'],
-            'categoryId' => ['required', 'array', 'min:1'],
-            'categoryId.*' => ['required', 'integer', 'distinct', Rule::in(ProjectAccess::scope(Category::query(), 'manage')->pluck('id')->all())],
+            'categoryId' => ['nullable', 'array'],
+            'categoryId.*' => ['required', 'integer', 'distinct', Rule::exists(Category::getTableName(), 'id')],
             'logId' => ['required', 'integer'],
         ]);
 
@@ -308,10 +331,14 @@ class SendMailService
         abort_unless($templates->count() === count($data['templateId']), 404);
         abort_if($templates->contains(fn ($template) => !(bool) $template->project->status), 422, __('frontend.str.projects.inactive_mailing'));
 
+        if ($templates->contains(fn ($template) => (int) $template->project_id === Project::DEFAULT_ID)) {
+            $request->validate(['categoryId' => ['required', 'array', 'min:1']]);
+        }
+
         $log = Logs::query()->findOrFail($data['logId']);
         abort_unless(Auth::user()->role === User::ROLE_ADMIN || (int) $log->user_id === (int) Auth::id(), 404);
 
-        return [$templates, array_map('intval', $data['categoryId']), (int) $log->id];
+        return [$templates, array_map('intval', $data['categoryId'] ?? []), (int) $log->id];
     }
 
     /**

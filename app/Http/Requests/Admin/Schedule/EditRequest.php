@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin\Schedule;
 
 
 use App\Models\Category;
+use App\Models\Project;
 use App\Models\Schedule;
 use App\Models\Templates;
 use App\Services\ProjectAccess;
@@ -48,6 +49,11 @@ class EditRequest extends FormRequest
      */
     public function rules(): array
     {
+        $templateProjectId = ProjectAccess::scope(Templates::query(), 'manage')
+            ->whereKey($this->integer('template_id'))
+            ->value('project_id');
+        $usesCategories = $templateProjectId !== null && (int) $templateProjectId === Project::DEFAULT_ID;
+
         return [
             'id' => [
                 'required',
@@ -67,21 +73,22 @@ class EditRequest extends FormRequest
             ],
 
             'categoryId' => [
-                'required',
+                Rule::requiredIf($usesCategories),
+                Rule::prohibitedIf(!$usesCategories),
+                'nullable',
                 'array',
-                'min:1',
             ],
 
             'categoryId.*' => [
                 'required',
                 'integer',
-                Rule::exists(Category::getTableName(), 'id')->where('project_id', ProjectAccess::scope(Templates::query(), 'manage')->whereKey($this->integer('template_id'))->value('project_id') ?? 0),
+                'distinct',
+                Rule::exists(Category::getTableName(), 'id'),
             ],
 
             'event_start' => [
                 'required',
                 'date_format:d.m.Y H:i',
-                'after:tomorrow',
             ],
 
             'event_end' => [

@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'Sélectionnez un projet pour afficher ses catégories d’abonnés.',
+            'subscriber_categories_empty' => 'Les projets sélectionnés ne disposent pas encore de catégories d’abonnés.',
             'default_name' => 'Projet par défaut',
             'subscriber_default_project_hint' => 'Si aucun projet n’est sélectionné, l’abonné sera ajouté au projet par défaut.',
             'subscriber_unassigned' => 'Sans projet',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'Supprimer tous les abonnés',
         'import_subscribers' => 'Importer des abonnés',
         'export_subscribers' => 'Exporter les abonnés',
+        'export_file_options' => 'Options du fichier',
+        'export_zip' => 'Compresser au format ZIP',
+        'download_file' => 'Télécharger le fichier',
+        'export_projects_hint' => 'Vous pouvez sélectionner plusieurs projets.',
+        'export_unassigned_hint' => 'Sans sélection de projet, les abonnés sans projet seront exportés.',
+        'export_categories_hint' => 'Sans sélection de catégorie, tous les abonnés des projets sélectionnés seront exportés.',
         'remove_all_subscribers' => 'Supprimer tous les abonnés',
         'want_to_delete_all_subscribers' => 'Êtes-vous sûr de vouloir supprimer tous les abonnés ?',
         'add_subscriber' => 'Ajouter un abonné',
@@ -154,8 +162,10 @@ return [
         'sender_name' => 'Nom de l’expéditeur',
         'sender_email' => 'E-mail de l’expéditeur',
         'add_schedule' => 'Ajouter une planification',
-        'schedule_categories_hint' => 'Après la sélection d’un modèle, seules les catégories de son projet seront affichées.',
-        'schedule_categories_empty' => 'Le projet du modèle sélectionné ne contient pas encore de catégories d’abonnés.',
+        'schedule_categories_hint' => 'Les catégories sont disponibles et obligatoires uniquement pour les modèles du projet par défaut. Sélectionnez au moins une catégorie.',
+        'schedule_categories_empty' => 'Aucune catégorie d’abonnés n’a encore été créée.',
+        'manual_mailing_default_categories_hint' => 'Sélectionnez au moins une catégorie globale pour les modèles du projet par défaut. Le filtrage par catégorie concerne uniquement les destinataires du projet par défaut.',
+        'manual_mailing_project_subscribers_hint' => 'Les modèles des autres projets seront envoyés à tous les abonnés actifs de leur propre projet, sans sélection de catégories.',
         'enter_login' => 'Saisir le login',
         'enter_password' => 'Saisir le mot de passe',
         'singin' => 'Se connecter',
@@ -236,6 +246,7 @@ return [
         'remove_subscriber' => 'Supprimer les abonnés qui n’ont pas confirmé leur inscription',
     ],
     'msg' => [
+        'mailing_already_running' => 'Cet envoi est déjà en cours.',
         'are_you_sure' => 'Êtes-vous sûr ?',
         'will_not_be_able_to_recover_information' => 'Vous ne pourrez pas récupérer ces informations !',
         'yes_remove' => 'Oui, supprimer !',

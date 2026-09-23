@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'Selecione um projeto para ver suas categorias de assinantes.',
+            'subscriber_categories_empty' => 'Os projetos selecionados ainda não têm categorias de assinantes.',
             'default_name' => 'Projeto padrão',
             'subscriber_default_project_hint' => 'Se nenhum projeto for selecionado, o assinante será adicionado ao projeto padrão.',
             'subscriber_unassigned' => 'Sem projeto',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'Excluir todos os assinantes',
         'import_subscribers' => 'Importar assinantes',
         'export_subscribers' => 'Exportar assinantes',
+        'export_file_options' => 'Opções do arquivo',
+        'export_zip' => 'Compactar em ZIP',
+        'download_file' => 'Baixar arquivo',
+        'export_projects_hint' => 'Você pode selecionar vários projetos.',
+        'export_unassigned_hint' => 'Sem selecionar projetos, serão exportados os assinantes sem vínculo com projetos.',
+        'export_categories_hint' => 'Sem selecionar categorias, serão exportados todos os assinantes dos projetos selecionados.',
         'remove_all_subscribers' => 'Remover todos os assinantes',
         'want_to_delete_all_subscribers' => 'Tem certeza de que deseja excluir todos os assinantes?',
         'add_subscriber' => 'Adicionar assinante',
@@ -154,8 +162,10 @@ return [
         'sender_name' => 'Nome do remetente',
         'sender_email' => 'E-mail do remetente',
         'add_schedule' => 'Adicionar agendamento',
-        'schedule_categories_hint' => 'Após selecionar um modelo, serão exibidas apenas as categorias do projeto dele.',
-        'schedule_categories_empty' => 'O projeto do modelo selecionado ainda não tem categorias de assinantes.',
+        'schedule_categories_hint' => 'As categorias estão disponíveis e são obrigatórias apenas para modelos do projeto padrão. Selecione pelo menos uma categoria.',
+        'schedule_categories_empty' => 'Ainda não foram criadas categorias de assinantes.',
+        'manual_mailing_default_categories_hint' => 'Selecione pelo menos uma categoria global para os modelos do projeto padrão. O filtro por categorias aplica-se apenas aos destinatários do projeto padrão.',
+        'manual_mailing_project_subscribers_hint' => 'Os modelos de outros projetos serão enviados a todos os assinantes ativos do respetivo projeto, sem selecionar categorias.',
         'enter_login' => 'Inserir login',
         'enter_password' => 'Inserir senha',
         'singin' => 'Entrar',
@@ -236,6 +246,7 @@ return [
     ],
 
     'msg' => [
+        'mailing_already_running' => 'Este envio já está em andamento.',
         'are_you_sure' => 'Tem certeza?',
         'will_not_be_able_to_recover_information' => 'Não será possível recuperar estas informações!',
         'yes_remove' => 'Sim, excluir!',

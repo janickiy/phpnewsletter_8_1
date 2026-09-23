@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'Wählen Sie ein Projekt aus, um seine Abonnentenkategorien anzuzeigen.',
+            'subscriber_categories_empty' => 'Die ausgewählten Projekte haben noch keine Abonnentenkategorien.',
             'default_name' => 'Standardprojekt',
             'subscriber_default_project_hint' => 'Wenn keine Projekte ausgewählt sind, wird der Abonnent dem Standardprojekt hinzugefügt.',
             'subscriber_unassigned' => 'Ohne Projekt',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'Alle Abonnenten löschen',
         'import_subscribers' => 'Abonnenten importieren',
         'export_subscribers' => 'Abonnenten exportieren',
+        'export_file_options' => 'Dateioptionen',
+        'export_zip' => 'Als ZIP komprimieren',
+        'download_file' => 'Datei herunterladen',
+        'export_projects_hint' => 'Sie können mehrere Projekte auswählen.',
+        'export_unassigned_hint' => 'Ohne Projektauswahl werden Abonnenten ohne Projektzuordnung exportiert.',
+        'export_categories_hint' => 'Ohne Kategorieauswahl werden alle Abonnenten der ausgewählten Projekte exportiert.',
         'remove_all_subscribers' => 'Alle Abonnenten löschen',
         'want_to_delete_all_subscribers' => 'Möchten Sie wirklich alle Abonnenten löschen?',
         'add_subscriber' => 'Abonnent hinzufügen',
@@ -154,8 +162,10 @@ return [
         'sender_name' => 'Absendername',
         'sender_email' => 'Absender-E-Mail',
         'add_schedule' => 'Zeitplan hinzufügen',
-        'schedule_categories_hint' => 'Nach Auswahl einer Vorlage werden nur die Kategorien ihres Projekts angezeigt.',
-        'schedule_categories_empty' => 'Das Projekt der ausgewählten Vorlage hat noch keine Abonnentenkategorien.',
+        'schedule_categories_hint' => 'Kategorien sind nur für Vorlagen des Standardprojekts verfügbar und erforderlich. Wählen Sie mindestens eine Kategorie aus.',
+        'schedule_categories_empty' => 'Es wurden noch keine Abonnentenkategorien erstellt.',
+        'manual_mailing_default_categories_hint' => 'Wählen Sie für Vorlagen des Standardprojekts mindestens eine globale Kategorie aus. Der Kategoriefilter gilt nur für Empfänger im Standardprojekt.',
+        'manual_mailing_project_subscribers_hint' => 'Vorlagen anderer Projekte werden ohne Kategorieauswahl an alle aktiven Abonnenten ihres jeweiligen Projekts gesendet.',
         'enter_login' => 'Login eingeben',
         'enter_password' => 'Passwort eingeben',
         'singin' => 'Anmelden',
@@ -236,6 +246,7 @@ return [
         'remove_subscriber' => 'Abonnenten entfernen, die ihre Anmeldung nicht bestätigt haben',
     ],
     'msg' => [
+        'mailing_already_running' => 'Dieser Versand läuft bereits.',
         'are_you_sure' => 'Sind Sie sicher?',
         'will_not_be_able_to_recover_information' => 'Diese Informationen können nicht wiederhergestellt werden!',
         'yes_remove' => 'Ja, löschen!',

@@ -22,6 +22,14 @@ class SendUnsentEmails extends Command implements Isolatable
 
     protected $description = 'Send unsent emails to subscribers';
 
+    protected $isolated = true;
+
+    /** Match the scheduler's overlap window for long mailing batches. */
+    public function isolationLockExpiresAt(): \DateInterval
+    {
+        return new \DateInterval('P1D');
+    }
+
     /**
      * Initialize the retry command with schedule, subscriber, and delay services.
      */
@@ -71,8 +79,6 @@ class SendUnsentEmails extends Command implements Isolatable
                 $interval
             );
 
-            $sentSubscriberIds = [];
-            $subscriberUpdates = [];
             $progressBar = $this->createMailingProgressBar(count($subscribers ?? []));
 
             foreach ($subscribers ?? [] as $subscriber) {
@@ -86,8 +92,10 @@ class SendUnsentEmails extends Command implements Isolatable
                 $attemptCount++;
 
                 if ($result['result'] === true) {
-                    $subscriberUpdates[$subscriber->id] = now()->format('Y-m-d H:i:s');
-                    $sentSubscriberIds[] = $subscriber->id;
+                    // Persist before the next attempt so an interrupted batch cannot repeat this success.
+                    $this->resultSend($row->id, [$subscriber->id], [
+                        $subscriber->id => now()->format('Y-m-d H:i:s'),
+                    ]);
                     $mailCount++;
                     $status = 'success';
                 } else {
@@ -101,13 +109,11 @@ class SendUnsentEmails extends Command implements Isolatable
                     (int) SettingsHelper::getInstance()->getValueForKey('LIMIT_SEND') === 1
                     && $mailCount >= (int) SettingsHelper::getInstance()->getValueForKey('LIMIT_NUMBER')
                 ) {
-                    $this->resultSend($row->id, $sentSubscriberIds, $subscriberUpdates);
                     break;
                 }
             }
 
             $this->finishMailingProgressBar($progressBar);
-            $this->resultSend($row->id, $sentSubscriberIds, $subscriberUpdates);
 
             if (
                 (int) SettingsHelper::getInstance()->getValueForKey('LIMIT_SEND') === 1

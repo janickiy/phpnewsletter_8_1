@@ -16,6 +16,7 @@ use App\Models\Templates;
 use App\Models\User;
 use App\Repositories\ProjectRepository;
 use App\Services\ProjectAccess;
+use App\Services\RedirectReportFilter;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Yajra\DataTables\Facades\DataTables;
@@ -105,13 +106,11 @@ class DataTableController extends Controller
     public function getCategory(): JsonResponse
     {
         $rows = ProjectAccess::categories(Category::query(), 'manage')
-            ->selectRaw('categories.id, categories.name, projects.name AS project, count(subscriptions.category_id) AS subcount')
-            ->leftJoinSub(Project::query()->includingDefault()->select('projects.*'), 'projects', 'categories.project_id', '=', 'projects.id')
+            ->selectRaw('categories.id, categories.name, count(DISTINCT subscriptions.subscriber_id) AS subcount')
             ->leftJoin('subscriptions', 'categories.id', '=', 'subscriptions.category_id')
-            ->groupBy('categories.id', 'categories.name', 'projects.name');
+            ->groupBy('categories.id', 'categories.name');
 
         return DataTables::of($rows)
-            ->editColumn('project', fn ($row) => $row->project ?? __('frontend.str.projects.subscriber_unassigned'))
             ->addColumn('actions', function ($row) {
                 $editBtn = sprintf(
                     '<a title="%s" class="btn btn-sm btn-outline-primary" href="%s"><span class="fa fa-edit"></span></a>',
@@ -186,8 +185,7 @@ class DataTableController extends Controller
             ->with([
                 'projects' => fn ($query) => $query->whereIn('projects.id', $visibleProjectIds)->select('projects.id', 'projects.name')->orderBy('projects.name'),
                 'subscriptions' => fn ($query) => $query
-                    ->select('subscriber_id', 'category_id')
-                    ->whereHas('category', fn ($categories) => $categories->whereIn('project_id', $visibleProjectIds)),
+                    ->select('subscriber_id', 'category_id'),
                 'subscriptions.category:id,name',
             ])
             ->select([
@@ -351,21 +349,28 @@ class DataTableController extends Controller
      */
     public function getRedirectLogs(): JsonResponse
     {
-        $rows = ProjectAccess::scope(Redirect::query())
-            ->selectRaw('url, COUNT(email) as count, MAX(redirect.created_at) as last_clicked_at')
-            ->groupBy('url')
+        $rows = ProjectAccess::redirects(Redirect::query())
+            ->selectRaw('url, template_id, template, COUNT(email) as count, MAX(redirect.created_at) as last_clicked_at')
+            ->groupBy('url', 'template_id', 'template')
             ->distinct();
 
         return DataTables::of($rows)
             ->orderColumn('last_clicked_at', 'MAX(redirect.created_at) $1')
+            ->editColumn('template', fn ($row) => $row->template ?? '—')
             ->editColumn('count', fn ($row) => sprintf(
                 '<a href="%s">%s</a>',
-                route('admin.redirect.info', ['url' => $this->encodeRouteBase64($row->url)]),
+                route('admin.redirect.info', [
+                    'url' => $this->encodeRouteBase64($row->url),
+                    'newsletter' => RedirectReportFilter::encode($row->template_id, $row->template),
+                ]),
                 $row->count
             ))
             ->addColumn('report', fn ($row) => sprintf(
                     '<a href="%s">%s</a>',
-                    route('admin.redirect.report', ['url' => $this->encodeRouteBase64($row->url)]),
+                    route('admin.redirect.report', [
+                        'url' => $this->encodeRouteBase64($row->url),
+                        'newsletter' => RedirectReportFilter::encode($row->template_id, $row->template),
+                    ]),
                     __('frontend.str.download')
                 ))
             ->rawColumns(['count', 'report'])
@@ -381,9 +386,13 @@ class DataTableController extends Controller
     {
         $decodedUrl = $this->decodeRouteBase64($url);
 
-        $rows = ProjectAccess::scope(Redirect::query())->where('url', $decodedUrl);
+        $rows = RedirectReportFilter::apply(
+            ProjectAccess::redirects(Redirect::query())->where('url', $decodedUrl),
+            request()->query('newsletter')
+        );
 
         return DataTables::of($rows)
+            ->editColumn('template', fn ($row) => $row->template ?? '—')
             ->editColumn('created_at', fn ($row) => $this->formatDateTime($row->created_at))
             ->make(true);
     }

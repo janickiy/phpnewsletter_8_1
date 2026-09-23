@@ -39,9 +39,9 @@ class ProjectDeactivationDuringMailingTest extends TestCase
         $defaultTemplate = $this->template(Project::DEFAULT_ID);
         $category = Category::query()->create(['name' => 'Project readers', 'project_id' => $project->id]);
         $defaultCategory = Category::query()->create(['name' => 'Default readers', 'project_id' => Project::DEFAULT_ID]);
-        $sentBeforePause = $this->recipient($category, 'sent@example.test');
-        $skippedAfterPause = $this->recipient($category, 'skipped@example.test');
-        $defaultRecipient = $this->recipient($defaultCategory, 'default@example.test');
+        $sentBeforePause = $this->recipient($project->id, $category, 'sent@example.test');
+        $skippedAfterPause = $this->recipient($project->id, $category, 'skipped@example.test');
+        $defaultRecipient = $this->recipient(Project::DEFAULT_ID, $defaultCategory, 'default@example.test');
 
         $this->app->instance(MailingDelayService::class, new class($project->id) extends MailingDelayService {
             public function __construct(private int $projectId) {}
@@ -61,7 +61,7 @@ class ProjectDeactivationDuringMailingTest extends TestCase
             $service->mailer = $mailer;
             $result = $service->sendOut(Request::create('/ajax', 'POST', [
                 'templateId' => [$template->id, $defaultTemplate->id],
-                'categoryId' => [$category->id, $defaultCategory->id],
+                'categoryId' => [$defaultCategory->id],
                 'logId' => $log->id,
             ]));
             $this->assertTrue($result['completed']);
@@ -111,9 +111,9 @@ class ProjectDeactivationDuringMailingTest extends TestCase
         return Templates::query()->create(['name' => 'Template '.$projectId, 'body' => '<p>Mailing</p>', 'prior' => 0, 'project_id' => $projectId]);
     }
 
-    private function recipient(Category $category, string $email): Subscribers
+    private function recipient(int $projectId, Category $category, string $email): Subscribers
     {
-        $subscriber = $this->subscriberFixture(['name' => $email, 'email' => $email, 'token' => md5($email), 'active' => 1], [$category->project_id]);
+        $subscriber = $this->subscriberFixture(['name' => $email, 'email' => $email, 'token' => md5($email), 'active' => 1], [$projectId]);
         Subscriptions::query()->create(['subscriber_id' => $subscriber->id, 'category_id' => $category->id]);
 
         return $subscriber;

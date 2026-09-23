@@ -7,7 +7,6 @@ use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ProjectRepository;
 use App\Repositories\SubscriberRepository;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -48,12 +47,8 @@ class ProjectDeletionTest extends TestCase
 
         $this->assertModelMissing($project);
         foreach ($deleted as $table => $row) {
-            if (in_array($table, ['subscribers', 'subscriptions'], true)) {
+            if (in_array($table, ['subscribers', 'subscriptions', 'categories', 'redirect'], true)) {
                 $this->assertDatabaseHas($table, $row);
-                continue;
-            }
-            if ($table === 'categories') {
-                $this->assertDatabaseHas($table, [...$row, 'project_id' => null]);
                 continue;
             }
             $this->assertDatabaseMissing($table, isset($row['id']) ? ['id' => $row['id']] : $row);
@@ -91,17 +86,17 @@ class ProjectDeletionTest extends TestCase
         $this->get(route('admin.category.edit', $category['id']))->assertOk()->assertSee($category['name']);
 
         $this->put(route('admin.category.update'), [
-            'id' => $category['id'], 'project_id' => '', 'name' => 'Preserved category renamed',
+            'id' => $category['id'], 'name' => 'Preserved category renamed',
         ])->assertRedirect(route('admin.category.index'))->assertSessionHasNoErrors()->assertSessionMissing('error');
 
         $this->assertDatabaseHas('categories', [
-            'id' => $category['id'], 'project_id' => null, 'name' => 'Preserved category renamed',
+            'id' => $category['id'], 'name' => 'Preserved category renamed',
         ]);
         $this->assertDatabaseHas('subscriptions', $data['subscriptions']);
         $this->assertDatabaseHas('subscribers', $data['subscribers']);
     }
 
-    public function test_project_roles_cannot_access_or_edit_categories_after_their_project_is_deleted(): void
+    public function test_project_roles_can_choose_global_categories_but_cannot_manage_them(): void
     {
         $owner = $this->user('project_admin');
         $moderator = $this->user('moderator');
@@ -120,19 +115,19 @@ class ProjectDeletionTest extends TestCase
             $this->getJson(route('admin.datatable.category'))->assertForbidden();
             $this->get(route('admin.category.edit', $data['categories']['id']))->assertForbidden();
             $this->put(route('admin.category.update'), [
-                'id' => $data['categories']['id'], 'project_id' => '', 'name' => 'Forbidden change',
+                'id' => $data['categories']['id'], 'name' => 'Forbidden change',
             ])->assertForbidden();
             $this->get(route('admin.subscribers.edit', $data['subscribers']['id']))
-                ->assertOk()->assertDontSee($data['categories']['name']);
+                ->assertOk()->assertSee($data['categories']['name']);
             $this->getJson(route('admin.datatable.subscribers', ['draw' => 1, 'start' => 0, 'length' => 20]))
-                ->assertOk()->assertDontSee($data['categories']['name']);
+                ->assertOk()->assertSee($data['categories']['name']);
         }
 
-        $this->assertDatabaseHas('categories', [...$data['categories'], 'project_id' => null]);
+        $this->assertDatabaseHas('categories', $data['categories']);
         $this->assertDatabaseHas('subscriptions', $data['subscriptions']);
     }
 
-    public function test_preserved_category_memberships_are_not_used_for_another_projects_mailing(): void
+    public function test_global_category_memberships_remain_available_within_the_recipients_current_project(): void
     {
         $owner = $this->user('project_admin');
         $moderator = $this->user('moderator');
@@ -148,31 +143,26 @@ class ProjectDeletionTest extends TestCase
         $this->actingAs($owner)->delete(route('admin.projects.destroy', $project->id))->assertNoContent();
 
         $repository = app(SubscriberRepository::class);
-        $this->assertSame(0, $repository->countSubscriptions([$data['categories']['id']], null, null, $otherProject->id));
-        $this->assertCount(0, $repository->getSubscribers(
+        $this->assertSame(1, $repository->countSubscriptions([$data['categories']['id']], null, null, $otherProject->id));
+        $this->assertCount(1, $repository->getSubscribers(
             1, $otherData['templates']['id'], [$data['categories']['id']], 'subscribers.id', 100
         ));
         $this->get(route('frontend.form', ['project_id' => $otherProject->id]))
-            ->assertOk()->assertDontSee($data['categories']['name'])->assertSee($otherData['categories']['name']);
+            ->assertOk()->assertSee($data['categories']['name'])->assertSee($otherData['categories']['name']);
         $this->assertDatabaseHas('subscriptions', $data['subscriptions']);
     }
 
-    public function test_the_project_foreign_key_rejects_raw_deletion_before_categories_are_detached(): void
+    public function test_deleting_a_project_directly_leaves_global_categories_and_subscriptions_unchanged(): void
     {
         $project = $this->project($this->user('admin'));
-        $category = $this->insert('categories', ['project_id' => $project->id, 'name' => 'Protected by the foreign key']);
+        $category = $this->insert('categories', ['name' => 'Independent global category']);
         $subscriber = $this->subscriberFixture(['email' => 'retained@example.test', 'token' => str_repeat('a', 32)]);
         $subscription = ['subscriber_id' => $subscriber->id, 'category_id' => $category['id']];
         DB::table('subscriptions')->insert($subscription);
 
-        try {
-            DB::table('projects')->where('id', $project->id)->delete();
-            $this->fail('Project deletion must use the repository to preserve associated categories.');
-        } catch (QueryException $exception) {
-            $this->assertSame('23000', $exception->getCode());
-        }
+        $this->assertSame(1, DB::table('projects')->where('id', $project->id)->delete());
 
-        $this->assertModelExists($project);
+        $this->assertModelMissing($project);
         $this->assertDatabaseHas('categories', $category);
         $this->assertDatabaseHas('subscriptions', $subscription);
         $this->assertModelExists($subscriber);
@@ -334,7 +324,7 @@ class ProjectDeletionTest extends TestCase
         ];
         DB::table('project_subscriber')->insert($rows['project_subscriber']);
         $rows['categories'] = $this->insert('categories', [
-            'project_id' => $project->id, 'name' => 'Category '.$project->id,
+            'name' => 'Category '.$project->id,
         ]);
         $rows['subscriptions'] = [
             'subscriber_id' => $rows['subscribers']['id'], 'category_id' => $rows['categories']['id'],
@@ -354,7 +344,8 @@ class ProjectDeletionTest extends TestCase
             'email' => $rows['subscribers']['email'], 'template' => $rows['templates']['name'], 'success' => 1, 'log_id' => $logId,
         ]);
         $rows['redirect'] = $this->insert('redirect', [
-            'project_id' => $project->id, 'url' => 'https://example.test/project/'.$project->id, 'email' => $rows['subscribers']['email'],
+            'template_id' => $rows['templates']['id'], 'template' => $rows['templates']['name'],
+            'url' => 'https://example.test/project/'.$project->id, 'email' => $rows['subscribers']['email'],
         ]);
 
         return $rows;

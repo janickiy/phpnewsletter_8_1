@@ -36,9 +36,9 @@ class InactiveProjectCategoriesTest extends TestCase
         $this->actingAs($administrator);
     }
 
-    public function test_category_table_and_dashboard_follow_project_status_without_hiding_retained_categories(): void
+    public function test_category_table_and_dashboard_are_independent_of_project_status(): void
     {
-        foreach ([[true, 3], [false, 2]] as [$active, $count]) {
+        foreach ([[true, 3], [false, 3]] as [$active, $count]) {
             $this->project->update(['status' => $active]);
 
             $response = $this->getJson(route('admin.datatable.category'))
@@ -46,7 +46,7 @@ class InactiveProjectCategoriesTest extends TestCase
             $ids = array_map('intval', array_column($response->json('data'), 'id'));
             $this->assertContains($this->defaultCategory->id, $ids);
             $this->assertContains($this->orphanCategory->id, $ids);
-            $this->assertSame($active, in_array($this->category->id, $ids, true));
+            $this->assertContains($this->category->id, $ids);
             $this->get(route('admin.dashboard.index'))->assertOk()
                 ->assertViewHas('stats', fn (array $stats) => $stats['categories'] === $count);
         }
@@ -56,27 +56,25 @@ class InactiveProjectCategoriesTest extends TestCase
         $this->assertModelExists($this->category);
     }
 
-    public function test_inactive_project_categories_cannot_be_read_or_changed_by_direct_requests_or_repository_calls(): void
+    public function test_categories_remain_manageable_after_a_project_is_disabled(): void
     {
         $this->project->update(['status' => false]);
 
-        $this->get(route('admin.category.edit', $this->category->id))->assertNotFound();
-        $this->putJson(route('admin.category.update'), [
-            'id' => $this->category->id, 'project_id' => $this->project->id, 'name' => 'Forbidden rename',
-        ])->assertForbidden();
-        $this->delete(route('admin.category.destroy', $this->category->id))->assertNotFound();
-        $this->postJson(route('admin.category.store'), [
-            'project_id' => $this->project->id, 'name' => 'Forbidden addition',
-        ])->assertUnprocessable()->assertJsonValidationErrors('project_id');
+        $this->get(route('admin.category.edit', $this->category->id))->assertOk()
+            ->assertDontSee('name="project_id"', false);
+        $this->put(route('admin.category.update'), [
+            'id' => $this->category->id, 'name' => 'Global readers',
+        ])->assertRedirect(route('admin.category.index'))->assertSessionHasNoErrors();
+        $this->post(route('admin.category.store'), [
+            'name' => 'New global category', 'project_id' => $this->project->id,
+        ])->assertRedirect(route('admin.category.index'))->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('categories', ['name' => 'New global category']);
 
         $repository = app(CategoryRepository::class);
-        $this->assertNull($repository->find($this->category->id));
-        $this->assertFalse($repository->update($this->category->id, new CategoryUpdateData('Forbidden rename')));
-        $this->assertFalse($repository->delete($this->category->id));
-        $this->assertArrayNotHasKey($this->category->id, $repository->getOption());
-        $this->assertDatabaseHas('categories', [
-            'id' => $this->category->id, 'name' => 'Project category', 'project_id' => $this->project->id,
-        ]);
+        $this->assertSame($this->category->id, $repository->find($this->category->id)->id);
+        $this->assertTrue($repository->update($this->category->id, new CategoryUpdateData('Renamed globally')));
+        $this->assertArrayHasKey($this->category->id, $repository->getOption());
+        $this->assertTrue($repository->delete($this->category->id));
         $this->assertDatabaseCount('categories', 3);
     }
 
@@ -87,10 +85,10 @@ class InactiveProjectCategoriesTest extends TestCase
         foreach ([$this->defaultCategory, $this->orphanCategory] as $category) {
             $this->get(route('admin.category.edit', $category->id))->assertOk();
             $this->put(route('admin.category.update'), [
-                'id' => $category->id, 'project_id' => $category->project_id, 'name' => 'Renamed '.$category->id,
+                'id' => $category->id, 'name' => 'Renamed '.$category->id,
             ])->assertRedirect(route('admin.category.index'))->assertSessionHasNoErrors()->assertSessionMissing('error');
             $this->assertDatabaseHas('categories', [
-                'id' => $category->id, 'name' => 'Renamed '.$category->id, 'project_id' => $category->project_id,
+                'id' => $category->id, 'name' => 'Renamed '.$category->id,
             ]);
         }
     }

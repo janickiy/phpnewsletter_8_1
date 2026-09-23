@@ -36,7 +36,7 @@ class AdminLteTablesTest extends TestCase
         $subscriber = $this->subscriberFixture(['email' => 'report@example.test', 'active' => 1, 'token' => str_repeat('a', 32)], [$projectId]);
         $log = \App\Models\Logs::query()->create(['time' => now()]);
         \App\Models\ReadySent::query()->create(['project_id' => $projectId, 'subscriber_id' => $subscriber->id, 'email' => $subscriber->email, 'template_id' => $template->id, 'template' => $template->name, 'success' => 1, 'log_id' => $log->id]);
-        \App\Models\Redirect::query()->create(['project_id' => $projectId, 'url' => 'https://example.test', 'email' => $subscriber->email]);
+        \App\Models\Redirect::query()->create(['template_id' => $template->id, 'template' => $template->name, 'url' => 'https://example.test', 'email' => $subscriber->email]);
 
         $routes = [
             'admin.category.index' => [],

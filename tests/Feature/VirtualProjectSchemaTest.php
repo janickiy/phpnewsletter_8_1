@@ -71,7 +71,7 @@ class VirtualProjectSchemaTest extends TestCase
     public static function projectTables(): array
     {
         return array_combine(
-            $tables = ['templates', 'categories', 'schedule', 'ready_sent', 'redirect', 'project_subscriber'],
+            $tables = ['templates', 'schedule', 'ready_sent', 'project_subscriber'],
             array_map(static fn (string $table) => [$table], $tables),
         );
     }
@@ -82,7 +82,6 @@ class VirtualProjectSchemaTest extends TestCase
 
         return ['project_id' => $projectId, ...match ($table) {
             'templates' => ['name' => 'Schema template '.$projectId, 'body' => 'Hello', 'prior' => 0],
-            'categories' => ['name' => 'Schema category '.$projectId],
             'schedule' => [
                 'event_name' => 'Schema mailing '.$projectId, 'template_id' => $template->id,
                 'event_start' => '2026-01-01 12:00:00', 'event_end' => '2026-01-01 13:00:00',
@@ -91,7 +90,6 @@ class VirtualProjectSchemaTest extends TestCase
                 'subscriber_id' => $this->subscriber->id, 'email' => $this->subscriber->email,
                 'template_id' => $template->id, 'template' => $template->name, 'success' => 1,
             ],
-            'redirect' => ['url' => 'https://example.test/schema', 'email' => $this->subscriber->email],
             'project_subscriber' => ['subscriber_id' => $this->subscriber->id],
         }];
     }

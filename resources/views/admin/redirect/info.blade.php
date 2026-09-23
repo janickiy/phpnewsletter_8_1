@@ -32,6 +32,8 @@
                             <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>URL</th>
+                                <th>{{ __('frontend.str.newsletter') }}</th>
                                 <th>Email</th>
                                 <th>{{ __('frontend.str.time') }}</th>
                             </tr>
@@ -91,14 +93,16 @@
                     $(row).attr('id', 'rowid_' + data['id']);
                     if (data['status'] === 0) $(row).attr('class', 'table-danger');
                 },
-                aaSorting: [[2, 'desc']],
+                aaSorting: [[4, 'desc']],
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: '{{ route('admin.datatable.info_redirect', ['url' => $url]) }}'
+                    url: @json(route('admin.datatable.info_redirect', ['url' => $url, 'newsletter' => $newsletter]))
                 },
                 columns: [
                     {data: 'id', name: 'id'},
+                    {data: 'url', name: 'url'},
+                    {data: 'template', name: 'template'},
                     {data: 'email', name: 'email'},
                     {data: 'created_at', name: 'created_at'},
                 ],

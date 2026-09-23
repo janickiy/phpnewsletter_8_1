@@ -8,7 +8,6 @@ use App\DTO\Update\CategoryUpdateData;
 use App\Http\Requests\Admin\Category\EditRequest;
 use App\Http\Requests\Admin\Category\StoreRequest;
 use App\Repositories\CategoryRepository;
-use App\Services\ProjectAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -43,7 +42,6 @@ class CategoryController extends Controller
     public function create(): View
     {
         return view('admin.category.create_edit', [
-            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
             'infoAlert' => __('frontend.hint.category_create'),
             'title' => __('frontend.title.category_create'),
         ]);
@@ -63,7 +61,6 @@ class CategoryController extends Controller
             $this->categoryRepository->add(
                 new CategoryCreateData(
                     name: $data['name'],
-                    projectId: (int) $data['project_id'],
                 )
             );
         } catch (\Throwable $e) {
@@ -91,7 +88,6 @@ class CategoryController extends Controller
 
         return view('admin.category.create_edit', [
             'row' => $row,
-            'projects' => ProjectAccess::projects('manage')->orderBy('name')->get(),
             'infoAlert' => __('frontend.hint.category_create'),
             'title' => __('frontend.title.category_edit'),
         ]);

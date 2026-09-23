@@ -43,7 +43,13 @@ class Project extends Model
         ]);
     }
 
-    /** Include the virtual project in a read query without storing it in projects. */
+    /**
+     * Include the virtual project in a read query without storing it in projects.
+     *
+     * @param Builder $query
+     * @return Builder
+     *
+     */
     public function scopeIncludingDefault(Builder $query): Builder
     {
         $columns = ['id', 'name', 'description', 'status', 'owner_id', 'created_at', 'updated_at'];
@@ -95,14 +101,6 @@ class Project extends Model
     public function subscribers(): BelongsToMany
     {
         return $this->belongsToMany(Subscribers::class, 'project_subscriber', 'project_id', 'subscriber_id')->withTimestamps();
-    }
-
-    /**
-     * @return HasMany
-     */
-    public function categories(): HasMany
-    {
-        return $this->hasMany(Category::class);
     }
 
     /**

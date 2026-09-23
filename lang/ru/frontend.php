@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'Выберите проект, чтобы увидеть его категории подписчиков.',
+            'subscriber_categories_empty' => 'В выбранных проектах пока нет категорий подписчиков.',
             'default_name' => 'Основной проект',
             'subscriber_default_project_hint' => 'Если проекты не выбраны, подписчик будет добавлен в основной проект.',
             'subscriber_unassigned' => 'Без проекта',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'Удалить всех подписчиков',
         'import_subscribers'     => 'Импорт подписчиков',
         'export_subscribers'     => 'Экспорт подписчиков',
+        'export_file_options' => 'Параметры файла',
+        'export_zip' => 'Упаковать в ZIP',
+        'download_file' => 'Скачать файл',
+        'export_projects_hint' => 'Можно выбрать несколько проектов.',
+        'export_unassigned_hint' => 'Без выбора — подписчики без привязки к проектам.',
+        'export_categories_hint' => 'Без выбора категорий — все подписчики выбранных проектов.',
         'remove_all_subscribers' => 'Удалить всех подписчиков',
         'want_to_delete_all_subscribers' => 'Вы действительно хотите удалить всех подписчиков?',
         'add_subscriber'    => 'Добавить  подписчика',
@@ -154,8 +162,10 @@ return [
         'sender_name'  => 'Имя отправителя',
         'sender_email' => 'Email отправителя',
         'add_schedule' => 'Добавить рассылку',
-        'schedule_categories_hint' => 'После выбора шаблона останутся категории его проекта.',
-        'schedule_categories_empty' => 'В проекте выбранного шаблона пока нет категорий подписчиков.',
+        'schedule_categories_hint' => 'Категории доступны и обязательны только для шаблонов основного проекта. Выберите хотя бы одну категорию.',
+        'schedule_categories_empty' => 'Категорий подписчиков пока нет.',
+        'manual_mailing_default_categories_hint' => 'Для шаблонов основного проекта выберите хотя бы одну общую категорию. Отбор по категориям применяется только к получателям основного проекта.',
+        'manual_mailing_project_subscribers_hint' => 'Шаблоны других проектов будут отправлены всем активным подписчикам своего проекта без выбора категорий.',
         'enter_login'  => 'Введите логин',
         'enter_password'  => 'Введите пароль',
         'singin'          => 'ВОЙТИ',
@@ -236,6 +246,7 @@ return [
         'remove_subscriber' => 'Удаление подписчиков которые не подтвердили подписку',
     ],
     'msg' => [
+        'mailing_already_running' => 'Эта рассылка уже выполняется.',
         'are_you_sure' => 'Вы уверены?',
         'will_not_be_able_to_recover_information' => 'Вы не сможете восстановить эту информацию!',
         'yes_remove' => 'Да, удалить!',

@@ -88,17 +88,31 @@ class ProjectAccess
         });
     }
 
-    /** Administrators may also manage categories retained after a project was deleted. */
+    /** Categories are shared by every project; contact access remains project-scoped. */
     public static function categories(Builder|QueryBuilder $query, string $ability = 'view', ?User $user = null): Builder|QueryBuilder
     {
         $user ??= auth()->user();
 
-        return $query->where(function (Builder|QueryBuilder $query) use ($ability, $user): void {
-            self::scope($query, $ability, 'categories.project_id', $user);
+        return $user ? $query : $query->whereRaw('1 = 0');
+    }
 
-            if ($user?->isAdmin()) {
-                $query->orWhereNull('categories.project_id');
-            }
+    /** Resolve click visibility through its template; administrators retain historical snapshots. */
+    public static function redirects(Builder|QueryBuilder $query, string $ability = 'view', ?User $user = null): Builder|QueryBuilder
+    {
+        $user ??= auth()->user();
+
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->whereExists(function (QueryBuilder $template) use ($ability, $user): void {
+            $template->selectRaw('1')->from('templates')
+                ->whereColumn('templates.id', 'redirect.template_id')
+                ->whereIn('templates.project_id', self::projects($ability, $user)->select('projects.id'));
         });
     }
 

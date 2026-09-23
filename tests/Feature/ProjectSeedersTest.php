@@ -18,7 +18,7 @@ class ProjectSeedersTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_initial_seeds_create_default_categories_without_a_project_record_or_owner(): void
+    public function test_initial_seeds_create_global_categories_without_a_project_record_or_owner(): void
     {
         $this->seed(DatabaseSeeder::class);
         $this->assertDatabaseCount('projects', 0);
@@ -34,14 +34,14 @@ class ProjectSeedersTest extends TestCase
         $this->assertSame(Project::DEFAULT_ID, $project->id);
         $this->assertNull($project->owner_id);
         $this->assertSame(__('frontend.str.projects.default_name'), $project->name);
-        $this->assertSame(3, $project->categories()->count());
+        $this->assertSame(['Category 1', 'Category 2', 'Category 3'], Category::query()->orderBy('name')->pluck('name')->all());
     }
 
     public function test_demo_seeds_keep_matching_records_in_other_projects_unchanged(): void
     {
         $owner = $this->admin();
         $other = Project::query()->create(['name' => 'Customer project', 'owner_id' => $owner->id, 'status' => 1]);
-        $category = Category::query()->create(['project_id' => $other->id, 'name' => 'Category 1']);
+        $category = Category::query()->create(['name' => 'Category 1']);
         $template = Templates::query()->create([
             'project_id' => $other->id, 'name' => 'Welcome email for new subscribers', 'body' => 'Customer content', 'prior' => 0,
         ]);
@@ -51,7 +51,8 @@ class ProjectSeedersTest extends TestCase
         ], [$other->id]);
         DB::table('subscriptions')->insert(['category_id' => $category->id, 'subscriber_id' => $subscriber->id]);
         DB::table('redirect')->insert([
-            'project_id' => $other->id, 'url' => 'https://example.test/start', 'email' => $subscriber->email,
+            'template_id' => $template->id, 'template' => $template->name,
+            'url' => 'https://example.test/start', 'email' => $subscriber->email,
             'created_at' => now(), 'updated_at' => now(),
         ]);
 
@@ -62,7 +63,7 @@ class ProjectSeedersTest extends TestCase
         $this->assertSame('Customer subscriber', $subscriber->fresh()->name);
         $this->assertSame('customer-token', $subscriber->fresh()->token);
         $this->assertDatabaseHas('subscriptions', ['category_id' => $category->id, 'subscriber_id' => $subscriber->id]);
-        $this->assertDatabaseHas('redirect', ['project_id' => $other->id, 'email' => $subscriber->email]);
+        $this->assertDatabaseHas('redirect', ['template_id' => $template->id, 'template' => $template->name, 'email' => $subscriber->email]);
 
         $demo = Project::defaultProject();
         $this->assertDatabaseCount('projects', 1);
@@ -70,25 +71,25 @@ class ProjectSeedersTest extends TestCase
         $this->assertSame(500, $demo->subscribers()->count());
         $this->assertSame(5, $demo->templates()->count());
         $this->assertSame(5, $demo->schedules()->count());
-        $this->assertSame(9, $demo->categories()->count());
+        $this->assertDatabaseCount('categories', 9);
         $this->assertSame(135, DB::table('ready_sent')->where('project_id', $demo->id)->count());
-        $this->assertSame(70, DB::table('redirect')->where('project_id', $demo->id)->count());
-        $this->assertNoCrossProjectSubscriptions();
+        $this->assertSame(70, DB::table('redirect')->whereIn('template_id', $demo->templates()->select('id'))->count());
+        $this->assertAllSubscriptionsBelongToProjectMembers();
     }
 
-    public function test_fake_subscriber_seeds_only_subscribe_within_the_selected_project(): void
+    public function test_fake_subscriber_seeds_use_global_categories_and_explicit_default_membership(): void
     {
         $owner = $this->admin();
         foreach (['First', 'Second'] as $name) {
             $project = Project::query()->create(['name' => $name, 'owner_id' => $owner->id, 'status' => 1]);
-            Category::query()->create(['project_id' => $project->id, 'name' => 'Category']);
+            Category::query()->create(['name' => 'Category']);
         }
 
         $this->seed(FakeSubscribersSeeder::class);
 
         $this->assertDatabaseCount('subscribers', 5000);
-        $this->assertSame(1, DB::table('project_subscriber')->distinct()->count('project_id'));
-        $this->assertNoCrossProjectSubscriptions();
+        $this->assertSame([Project::DEFAULT_ID], DB::table('project_subscriber')->distinct()->pluck('project_id')->all());
+        $this->assertAllSubscriptionsBelongToProjectMembers();
     }
 
     private function admin(): User
@@ -96,14 +97,13 @@ class ProjectSeedersTest extends TestCase
         return User::query()->create(['name' => 'Administrator', 'login' => 'admin', 'role' => 'admin', 'password' => 'secret123']);
     }
 
-    private function assertNoCrossProjectSubscriptions(): void
+    private function assertAllSubscriptionsBelongToProjectMembers(): void
     {
         $this->assertSame(0, DB::table('subscriptions')
             ->join('categories', 'categories.id', '=', 'subscriptions.category_id')
             ->whereNotExists(function ($query): void {
                 $query->selectRaw('1')->from('project_subscriber')
-                    ->whereColumn('project_subscriber.subscriber_id', 'subscriptions.subscriber_id')
-                    ->whereColumn('project_subscriber.project_id', 'categories.project_id');
+                    ->whereColumn('project_subscriber.subscriber_id', 'subscriptions.subscriber_id');
             })->count());
     }
 }

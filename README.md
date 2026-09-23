@@ -58,9 +58,10 @@ random-order and character-substitution settings are no longer supported.
 
 ### Projects and user roles
 
-Templates, categories, schedules and delivery/click statistics belong to a project.
+Templates, schedules and delivery/click statistics belong to a project.
+Subscriber categories are global and are not owned by a project.
 Subscribers have one record per email address and can belong to multiple projects
-or none. Name, email, active status, unsubscribe token and last-send time are shared
+or none. Name, email, category memberships, active status, unsubscribe token and last-send time are shared
 across projects; unsubscribing stops all mailings for that subscriber.
 Manual campaigns, scheduled delivery, retries and exports keep project data separate.
 
@@ -82,9 +83,8 @@ Inactive projects retain their data, but do not send campaigns or accept public
 subscriptions. Deleting a project after confirmation also deletes its templates,
 attachments, scheduled mailings and statistics. Subscriber records, categories and
 their subscription links are preserved, including contacts left without projects.
-Categories from a deleted project are marked as unassigned and remain manageable
-by administrators. They are excluded from project mailing selections. Shared mailing logs are
-retained while they contain results from another project.
+Deleting or deactivating a project does not change the global category list. Shared
+mailing logs are retained while they contain results from another project.
 The default project has ID `0` and is available to every admin-panel user within
 their role permissions, without an explicit membership. It is virtual: the
 `projects` table contains only ordinary projects. Its name follows the interface
@@ -94,18 +94,23 @@ Choose zero or more projects when creating or importing subscribers. An empty
 selection adds the contact to the default project. Clearing all memberships when
 editing still leaves an unassigned contact. Only administrators can view contacts
 without projects and permanently delete contact records. Project administrators and moderators see contacts assigned
-to their projects; removing a contact removes only their accessible memberships and
-categories. Editing memberships or importing cannot remove links to projects the
-current user cannot access.
-Imports reuse an existing email without overwriting its name or active status.
+to their projects; removing a contact removes only their accessible project memberships
+and preserves global category subscriptions. Editing memberships or importing cannot
+remove links to projects the current user cannot access.
+Subscriber creation, editing, import and export always show the same global category
+list, including when no projects are selected. Changing project selection does not
+clear categories. Editing categories replaces the contact’s global category selection.
+Imports reuse an existing email without overwriting its name or active status, and
+add selected categories without deleting existing category memberships.
 Exports combine the selected projects without duplicate contacts; an empty project
 selection exports unassigned contacts for administrators. Templates use the default
 project when no project is submitted. The default project is selected first in the
 form, and the project link cannot be changed after template creation.
 Generate subscription embed code separately for each project in **Subscription form**.
-The public form, categories and subscription endpoints use the default project (`0`)
-when `project_id` is omitted. Embed code for the default project loads `/categories`
-without a query parameter. Forms for other projects must pass their explicit `project_id`.
+The public form and subscription endpoints use the default project (`0`) when
+`project_id` is omitted. The category list is global in every project. Embed code
+for the default project loads `/categories` without a query parameter. Forms for
+other projects must pass their explicit `project_id` to select the subscription membership.
 
 ### Analytics and Reporting
 
@@ -128,7 +133,7 @@ for versions and maintenance details.
 1. Install the application and complete the setup wizard.
 2. Log in to the admin panel as the administrator.
 3. Configure the delivery method: SMTP, `mail()`, or `sendmail`.
-4. Create a project and its subscriber categories.
+4. Create a project and the global subscriber categories.
 5. Add or import subscribers.
 6. Create a template and define macros if needed.
 7. Send a test email.
@@ -213,8 +218,8 @@ update `APP_URL` when changing the application port.
 
 ### Upgrading an existing Docker installation
 
-`database/migrations` contains one creation migration per table, including its
-current columns, indexes and foreign keys. These consolidated migrations create
+`database/migrations` contains baseline creation migrations and later upgrades.
+The baseline includes each table's columns, indexes and foreign keys and creates
 the complete schema for new installations. They do not reapply changes to tables
 whose creation migrations have already run: older installations must first have
 nullable `ready_sent.schedule_id` and `log_id` with `ON DELETE SET NULL`, and the
@@ -223,11 +228,20 @@ settings and the `charsets` table are not part of this baseline.
 Installations from before project support also require a separate schema and data
 migration to associate their existing records with projects.
 
-Existing category tables must allow `categories.project_id` to be null. Project
-deletion clears this field in the repository before deleting the project, preserving
-categories and their subscriber links.
+Run `php artisan migrate --force` to apply the global-category upgrades. They remove
+the obsolete `categories.project_id`, generated `project_reference_id`, and their
+foreign key and indexes while preserving category IDs and all subscriber and schedule
+links. New installations create categories without any project columns.
 
-For virtual default-project support, `templates`, `categories`, `redirect`,
+The redirect-history upgrade adds `template_id` and `template` snapshots and removes
+the old project columns. Each new tracked link identifies its template; click history
+retains the template ID and name even if that template is later renamed or deleted.
+Existing click records and old links have no reliable template attribution, so their
+newsletter fields remain empty. Link reports and Excel exports separate newsletters
+that use the same URL. Administrators can see all retained click history; project
+roles see clicks for templates in their accessible projects.
+
+For virtual default-project support, `templates`,
 `schedule`, `project_subscriber` and `ready_sent` use a stored generated column
 `project_reference_id = NULLIF(project_id, 0)` with a restrictive foreign key to
 `projects.id`. This permits the virtual ID `0` while rejecting missing ordinary
@@ -448,6 +462,18 @@ The project uses three console commands:
 - `php artisan emails:send` - processes scheduled delivery
 - `php artisan emails:unsent` - retries unsent messages
 - `php artisan emails:remove-unconfirmed-subscriber` - removes expired unconfirmed subscriptions when enabled
+
+Both mailing commands process active schedules within their start/end window. For the
+default project, recipients must be active members of that project and belong to a
+selected global category; a schedule with no
+categories sends nothing. Other projects target all their active subscribers, without
+category filtering. Retries process failed deliveries only and skip subscribers already
+successfully sent that schedule.
+
+Multiple category memberships do not duplicate a recipient. A plain console invocation
+also prevents another instance of the same mailing command from starting, and overlapping
+manual delivery requests for the same log are rejected. Successful retries are saved after
+each message so later interruptions do not repeat completed deliveries.
 
 The Laravel scheduler is currently configured to run:
 

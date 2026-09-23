@@ -181,17 +181,17 @@ class InactiveProjectAccessTest extends TestCase
     }
 
     #[DataProvider('allRoles')]
-    public function test_editing_a_shared_subscriber_preserves_hidden_memberships_and_categories(string $role): void
+    public function test_editing_a_shared_subscriber_preserves_hidden_memberships_and_selected_global_categories(string $role): void
     {
         $subscriber = $this->subscriber('shared', [$this->activeProject->id, $this->inactiveProject->id]);
-        $category = Category::query()->create(['project_id' => $this->inactiveProject->id, 'name' => 'Hidden category']);
+        $category = Category::query()->create(['name' => 'Global category']);
         Subscriptions::query()->create(['subscriber_id' => $subscriber->id, 'category_id' => $category->id]);
         $this->actingAs($this->forRole($role));
         $this->get(route('admin.subscribers.edit', $subscriber->id))->assertOk()
-            ->assertDontSee($this->inactiveProject->name)->assertDontSee($category->name);
+            ->assertDontSee($this->inactiveProject->name)->assertSee($category->name);
         $this->put(route('admin.subscribers.update'), [
             'id' => $subscriber->id, 'email' => $subscriber->email, 'name' => 'Updated shared name',
-            'project_ids' => [$this->activeProject->id],
+            'project_ids' => [$this->activeProject->id], 'categoryId' => [$category->id],
         ])->assertSessionHasNoErrors()->assertSessionMissing('error')->assertRedirect(route('admin.subscribers.index'));
         $this->assertEqualsCanonicalizing(
             [$this->activeProject->id, $this->inactiveProject->id],
@@ -220,8 +220,8 @@ class InactiveProjectAccessTest extends TestCase
         $this->delivery($activeTemplate, $active, $mixedLog);
         $this->delivery($inactiveTemplate, $inactive, $mixedLog);
         $this->delivery($inactiveTemplate, $inactive, $inactiveLog);
-        Redirect::query()->create(['project_id' => $this->activeProject->id, 'email' => $active->email, 'url' => 'https://example.test/visible']);
-        Redirect::query()->create(['project_id' => $this->inactiveProject->id, 'email' => $inactive->email, 'url' => 'https://example.test/hidden']);
+        Redirect::query()->create(['template_id' => $activeTemplate->id, 'template' => $activeTemplate->name, 'email' => $active->email, 'url' => 'https://example.test/visible']);
+        Redirect::query()->create(['template_id' => $inactiveTemplate->id, 'template' => $inactiveTemplate->name, 'email' => $inactive->email, 'url' => 'https://example.test/hidden']);
         $this->actingAs($this->forRole($role));
 
         $summary = $this->getJson(route('admin.datatable.logs'))->assertOk()->assertJsonCount(1, 'data');
@@ -232,15 +232,16 @@ class InactiveProjectAccessTest extends TestCase
         foreach (['admin.log.info', 'admin.log.report', 'admin.datatable.info_log'] as $route) {
             $this->get(route($route, $inactiveLog->id))->assertNotFound();
         }
-        $this->getJson(route('admin.datatable.redirect'))->assertOk()
-            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.url', 'https://example.test/visible');
+        $clickCount = $role === User::ROLE_ADMIN ? 2 : 1;
+        $clicks = $this->getJson(route('admin.datatable.redirect'))->assertOk()->assertJsonCount($clickCount, 'data');
+        $this->assertContains('https://example.test/visible', array_column($clicks->json('data'), 'url'));
         $hiddenUrl = rtrim(strtr(base64_encode('https://example.test/hidden'), '+/', '-_'), '=');
-        $this->get(route('admin.redirect.report', $hiddenUrl))->assertNotFound();
+        $this->get(route('admin.redirect.report', $hiddenUrl))->assertStatus($role === User::ROLE_ADMIN ? 200 : 404);
         $stats = $this->get(route('admin.dashboard.index'))->assertOk()->viewData('stats');
         $this->assertSame(1, $stats['subscribers']);
         $this->assertSame(1, $stats['sentTotal']);
         $this->assertSame(1, $stats['readTotal']);
-        $this->assertSame(1, $stats['clicks']);
+        $this->assertSame($clickCount, $stats['clicks']);
     }
 
     public static function allRoles(): array

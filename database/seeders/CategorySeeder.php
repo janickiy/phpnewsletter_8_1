@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
-use App\Models\Project;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
@@ -16,7 +15,7 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         foreach ($this->categories() as $name) {
-            Category::query()->firstOrCreate(['project_id' => Project::DEFAULT_ID, 'name' => $name]);
+            Category::query()->firstOrCreate(['name' => $name]);
         }
     }
 

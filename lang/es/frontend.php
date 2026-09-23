@@ -3,6 +3,8 @@
 return [
     'str' => [
         'projects' => [
+            'subscriber_categories_select_project' => 'Seleccione un proyecto para ver sus categorías de suscriptores.',
+            'subscriber_categories_empty' => 'Los proyectos seleccionados aún no tienen categorías de suscriptores.',
             'default_name' => 'Proyecto predeterminado',
             'subscriber_default_project_hint' => 'Si no se selecciona ningún proyecto, el suscriptor se añadirá al proyecto predeterminado.',
             'subscriber_unassigned' => 'Sin proyecto',
@@ -55,6 +57,12 @@ return [
         'delete_all_subscribers' => 'Eliminar todos los suscriptores',
         'import_subscribers' => 'Importar suscriptores',
         'export_subscribers' => 'Exportar suscriptores',
+        'export_file_options' => 'Opciones del archivo',
+        'export_zip' => 'Comprimir en ZIP',
+        'download_file' => 'Descargar archivo',
+        'export_projects_hint' => 'Puede seleccionar varios proyectos.',
+        'export_unassigned_hint' => 'Si no selecciona proyectos, se exportarán los suscriptores sin proyecto asignado.',
+        'export_categories_hint' => 'Si no selecciona categorías, se exportarán todos los suscriptores de los proyectos seleccionados.',
         'remove_all_subscribers' => 'Eliminar todos los suscriptores',
         'want_to_delete_all_subscribers' => '¿Está seguro de que desea eliminar todos los suscriptores?',
         'add_subscriber' => 'Agregar suscriptor',
@@ -154,8 +162,10 @@ return [
         'sender_name'  => 'Nombre del remitente',
         'sender_email' => 'Correo electrónico del remitente',
         'add_schedule' => 'Agregar programación',
-        'schedule_categories_hint' => 'Después de seleccionar una plantilla, solo se mostrarán las categorías de su proyecto.',
-        'schedule_categories_empty' => 'El proyecto de la plantilla seleccionada aún no tiene categorías de suscriptores.',
+        'schedule_categories_hint' => 'Las categorías solo están disponibles y son obligatorias para las plantillas del proyecto predeterminado. Selecciona al menos una categoría.',
+        'schedule_categories_empty' => 'Aún no se han creado categorías de suscriptores.',
+        'manual_mailing_default_categories_hint' => 'Seleccione al menos una categoría global para las plantillas del proyecto predeterminado. El filtro por categorías se aplica solo a los destinatarios del proyecto predeterminado.',
+        'manual_mailing_project_subscribers_hint' => 'Las plantillas de otros proyectos se enviarán a todos los suscriptores activos de su propio proyecto, sin seleccionar categorías.',
         'enter_login'  => 'Introducir usuario',
         'enter_password' => 'Introducir contraseña',
         'singin' => 'Iniciar sesión',
@@ -236,6 +246,7 @@ return [
         'remove_subscriber' => 'Eliminar suscriptores que no han confirmado su suscripción',
     ],
     'msg' => [
+        'mailing_already_running' => 'Este envío ya está en curso.',
         'are_you_sure' => '¿Está seguro?',
         'will_not_be_able_to_recover_information' => '¡No podrá recuperar esta información!',
         'yes_remove' => '¡Sí, eliminar!',

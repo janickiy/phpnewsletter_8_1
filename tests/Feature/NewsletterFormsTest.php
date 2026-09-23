@@ -153,7 +153,8 @@ class NewsletterFormsTest extends TestCase
         $this->assertSame(route('admin.subscribers.export_subscribers'), $this->node($page, '//form')->getAttribute('action'));
         $this->assertCsrfToken($page);
         $this->assertSame('text', $this->node($page, '//input[@name="export_type" and @checked]')->getAttribute('value'));
-        $this->assertSame('none', $this->node($page, '//input[@name="compress" and @checked]')->getAttribute('value'));
+        $this->assertSame('none', $this->node($page, '//input[@type="hidden" and @name="compress"]')->getAttribute('value'));
+        $this->assertFalse($this->node($page, '//input[@type="checkbox" and @name="compress" and @value="zip"]')->hasAttribute('checked'));
 
         $this->withSession(['_old_input' => [
             'project_ids' => [$this->project->id],
@@ -166,11 +167,12 @@ class NewsletterFormsTest extends TestCase
         $this->assertSame('excel', $this->node($page, '//input[@name="export_type" and @checked]')->getAttribute('value'));
         $this->assertSame('zip', $this->node($page, '//input[@name="compress" and @checked]')->getAttribute('value'));
         $this->assertSame((string) $category->id, $this->node($page, '//select[@name="categoryId[]"]/option[@selected]')->getAttribute('value'));
+        $this->assertSame((string) $this->project->id, $this->node($page, '//select[@name="project_ids[]"]/option[@selected]')->getAttribute('value'));
     }
 
     public function test_bulk_forms_preserve_zero_actions_and_javascript_hooks(): void
     {
-        $category = Category::query()->create(['project_id' => $this->project->id, 'name' => 'Mailing category']);
+        $category = Category::query()->create(['project_id' => Project::DEFAULT_ID, 'name' => 'Mailing category']);
         $this->withSession(['_old_input' => ['action' => '0', 'categoryId' => [$category->id]]]);
         $page = $this->page('admin.templates.index');
 

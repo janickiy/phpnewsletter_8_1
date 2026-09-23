@@ -124,19 +124,21 @@
                     <div class="row">
                         <div class="col-sm-12 pt-3 pb-3">
                             <div class="d-flex flex-wrap gap-2">
-                                <div class="w-100">
+                                <div class="w-100" id="mailing-categories">
 
                                     @php
                                         $selectedCategoryIds = array_map('strval', (array) old('categoryId', []));
                                     @endphp
-                                    <select name="categoryId[]" id="categoryId" multiple class="form-select custom-scroll" style="width: 100%">
+                                    <select name="categoryId[]" id="categoryId" multiple class="form-select custom-scroll" style="width: 100%"
+                                            aria-label="{{ __('frontend.form.select_category') }}" aria-describedby="mailing-default-categories-hint">
                                         <option value="">{{ __('frontend.form.select_category') }}</option>
                                         @foreach($categoryOptions as $categoryValue => $categoryLabel)
                                             <option value="{{ $categoryValue }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>{{ $categoryLabel }}</option>
                                         @endforeach
                                     </select>
-
+                                    <div id="mailing-default-categories-hint" class="form-text">{{ __('frontend.str.manual_mailing_default_categories_hint') }}</div>
                                 </div>
+                                <div id="mailing-project-subscribers-hint" class="form-text d-none">{{ __('frontend.str.manual_mailing_project_subscribers_hint') }}</div>
                             </div>
                         </div>
                     </div>
@@ -193,6 +195,8 @@
         const serverErrorText = "{{ __('frontend.str.error_server') }}";
         const noNewsletterSelectedText = "{{ __('frontend.str.no_newsletter_selected') }}";
         const noCategorySelectedText = "{{ __('frontend.form.select_category') }}";
+        const defaultProjectId = {{ \App\Models\Project::DEFAULT_ID }};
+        const templateProjects = {};
 
         let mailingState = {
             paused: false,
@@ -200,6 +204,8 @@
             countTimer: null,
             logTimer: null,
             sendRequest: null,
+            templateIds: [],
+            categoryIds: [],
         };
 
         $(function () {
@@ -218,7 +224,7 @@
                     return;
                 }
 
-                if (categoryIds.length === 0) {
+                if (hasDefaultProjectTemplate(templateIds) && categoryIds.length === 0) {
                     showStatusMessage(noCategorySelectedText);
                     return;
                 }
@@ -303,6 +309,7 @@
                 },
                 createdRow: function (row, data) {
                     $(row).attr('id', 'rowid_' + data.id);
+                    templateProjects[data.id] = Number(data.project_id);
                 },
                 aaSorting: [[1, 'desc']],
                 processing: true,
@@ -385,6 +392,10 @@
         }
 
         function getSelectedCategoryIds() {
+            if (!hasDefaultProjectTemplate()) {
+                return [];
+            }
+
             const values = $('#categoryId').val() || [];
 
             return values.map(function (value) {
@@ -392,6 +403,29 @@
             }).filter(function (value) {
                 return Number.isInteger(value);
             });
+        }
+
+        function hasDefaultProjectTemplate(templateIds = getSelectedTemplateIds()) {
+            return templateIds.some(function (templateId) {
+                return templateProjects[templateId] === defaultProjectId;
+            });
+        }
+
+        function updateMailingAudience() {
+            const templateIds = getSelectedTemplateIds();
+            const needsCategories = hasDefaultProjectTemplate(templateIds);
+            const hasProjectTemplates = templateIds.some(function (templateId) {
+                return templateProjects[templateId] !== defaultProjectId;
+            });
+
+            $('#mailing-categories').toggleClass('d-none', !needsCategories);
+            $('#categoryId').prop('required', needsCategories)
+                .prop('disabled', !needsCategories || !mailingState.completed);
+            $('#mailing-project-subscribers-hint').toggleClass('d-none', !hasProjectTemplates);
+
+            if (!needsCategories) {
+                $('#categoryId').val([]);
+            }
         }
 
         function countChecked() {
@@ -407,6 +441,8 @@
         function startMailing(templateIds, categoryIds) {
             mailingState.paused = false;
             mailingState.completed = false;
+            mailingState.templateIds = templateIds;
+            mailingState.categoryIds = categoryIds;
             clearTimers();
             resetCounters();
             resetStatusMessage();
@@ -504,9 +540,9 @@
                 headers: {'X-CSRF-TOKEN': csrfToken},
                 data: {
                     action: 'count_send',
-                    templateId: getSelectedTemplateIds(),
+                    templateId: mailingState.templateIds,
                     logId: logId,
-                    categoryId: getSelectedCategoryIds(),
+                    categoryId: mailingState.categoryIds,
                 },
                 dataType: 'json',
                 success: function (json) {
@@ -657,12 +693,14 @@
         }
 
         function setRunningUiState() {
+            $('#categoryId').prop('disabled', true);
             $('#stopsendout').removeClass('disabled').prop('disabled', false);
             $('#sendout').addClass('disabled').prop('disabled', true);
             $('#process').removeClass().addClass('showprocess');
         }
 
         function setIdleUiState() {
+            updateMailingAudience();
             $('#stopsendout').addClass('disabled').prop('disabled', true);
             $('#sendout').removeClass('disabled').prop('disabled', false);
             $('#process').removeClass();

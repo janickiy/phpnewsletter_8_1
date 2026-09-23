@@ -62,28 +62,7 @@
                             @endif
                         </div>
 
-                        <div class="mb-3">
-
-                            <label for="categoryId" class="form-label">{{ __('frontend.form.subscribers_category') }}</label>
-
-                            @php
-                                $selectedCategoryIds = collect((array) (session()->hasOldInput() ? old('categoryId', []) : ($subscriberCategoryIds ?? [])))
-                                    ->map(fn ($value) => (string) $value)
-                                    ->all();
-                            @endphp
-
-                            <select name="categoryId[]" id="categoryId" multiple class="form-select">
-                                @foreach($options as $categoryValue => $categoryLabel)
-                                    <option value="{{ $categoryValue }}" @selected(in_array((string) $categoryValue, $selectedCategoryIds, true))>
-                                        {{ $categoryLabel }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            @if ($errors->has('categoryId') || $errors->has('categoryId.*'))
-                                <p class="text-danger">{{ $errors->first('categoryId') ?: $errors->first('categoryId.*') }}</p>
-                            @endif
-                        </div>
+                        @include('admin.subscribers.category_field')
 
                     </div>
                     <!-- /.card-body -->
@@ -106,11 +85,5 @@
             <!-- /.card -->
         </div>
     </div>
-
-@endsection
-
-@section('js')
-    @include('admin.subscribers.project_categories_js')
-
 
 @endsection

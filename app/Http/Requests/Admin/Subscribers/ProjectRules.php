@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Admin\Subscribers;
 
-use App\Models\Project;
 use App\Services\ProjectAccess;
 use Illuminate\Validation\Rule;
 
@@ -17,11 +16,6 @@ trait ProjectRules
 
     private function projectRules(bool $requireProject = true, bool $defaultProject = false): array
     {
-        $projectIds = (array) $this->input('project_ids', []);
-        if ($defaultProject && $projectIds === []) {
-            $projectIds = [Project::DEFAULT_ID];
-        }
-
         return [
             'project_ids' => $requireProject && !$defaultProject && !$this->user()?->isAdmin()
                 ? ['required', 'array', 'min:1'] : ['nullable', 'array'],
@@ -32,7 +26,7 @@ trait ProjectRules
             'categoryId' => ['nullable', 'array'],
             'categoryId.*' => [
                 'required', 'integer', 'distinct',
-                Rule::exists('categories', 'id')->whereIn('project_id', array_filter($projectIds, 'is_numeric')),
+                Rule::exists('categories', 'id'),
             ],
         ];
     }
