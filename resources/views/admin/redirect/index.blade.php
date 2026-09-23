@@ -48,6 +48,7 @@
                                 <th>URL</th>
                                 <th>{{ __('frontend.str.redirect_number') }}</th>
                                 <th>{{ __('frontend.str.excel_report') }}</th>
+                                <th>{{ __('frontend.str.time') }}</th>
                             </tr>
                             </thead>
                         </table>
@@ -109,7 +110,7 @@
                 },
                 "autoWidth": false,
                 "responsive": true,
-                aaSorting: [[0, 'asc']],
+                aaSorting: [[3, 'desc']],
                 processing: true,
                 serverSide: true,
                 ajax: {
@@ -120,6 +121,7 @@
                     {data: 'url', name: 'url'},
                     {data: 'count', name: 'count', searchable: false},
                     {data: 'report', name: 'report', orderable: false, searchable: false},
+                    {data: 'last_clicked_at', name: 'last_clicked_at', visible: false, searchable: false},
                 ],
             });
         });

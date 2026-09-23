@@ -162,7 +162,6 @@
                 ['key' => 'schedule', 'label' => __('frontend.menu.schedule'), 'note' => __('frontend.dashboard.active_count', ['count' => number_format($stats['upcomingSchedule'])]), 'icon' => 'fa-calendar-days', 'color' => 'warning', 'route' => 'admin.schedule.index', 'visible' => $canManage],
                 ['key' => 'sentTotal', 'label' => __('frontend.menu.mailing_log'), 'note' => number_format($stats['sentFailed']).' '.__('frontend.str.error'), 'icon' => 'fa-paper-plane', 'color' => 'danger', 'route' => 'admin.log.index', 'visible' => true],
                 ['key' => 'categories', 'label' => __('frontend.menu.subscribers_category'), 'note' => __('frontend.str.category'), 'icon' => 'fa-list', 'color' => 'primary', 'route' => 'admin.category.index', 'visible' => $isAdmin],
-                ['key' => 'smtp', 'label' => __('frontend.str.smtp_server'), 'note' => __('frontend.dashboard.active_count', ['count' => number_format($stats['activeSmtp'])]), 'icon' => 'fa-inbox', 'color' => 'secondary', 'route' => 'admin.smtp.index', 'visible' => $isAdmin],
                 ['key' => 'clicks', 'label' => __('frontend.str.redirect'), 'note' => __('frontend.str.redirect_number'), 'icon' => 'fa-link', 'color' => 'dark', 'route' => 'admin.redirect.index', 'visible' => true],
                 ['key' => 'users', 'label' => __('frontend.menu.users'), 'note' => number_format($stats['macros']).' '.__('frontend.menu.macros'), 'icon' => 'fa-users-gear', 'color' => 'light', 'route' => 'admin.users.index', 'visible' => $isAdmin],
             ];

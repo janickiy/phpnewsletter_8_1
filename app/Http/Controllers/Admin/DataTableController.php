@@ -352,11 +352,12 @@ class DataTableController extends Controller
     public function getRedirectLogs(): JsonResponse
     {
         $rows = ProjectAccess::scope(Redirect::query())
-            ->selectRaw('url, COUNT(email) as count')
+            ->selectRaw('url, COUNT(email) as count, MAX(redirect.created_at) as last_clicked_at')
             ->groupBy('url')
             ->distinct();
 
         return DataTables::of($rows)
+            ->orderColumn('last_clicked_at', 'MAX(redirect.created_at) $1')
             ->editColumn('count', fn ($row) => sprintf(
                 '<a href="%s">%s</a>',
                 route('admin.redirect.info', ['url' => $this->encodeRouteBase64($row->url)]),

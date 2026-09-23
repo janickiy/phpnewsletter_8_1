@@ -169,6 +169,63 @@ class ProjectReportingAccessTest extends TestCase
         $response->assertSee('href="'.route('admin.subscribers.index').'"', false);
     }
 
+    public function test_mailing_summary_sorts_by_date_before_pagination(): void
+    {
+        $this->mixedLog->update(['time' => '2026-01-31 12:00:00']);
+        $latestLog = Logs::query()->create(['time' => '2026-02-01 12:00:00']);
+        $this->delivery($this->own, $latestLog, 'latest@example.test', 1);
+
+        $parameters = [
+            'draw' => 1, 'start' => 0, 'length' => 1,
+            'columns' => [['data' => 'event_start', 'name' => 'event_start', 'orderable' => 'true', 'searchable' => 'false']],
+            'order' => [['column' => 0, 'dir' => 'desc']],
+        ];
+        $this->getJson(route('admin.datatable.logs', $parameters))->assertOk()
+            ->assertJsonPath('recordsTotal', 2)->assertJsonPath('data.0.id', $latestLog->id);
+        $parameters['start'] = 1;
+        $this->getJson(route('admin.datatable.logs', $parameters))->assertOk()
+            ->assertJsonPath('data.0.id', $this->mixedLog->id);
+    }
+
+    public function test_redirect_summary_sorts_by_last_accessible_click_before_pagination(): void
+    {
+        Redirect::query()->where('project_id', $this->own->id)->update(['created_at' => '2026-01-01 12:00:00']);
+        Redirect::query()->where('project_id', $this->other->id)->update(['created_at' => '2026-12-01 12:00:00']);
+        $latestUrl = 'https://example.test/z-latest';
+        foreach ([
+            [$latestUrl, '2026-07-01 12:00:00'],
+            [$latestUrl, '2026-02-01 12:00:00'],
+            [self::SHARED_URL, '2026-03-01 12:00:00'],
+        ] as [$url, $date]) {
+            $click = new Redirect(['project_id' => $this->own->id, 'url' => $url, 'email' => 'allowed@example.test']);
+            $click->created_at = $date;
+            $click->save();
+        }
+
+        $parameters = [
+            'draw' => 1, 'start' => 0, 'length' => 1,
+            'columns' => [
+                ['data' => 'url', 'name' => 'url', 'orderable' => 'true', 'searchable' => 'true'],
+                ['data' => 'count', 'name' => 'count', 'orderable' => 'true', 'searchable' => 'false'],
+                ['data' => 'report', 'name' => 'report', 'orderable' => 'false', 'searchable' => 'false'],
+                ['data' => 'last_clicked_at', 'name' => 'last_clicked_at', 'orderable' => 'true', 'searchable' => 'false'],
+            ],
+            'order' => [['column' => 3, 'dir' => 'desc']],
+        ];
+        $this->getJson(route('admin.datatable.redirect', $parameters))->assertOk()
+            ->assertJsonPath('recordsTotal', 2)->assertJsonPath('data.0.url', $latestUrl)
+            ->assertJsonPath('data.0.last_clicked_at', '2026-07-01 12:00:00');
+        $parameters['start'] = 1;
+        $this->getJson(route('admin.datatable.redirect', $parameters))->assertOk()
+            ->assertJsonPath('data.0.url', self::SHARED_URL)
+            ->assertJsonPath('data.0.last_clicked_at', '2026-03-01 12:00:00');
+
+        $parameters['start'] = 0;
+        $parameters['order'] = [['column' => 0, 'dir' => 'asc']];
+        $this->getJson(route('admin.datatable.redirect', $parameters))->assertOk()
+            ->assertJsonPath('data.0.url', self::SHARED_URL);
+    }
+
     private function user(string $login, string $role): User
     {
         return User::query()->create(['name' => ucfirst($login), 'login' => $login, 'role' => $role, 'password' => 'password']);

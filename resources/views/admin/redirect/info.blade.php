@@ -91,7 +91,7 @@
                     $(row).attr('id', 'rowid_' + data['id']);
                     if (data['status'] === 0) $(row).attr('class', 'table-danger');
                 },
-                aaSorting: [[1, 'asc']],
+                aaSorting: [[2, 'desc']],
                 processing: true,
                 serverSide: true,
                 ajax: {

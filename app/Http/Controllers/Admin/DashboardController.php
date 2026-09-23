@@ -7,7 +7,6 @@ use App\Models\Macros;
 use App\Models\ReadySent;
 use App\Models\Redirect;
 use App\Models\Schedule;
-use App\Models\Smtp;
 use App\Models\Subscribers;
 use App\Models\Templates;
 use App\Models\User;
@@ -28,7 +27,6 @@ class DashboardController extends Controller
         $sentSuccess = ProjectAccess::scope(ReadySent::query())->where('success', 1)->count();
         $sentFailed = ProjectAccess::scope(ReadySent::query())->where('success', 0)->count();
         $readTotal = ProjectAccess::scope(ReadySent::query())->where('readMail', 1)->count();
-        $smtpTotal = $isAdmin ? Smtp::query()->count() : 0;
 
         $stats = [
             'projects' => ProjectAccess::projects('manage')->count(),
@@ -38,15 +36,13 @@ class DashboardController extends Controller
             'categories' => ($isAdmin ? ProjectAccess::categories(Category::query(), 'manage')->count() : 0),
             'schedule' => ProjectAccess::scope(Schedule::query(), 'manage')->count(),
             'upcomingSchedule' => ProjectAccess::scope(Schedule::query(), 'manage')->where('event_start', '>=', now())->count(),
-            'smtp' => $smtpTotal,
-            'activeSmtp' => ($isAdmin ? Smtp::query()->where('active', 1)->count() : 0),
+            'clicks' => ProjectAccess::scope(Redirect::query())->count(),
             'macros' => ($isAdmin ? Macros::query()->count() : 0),
             'users' => ($isAdmin ? User::query()->count() : 0),
             'sentTotal' => $sentTotal,
             'sentSuccess' => $sentSuccess,
             'sentFailed' => $sentFailed,
             'readTotal' => $readTotal,
-            'clicks' => ProjectAccess::scope(Redirect::query())->count(),
             'deliveryRate' => $sentTotal > 0 ? round($sentSuccess / $sentTotal * 100) : 0,
             'openRate' => $sentSuccess > 0 ? round($readTotal / $sentSuccess * 100) : 0,
         ];

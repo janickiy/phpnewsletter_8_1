@@ -141,7 +141,7 @@
                 'createdRow': function (row, data, dataIndex) {
                     $(row).attr('id', 'rowid_' + data['id']);
                 },
-                aaSorting: [[0, 'asc']],
+                aaSorting: [[0, 'desc']],
                 processing: true,
                 serverSide: true,
                 ajax: {
