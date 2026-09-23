@@ -218,8 +218,8 @@ update `APP_URL` when changing the application port.
 
 ### Upgrading an existing Docker installation
 
-`database/migrations` contains baseline creation migrations and later upgrades.
-The baseline includes each table's columns, indexes and foreign keys and creates
+`database/migrations` contains consolidated creation migrations for each table.
+They include the current columns, indexes and foreign keys and create
 the complete schema for new installations. They do not reapply changes to tables
 whose creation migrations have already run: older installations must first have
 nullable `ready_sent.schedule_id` and `log_id` with `ON DELETE SET NULL`, and the
@@ -228,13 +228,14 @@ settings and the `charsets` table are not part of this baseline.
 Installations from before project support also require a separate schema and data
 migration to associate their existing records with projects.
 
-Run `php artisan migrate --force` to apply the global-category upgrades. They remove
-the obsolete `categories.project_id`, generated `project_reference_id`, and their
-foreign key and indexes while preserving category IDs and all subscriber and schedule
-links. New installations create categories without any project columns.
+The category and redirect creation migrations already contain their final schemas:
+neither table has `project_id` or `project_reference_id`, and `redirect` has nullable
+`template_id` and `template` snapshot fields. The three September 24 upgrade migrations
+have been consolidated into these creation migrations. Running `migrate` on an older
+database does not alter tables whose creation migrations have already run; such a
+database needs a separate schema conversion that preserves its existing records.
 
-The redirect-history upgrade adds `template_id` and `template` snapshots and removes
-the old project columns. Each new tracked link identifies its template; click history
+Each new tracked link identifies its template; click history
 retains the template ID and name even if that template is later renamed or deleted.
 Existing click records and old links have no reliable template attribution, so their
 newsletter fields remain empty. Link reports and Excel exports separate newsletters

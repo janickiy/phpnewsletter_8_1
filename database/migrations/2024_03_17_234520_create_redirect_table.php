@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('redirect', function (Blueprint $table) {
             $table->increments('id');
             $table->string('url');
+            // Keep historical template details even after the template is deleted.
             $table->unsignedInteger('template_id')->nullable()->index();
             $table->string('template')->nullable();
             $table->string('email');
