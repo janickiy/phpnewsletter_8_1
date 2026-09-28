@@ -373,7 +373,6 @@ Supported import formats:
 - CSV
 - XLS
 - XLSX
-- ODS
 
 Before import, it is recommended to:
 
@@ -548,19 +547,6 @@ Recommendations:
 - check cron configuration and `php artisan schedule:run` usage if you rely on Laravel scheduler;
 - make sure the schedule entry falls into the correct time window;
 - verify the server time zone.
-
-## Project Structure
-
-- `app/` - controllers, models, services, DTOs, middleware, helpers, and console commands
-- `bootstrap/app.php` - application setup, routes, middleware, redirects, and exception handling
-- `bootstrap/providers.php` - application service providers; package providers use Composer discovery
-- `app/Http/Middleware/` - application-specific installation, locale, permission, and subscriber middleware
-- `routes/` - web and API routes, console commands, and scheduled tasks
-- `lang/` - interface translations
-- `resources/views/` - admin templates, public subscription pages, and installer screens
-- `database/migrations/` - database schema definitions
-- `storage/` - logs, cache, temporary files, and stored attachments
-- `public/` - public assets and entry point
 
 The application uses the Laravel 13 bootstrap structure. Framework middleware,
 HTTP and console kernels, and the default exception handler are provided by Laravel;
