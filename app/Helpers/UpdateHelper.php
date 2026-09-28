@@ -52,7 +52,7 @@ class UpdateHelper
     public function getUrlInfo(): string
     {
         return $this->url . '?' . http_build_query([
-                'id' => 6,
+                'id' => 8,
                 'version' => $this->currentVersion,
                 'lang' => $this->language,
                 'ip' => $this->getIP(),
